@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>My Profile — Nexus</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nexus.css?v=20260824h"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span class="dot"></span> Nexus</div>
+  <div>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="policies.html">Policies &amp; Help</a>
+    <a href="#" onclick="nexusSignOut()">Sign out</a>
+  </div>
+</div>
+
+<div class="container" style="padding-top:44px;padding-bottom:60px;max-width:560px;">
+  <a href="dashboard.html" class="muted" style="font-size:13px;">&larr; Dashboard</a>
+  <h1 style="margin:10px 0 4px;">My Profile</h1>
+  <p class="muted">Update your display name or change your password.</p>
+
+  <div class="card" style="margin-top:26px;">
+    <h3 style="margin-top:0;">Your details</h3>
+    <label>Full name</label>
+    <input id="pfName" type="text" style="margin-bottom:14px;"/>
+    <label>Email</label>
+    <input id="pfEmail" type="text" disabled style="margin-bottom:6px;background:#f3f1ea;color:var(--ink-soft);"/>
+    <p class="muted" style="font-size:12px;margin-top:0;margin-bottom:18px;">Email address changes aren't self-service — contact a Nexus admin if yours needs to change.</p>
+    <label>Role</label>
+    <input id="pfRole" type="text" disabled style="margin-bottom:18px;background:#f3f1ea;color:var(--ink-soft);"/>
+    <button class="btn btn-primary" onclick="saveName()">Save name</button>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <h3 style="margin-top:0;">Change password</h3>
+    <label>New password</label>
+    <input id="pfPass1" type="password" placeholder="At least 8 characters" style="margin-bottom:14px;"/>
+    <label>Confirm new password</label>
+    <input id="pfPass2" type="password" placeholder="Re-enter password" style="margin-bottom:18px;"/>
+    <button class="btn btn-outline" onclick="changePassword()">Update password</button>
+  </div>
+</div>
+
+<script src="supabase-client.js?v=20260824h"></script>
+<script src="auth-guard.js?v=20260824h"></script>
+<script>
+let PROFILE;
+
+(async () => {
+  const ctx = await nexusRequireAuth();
+  if (!ctx) return;
+  await nexusEnsureDeclaration(ctx.profile);
+  PROFILE = ctx.profile;
+
+  document.getElementById('pfName').value = PROFILE.full_name || '';
+  document.getElementById('pfEmail').value = PROFILE.email || '';
+  document.getElementById('pfRole').value = PROFILE.role === 'admin' ? 'Admin' : 'User';
+})();
+
+async function saveName(){
+  const full_name = document.getElementById('pfName').value.trim();
+  if (!full_name) return nexusToast('Enter a name.', 'err');
+
+  const { data, error } = await nexus.from('profiles').update({ full_name }).eq('id', PROFILE.id).select();
+  if (error) return nexusToast(error.message, 'err');
+
+  // A blocked-by-RLS update returns success with zero rows affected,
+  // not an error — check explicitly so a silent no-op is never shown
+  // to the person as "Saved."
+  if (!data || !data.length){
+    nexusToast('Could not save — the database migration for self-editing profiles may not be applied yet. Ask your admin to run allow-self-profile-edit.sql.', 'err');
+    return;
+  }
+
+  PROFILE.full_name = full_name;
+  await nexusLogEvent(PROFILE, 'profile_updated', { field: 'full_name' });
+  nexusToast('Saved.', 'ok');
+}
+
+async function changePassword(){
+  const p1 = document.getElementById('pfPass1').value;
+  const p2 = document.getElementById('pfPass2').value;
+  if (p1.length < 8) return nexusToast('Password must be at least 8 characters.', 'err');
+  if (p1 !== p2) return nexusToast('Passwords do not match.', 'err');
+
+  const { error } = await nexus.auth.updateUser({ password: p1 });
+  if (error) return nexusToast(error.message, 'err');
+
+  await nexusLogEvent(PROFILE, 'password_changed', {});
+  nexusToast('Password updated.', 'ok');
+  document.getElementById('pfPass1').value = '';
+  document.getElementById('pfPass2').value = '';
+}
+</script>
+</body>
+</html>

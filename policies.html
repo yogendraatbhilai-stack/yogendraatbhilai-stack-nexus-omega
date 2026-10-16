@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Policies & Help — Nexus</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nexus.css?v=20260824h"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  .policy-nav{ position:sticky; top:20px; }
+  .policy-nav a{ display:block; padding:9px 12px; border-radius:8px; color:var(--ink-soft); text-decoration:none; font-size:13.5px; margin-bottom:2px; }
+  .policy-nav a:hover, .policy-nav a.active{ background:var(--paper); color:var(--navy); font-weight:600; }
+  .policy-section{ margin-bottom:44px; scroll-margin-top:24px; }
+  .policy-section h2{ font-size:20px; margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid var(--line); }
+  .policy-section h3{ font-size:15px; margin:20px 0 8px; color:var(--navy); }
+  .policy-section p, .policy-section li{ font-size:13.5px; line-height:1.7; color:#2c3a48; }
+  .policy-section ol, .policy-section ul{ padding-left:20px; }
+  .faq-item{ border-bottom:1px solid var(--line); padding:14px 0; }
+  .faq-item summary{ cursor:pointer; font-weight:600; font-size:14px; color:var(--navy); }
+  .faq-item p{ margin-top:10px; }
+  .layout{ display:grid; grid-template-columns: 200px 1fr; gap:40px; }
+  @media (max-width: 760px){ .layout{ grid-template-columns: 1fr; } .policy-nav{ position:static; } }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span class="dot"></span> Nexus</div>
+  <div>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="profile.html">My Profile</a>
+    <a href="#" onclick="nexusSignOut()">Sign out</a>
+  </div>
+</div>
+
+<div class="container" style="padding-top:44px;padding-bottom:70px;">
+  <h1 style="margin-bottom:4px;">Policies &amp; Help</h1>
+  <p class="muted">Code of conduct, privacy policy, frequently asked questions, and how to use Nexus.</p>
+
+  <div class="layout" style="margin-top:32px;">
+    <nav class="policy-nav">
+      <a href="#conduct">Code of Conduct</a>
+      <a href="#privacy">Privacy Policy</a>
+      <a href="#howto">How to Use Nexus</a>
+      <a href="#faq">FAQs</a>
+    </nav>
+
+    <div>
+      <section class="policy-section" id="conduct">
+        <h2>Omega Financial — Code of Conduct</h2>
+        <p>This code governs everyone's use of Nexus and the client relationships it supports. It exists to protect clients, the firm, and everyone who works here.</p>
+
+        <h3>1. Client ownership</h3>
+        <p>Every client serviced through Nexus is a client of Omega Financial, regardless of who the relationship manager is or how the client was originally introduced. No employee may service a Nexus client under a personal ARN, a side business, or any external distributor code.</p>
+
+        <h3>2. Confidentiality</h3>
+        <p>Client data, portfolio details, contact information, and investment recommendations accessed through Nexus are confidential. They may not be shared, exported, or discussed outside Omega Financial for any purpose, including after an employee's departure from the firm.</p>
+
+        <h3>3. Intellectual property</h3>
+        <p>The calculators, methodologies, portfolio models, and reporting formats inside Nexus are the intellectual property of Omega Financial. Reproducing, copying, or reusing them for personal or third-party benefit is a violation of this code.</p>
+
+        <h3>4. Accountability</h3>
+        <p>Every report generated through Nexus is watermarked with the preparer's name and a permanent reference number, and every login, save, and permission change is permanently logged. This exists to protect honest work, not to create suspicion — but it means every action is traceable.</p>
+
+        <h3>5. Consequences</h3>
+        <p>Violations of this code — including using Nexus for personal ARN business, leaking client data, or copying proprietary methodology — may result in disciplinary action, termination, and legal proceedings as applicable under Indian law.</p>
+      </section>
+
+      <section class="policy-section" id="privacy">
+        <h2>Privacy Policy</h2>
+        <p>This policy explains what information Nexus collects and how it is used, for both employees using the system and the clients whose data passes through it.</p>
+
+        <h3>What Nexus collects</h3>
+        <ul>
+          <li>Employee account details: name, work email, role, and login activity</li>
+          <li>Client information entered by an advisor while using a tool: name, contact number, and the financial figures needed for that tool's calculation</li>
+          <li>Every saved report and the PDF generated from it</li>
+          <li>A permanent activity log: logins, reports saved, permission changes</li>
+        </ul>
+
+        <h3>How it's used</h3>
+        <p>Client information is used solely to generate the financial reports and proposals an advisor is preparing for that client. It is not sold, shared with third parties, or used for any purpose outside servicing that client's relationship with Omega Financial.</p>
+
+        <h3>Who can see what</h3>
+        <p>An advisor can only see their own saved reports and the clients within them. Nexus administrators can see all reports and all activity logs across the firm, for oversight, audit, and business continuity purposes.</p>
+
+        <h3>Data retention</h3>
+        <p>Saved reports and activity logs are retained permanently and cannot be deleted by the advisor who created them — only a Nexus administrator can remove a report, and every deletion is itself logged.</p>
+
+        <h3>Your acceptance</h3>
+        <p>By using Nexus, every employee explicitly accepts the declaration presented at first login, confirming their understanding of client ownership, confidentiality, and the terms of this policy.</p>
+      </section>
+
+      <section class="policy-section" id="howto">
+        <h2>How to Use Nexus</h2>
+
+        <h3>Signing in</h3>
+        <p>Use your registered email and password. If your organisation has two-factor login enabled, you'll also be asked to enter a one-time code sent to your email.</p>
+
+        <h3>Finding a tool</h3>
+        <p>From the Dashboard, click into a section (e.g. Sales or Customer Awareness) to see the tools available inside it. Click any tool to open it.</p>
+
+        <h3>Saving a report</h3>
+        <p>Every tool has a <b>Save to Nexus</b> button — this is the only way to produce a downloadable PDF. It locks the report permanently (only an admin can later edit or remove it), stamps it with your name and a reference number, and files it in that section's Reports page.</p>
+
+        <h3>Finding a saved report</h3>
+        <p>Open a section's <b>Reports</b> page (linked from the section screen) to browse everything saved there. Use the client name search box, or the tool picklist, to narrow results — the tool picklist can search across every section in Nexus, not just the one you're currently in.</p>
+
+        <h3>For admins: managing the team</h3>
+        <p>The Admin panel (visible only to admin accounts) lets you promote or block users, control which sections and tools each person can access, review every saved report, inspect the permanent audit log, and view the Analysis tab for proposal counts by user and time period.</p>
+      </section>
+
+      <section class="policy-section" id="faq">
+        <h2>Frequently Asked Questions</h2>
+
+        <details class="faq-item">
+          <summary>Why can't I download a PDF directly from a calculator anymore?</summary>
+          <p>PDFs are only available through Nexus's Reports section now, so that every report generated stays traceable, watermarked, and permanently on record — this protects both clients and advisors.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>I made a mistake in a saved report. Can I fix it?</summary>
+          <p>No — once saved, a report is locked and cannot be edited or deleted by the person who created it. This is by design. If a correction is genuinely needed, ask a Nexus admin, who can remove the report so you can save a corrected version.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>Why do I need to enter a code from my email to sign in?</summary>
+          <p>This is an additional security step to protect client data and confirm it's really you signing in, not just someone who has your password.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>Can I access Nexus after I leave the company?</summary>
+          <p>No. An admin can block any account instantly and completely — the moment that happens, that login can no longer read or save anything in Nexus, even if a browser session was still open.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>Who can see the clients I've entered into a tool?</summary>
+          <p>Only you and Nexus admins. Other advisors cannot see your saved reports or the clients in them.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>What happens if I forget my password?</summary>
+          <p>Use the "Forgot password?" link on the sign-in page to receive a reset link by email.</p>
+        </details>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script src="supabase-client.js?v=20260824h"></script>
+<script src="auth-guard.js?v=20260824h"></script>
+<script>
+(async () => {
+  const ctx = await nexusRequireAuth();
+  if (!ctx) return;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Sign in — Nexus</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nexus.css?v=20260824h"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+<div class="center-screen">
+  <div class="card auth-card">
+    <div style="text-align:center;margin-bottom:22px;">
+      <div class="display" style="font-size:22px;">Nexus</div>
+      <div class="muted" style="font-size:13px;">by Omega Financial</div>
+    </div>
+
+    <div id="blockedMsg" style="display:none;background:#fbe9e7;color:#a4342a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;">
+      Your account was blocked by an admin. Please contact your Nexus admin.
+    </div>
+
+    <div id="pendingMsg" style="display:none;background:#fff6e0;color:#8a6d10;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;">
+      Your account has been created and is waiting for admin approval. You'll be able to sign in once an admin approves it.
+    </div>
+
+    <div id="signinView">
+      <label>Email</label>
+      <input id="siEmail" type="email" placeholder="you@omegafinancial.co.in" style="margin-bottom:14px;"/>
+      <label>Password</label>
+      <input id="siPassword" type="password" placeholder="••••••••" style="margin-bottom:6px;"/>
+      <div style="text-align:right;margin-bottom:18px;">
+        <a href="reset-password.html" style="font-size:12.5px;">Forgot password?</a>
+      </div>
+      <button class="btn btn-primary" style="width:100%;" onclick="signIn()">Sign in</button>
+      <hr class="divider"/>
+      <p class="muted" style="font-size:13px;text-align:center;">New to Nexus? <a href="#" onclick="toggleView(event)">Create an account</a></p>
+    </div>
+
+    <div id="otpView" style="display:none;">
+      <p class="muted" style="font-size:13px;margin-bottom:14px;">For your security, we've emailed a 6-digit code to <b id="otpEmailShown"></b>. Enter it below to finish signing in.</p>
+      <label>6-digit code</label>
+      <input id="otpCode" type="text" inputmode="numeric" maxlength="6" placeholder="••••••" style="margin-bottom:18px;letter-spacing:.3em;text-align:center;font-size:20px;"/>
+      <button class="btn btn-primary" style="width:100%;" onclick="verifyOtpCode()">Verify &amp; sign in</button>
+      <p class="muted" style="font-size:12.5px;text-align:center;margin-top:14px;">
+        <a href="#" onclick="resendOtp(event)">Resend code</a> &middot; <a href="#" onclick="backToPassword(event)">Use a different account</a>
+      </p>
+    </div>
+
+    <div id="signupView" style="display:none;">
+      <label>Full name</label>
+      <input id="suName" type="text" placeholder="Your full name" style="margin-bottom:14px;"/>
+      <label>Work email</label>
+      <input id="suEmail" type="email" placeholder="you@omegafinancial.co.in" style="margin-bottom:14px;"/>
+      <label>Password</label>
+      <input id="suPassword" type="password" placeholder="At least 8 characters" style="margin-bottom:18px;"/>
+      <button class="btn btn-gold" style="width:100%;" onclick="signUp()">Create account</button>
+      <hr class="divider"/>
+      <p class="muted" style="font-size:13px;text-align:center;">Already have an account? <a href="#" onclick="toggleView(event)">Sign in</a></p>
+    </div>
+  </div>
+</div>
+
+<script src="supabase-client.js?v=20260824h"></script>
+<script src="auth-guard.js?v=20260824h"></script>
+<script>
+if (new URLSearchParams(location.search).get('blocked')) {
+  document.getElementById('blockedMsg').style.display = 'block';
+}
+if (new URLSearchParams(location.search).get('pending')) {
+  document.getElementById('pendingMsg').style.display = 'block';
+}
+
+let pendingEmail = null;
+
+function toggleView(e){
+  e.preventDefault();
+  const signin = document.getElementById('signinView');
+  const signup = document.getElementById('signupView');
+  signin.style.display = signin.style.display === 'none' ? '' : 'none';
+  signup.style.display = signup.style.display === 'none' ? '' : 'none';
+}
+
+function showOtpView(email){
+  document.getElementById('signinView').style.display = 'none';
+  document.getElementById('otpView').style.display = '';
+  document.getElementById('otpEmailShown').textContent = email;
+  document.getElementById('otpCode').value = '';
+  document.getElementById('otpCode').focus();
+}
+
+function backToPassword(e){
+  e.preventDefault();
+  pendingEmail = null;
+  document.getElementById('otpView').style.display = 'none';
+  document.getElementById('signinView').style.display = '';
+}
+
+// Emergency switch: if your email provider (SMTP) isn't sending login
+// codes reliably, set this to false to temporarily fall back to plain
+// password login — nobody gets locked out while you sort out email
+// delivery. Set it back to true once OTP emails are working again.
+const OTP_ENABLED = false;
+
+// Step 1: verify the password, then require a one-time emailed code
+// before granting a real session — this is Nexus's two-factor login.
+async function signIn(){
+  const email = document.getElementById('siEmail').value.trim();
+  const password = document.getElementById('siPassword').value;
+  if (!email || !password) return nexusToast('Enter your email and password.', 'err');
+
+  const { data, error } = await nexus.auth.signInWithPassword({ email, password });
+  if (error) return nexusToast(error.message, 'err');
+
+  if (!OTP_ENABLED){
+    try{
+      const { data: profile } = await nexus.from('profiles').select('*').eq('id', data.user.id).single();
+      if (profile) await nexusLogEvent(profile, 'login', { otp: false });
+    }catch(e){ /* non-blocking */ }
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  // Password is correct, but don't keep this session yet — the login
+  // isn't complete until the emailed code is verified too.
+  await nexus.auth.signOut();
+
+  const { error: otpErr } = await nexus.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+  if (otpErr) return nexusToast('Could not send your login code: ' + otpErr.message, 'err');
+
+  pendingEmail = email;
+  showOtpView(email);
+  nexusToast('Code sent — check your email.', 'ok');
+}
+
+async function resendOtp(e){
+  e.preventDefault();
+  if (!pendingEmail) return;
+  const { error } = await nexus.auth.signInWithOtp({ email: pendingEmail, options: { shouldCreateUser: false } });
+  if (error) return nexusToast(error.message, 'err');
+  nexusToast('New code sent.', 'ok');
+}
+
+async function verifyOtpCode(){
+  const token = document.getElementById('otpCode').value.trim();
+  if (!pendingEmail || !token) return nexusToast('Enter the 6-digit code.', 'err');
+
+  const { data, error } = await nexus.auth.verifyOtp({ email: pendingEmail, token, type: 'email' });
+  if (error) return nexusToast(error.message, 'err');
+
+  // Log the completed login (best-effort — profile may take a moment to
+  // exist for a brand-new signup, so this never blocks the redirect).
+  try{
+    const { data: profile } = await nexus.from('profiles').select('*').eq('id', data.user.id).single();
+    if (profile) await nexusLogEvent(profile, 'login', {});
+  }catch(e){ /* non-blocking */ }
+
+  window.location.href = 'dashboard.html';
+}
+
+async function signUp(){
+  const full_name = document.getElementById('suName').value.trim();
+  const email = document.getElementById('suEmail').value.trim();
+  const password = document.getElementById('suPassword').value;
+  if (!full_name || !email || !password) return nexusToast('Fill in all fields.', 'err');
+  if (password.length < 8) return nexusToast('Password must be at least 8 characters.', 'err');
+  const { error } = await nexus.auth.signUp({
+    email, password,
+    options: { data: { full_name } }
+  });
+  if (error) return nexusToast(error.message, 'err');
+  nexusToast('Account created. It now needs admin approval before you can sign in — you\'ll be notified once approved.', 'ok');
+  toggleView({ preventDefault(){} });
+}
+
+// If already signed in, skip straight to dashboard
+(async () => {
+  const { data: { session } } = await nexus.auth.getSession();
+  if (session) window.location.href = 'dashboard.html';
+})();
+</script>
+</body>
+</html>

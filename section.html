@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Section — Nexus</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nexus.css?v=20260824h"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  .sec-hero{
+    background: linear-gradient(120deg, var(--navy) 0%, #123a5e 100%);
+    color:#fff; border-radius: 18px; padding: 34px 32px;
+    position:relative; overflow:hidden; margin-top:22px;
+  }
+  .sec-hero::after{
+    content:""; position:absolute; right:-60px; top:-60px; width:220px; height:220px;
+    background: radial-gradient(circle, rgba(212,175,55,.28), transparent 70%);
+  }
+  .sec-hero .eyebrow{ font-size:11px; letter-spacing:.12em; text-transform:uppercase; color: var(--gold-soft); font-weight:700; margin-bottom:8px; }
+  .sec-hero h1{ color:#fff; margin:0 0 8px; font-size: 30px; }
+  .sec-hero p{ color:#cfd9e3; max-width:520px; margin:0 0 20px; font-size:14.5px; line-height:1.55; }
+  .sec-hero .btn-gold{ position:relative; z-index:1; }
+
+  .tool-list{ display:flex; flex-direction:column; gap:14px; margin-top:26px; }
+  .tool-row{ display:flex; align-items:center; gap:18px; }
+  .tool-row .tool-icon{
+    flex-shrink:0; width:46px; height:46px; border-radius:12px;
+    background: linear-gradient(135deg, rgba(14,42,71,.08), rgba(212,175,55,.14));
+    display:flex; align-items:center; justify-content:center; color:var(--navy);
+  }
+  .tool-row .tool-body{ flex:1; }
+  .tool-row h3{ margin:0 0 4px; font-size:16.5px; }
+  .tool-row p{ margin:0; color:var(--ink-soft); font-size:13.5px; }
+  .tool-row.locked{ opacity:.55; }
+  .tool-row:not(.locked):hover{ box-shadow: 0 10px 26px rgba(14,42,71,.1); transform: translateY(-1px); }
+  .tool-row{ transition: transform .15s ease, box-shadow .15s ease; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span class="dot"></span> Nexus</div>
+  <div>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="profile.html">My Profile</a>
+    <a href="policies.html">Policies &amp; Help</a>
+    <a href="#" onclick="nexusSignOut()">Sign out</a>
+  </div>
+</div>
+
+<div class="container" style="padding-top:6px;padding-bottom:60px;max-width:860px;">
+  <a href="dashboard.html" class="muted" style="font-size:13px;display:inline-block;margin-top:20px;">&larr; All sections</a>
+
+  <div class="sec-hero">
+    <div class="eyebrow" id="secEyebrow">Nexus Section</div>
+    <h1 id="secTitle">Section</h1>
+    <p id="secDesc"></p>
+    <a class="btn btn-gold" id="reportsLink" href="#">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>
+      View saved reports
+    </a>
+  </div>
+
+  <div class="tool-list" id="toolList"></div>
+</div>
+
+<script src="supabase-client.js?v=20260824h"></script>
+<script src="auth-guard.js?v=20260824h"></script>
+<script>
+const TOOL_ICON = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
+
+(async () => {
+  const ctx = await nexusRequireAuth();
+  if (!ctx) return;
+  await nexusEnsureDeclaration(ctx.profile);
+  const { profile } = ctx;
+
+  const key = new URLSearchParams(location.search).get('s');
+  const cat = await nexusGetCatalogue(profile);
+  const sec = cat.sections.find(s => s.key === key);
+  if (!sec){
+    document.getElementById('secTitle').textContent = 'Section not found';
+    return;
+  }
+  if (!nexusCanSeeSection(cat, sec.id)){
+    document.body.innerHTML = '<div class="center-screen"><div class="card auth-card"><h2>Restricted</h2><p class="muted">You don\'t have access to this section. Ask a Nexus admin to grant it.</p><a class="btn btn-outline" href="dashboard.html">Back to dashboard</a></div></div>';
+    return;
+  }
+
+  document.getElementById('secTitle').textContent = sec.name;
+  document.getElementById('secDesc').textContent = sec.description || '';
+  document.getElementById('secEyebrow').textContent = 'Nexus · ' + sec.name;
+  document.getElementById('reportsLink').href = `reports.html?s=${encodeURIComponent(sec.key)}`;
+
+  // Tools the person doesn't have access to are simply not shown at all —
+  // no "No access" placeholder cluttering their view. Admins still see
+  // everything (nexusCanSeeTool always returns true for them).
+  const tools = cat.tools.filter(t => t.section_id === sec.id && nexusCanSeeTool(cat, t.id));
+  const list = document.getElementById('toolList');
+  list.innerHTML = '';
+  tools.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'card tool-row';
+    row.innerHTML = `
+      <div class="tool-icon">${TOOL_ICON}</div>
+      <div class="tool-body">
+        <h3>${t.name}</h3>
+        <p>${t.description || ''}</p>
+      </div>
+      <a class="btn btn-primary" href="${t.path}">Open</a>
+    `;
+    list.appendChild(row);
+  });
+  if (!tools.length){
+    list.innerHTML = '<p class="muted">No tools are available to you in this section yet.</p>';
+  }
+})();
+</script>
+</body>
+</html>

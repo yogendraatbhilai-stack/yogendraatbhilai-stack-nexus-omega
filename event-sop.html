@@ -1,0 +1,883 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Omega Financial – Event SOP Governance Tool</title>
+
+  <!-- jsPDF for PDF export (A4) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="supabase-client.js?v=20260824h"></script>
+  <script src="auth-guard.js?v=20260824h"></script>
+  <script src="nexus-bridge.js?v=20260824h"></script>
+
+  <style>
+    :root{
+      --bg:#f3f6f9;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --green:#0a6d3b;
+      --blue:#1f7ae0;
+      --red:#d92d20;
+      --line:#e2e8f0;
+      --shadow:0 10px 25px rgba(2,6,23,.08);
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; background:var(--bg); color:var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    }
+    .topbar{
+      position:sticky; top:0; z-index:10;
+      background:linear-gradient(90deg, var(--green), #0c8a4b);
+      color:#fff; padding:16px 18px;
+      box-shadow: 0 8px 20px rgba(0,0,0,.12);
+    }
+    .topbar h1{margin:0; font-size:18px; letter-spacing:.2px}
+    .container{max-width:1100px; margin:18px auto; padding:0 14px}
+    .grid{
+      display:grid; gap:14px;
+      grid-template-columns: 1.2fr .8fr;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+    }
+    .card{
+      background:var(--card); border-radius:var(--radius);
+      box-shadow:var(--shadow); border:1px solid rgba(226,232,240,.8);
+      padding:14px 14px;
+    }
+    .card h2{
+      margin:0 0 10px; font-size:15px; color:var(--green);
+      display:flex; align-items:center; gap:8px;
+    }
+    .meta{
+      display:grid; gap:10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (max-width: 650px){
+      .meta{grid-template-columns:1fr}
+    }
+    label{font-size:12px; color:var(--muted); display:block; margin-bottom:6px}
+    input[type="text"], input[type="date"]{
+      width:100%; padding:10px 11px;
+      border:1px solid var(--line); border-radius:10px;
+      outline:none; background:#fbfdff;
+      font-size:14px;
+    }
+    input[type="text"]:focus, input[type="date"]:focus{
+      border-color:rgba(31,122,224,.55);
+      box-shadow:0 0 0 4px rgba(31,122,224,.12);
+    }
+
+    .btnrow{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px}
+    button{
+      border:none; border-radius:12px; padding:10px 12px;
+      font-weight:600; cursor:pointer; font-size:13px;
+      transition:.15s transform ease, .15s opacity ease;
+    }
+    button:active{transform:scale(.98)}
+    .btn-primary{background:var(--blue); color:#fff}
+    .btn-green{background:var(--green); color:#fff}
+    .btn-gray{background:#e5e7eb; color:#111827}
+    .btn-danger{background:var(--red); color:#fff}
+    .btn-disabled{opacity:.5; cursor:not-allowed}
+
+    .pill{
+      display:inline-flex; align-items:center; gap:6px;
+      font-size:12px; color:#0b1220;
+      background:#eef6ff; border:1px solid #dbeafe;
+      padding:6px 10px; border-radius:999px;
+      margin-top:6px;
+    }
+    .pill b{color:#0b1220}
+    .muted{color:var(--muted); font-size:12px}
+
+    .sectionsWrap{display:none; margin-top:14px}
+    .section{
+      margin-top:14px;
+      border:1px solid rgba(226,232,240,.9);
+      border-radius:var(--radius);
+      background:var(--card);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .sectionHeader{
+      padding:12px 14px;
+      display:flex; justify-content:space-between; gap:10px; align-items:flex-start;
+      background:linear-gradient(180deg,#ffffff,#fbfdff);
+      border-bottom:1px solid var(--line);
+    }
+    .sectionTitle{
+      margin:0; font-size:14px; color:var(--green);
+      line-height:1.25;
+    }
+    .responsible{
+      font-size:12px; color:var(--muted); margin-top:6px
+    }
+    .sectionBody{padding:12px 14px}
+    .task{
+      display:flex; gap:10px; align-items:flex-start;
+      padding:8px 10px; border-radius:12px;
+    }
+    .task:hover{background:#f7fafc}
+    .task input{margin-top:2px; transform:scale(1.05)}
+    .taskText{font-size:13px; line-height:1.3}
+    .hr{height:1px; background:var(--line); margin:12px 0}
+
+    .progressRow{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+    .bar{
+      width:280px; max-width:100%;
+      height:14px; border-radius:999px;
+      background:#e5e7eb; overflow:hidden;
+      border:1px solid rgba(226,232,240,.9)
+    }
+    .fill{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,var(--green), #18a957);
+      color:#fff; font-size:11px; text-align:center;
+      line-height:14px;
+      transition: width .18s ease;
+    }
+    .pct{font-weight:700; font-size:12px}
+    .def{font-size:12px; color:var(--muted)}
+    .sectionBtns{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+
+    .dash{
+      display:none; margin-top:14px;
+      border:1px solid rgba(226,232,240,.9);
+      border-radius:var(--radius);
+      background:var(--card);
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .dash h3{margin:0 0 10px; font-size:14px; color:var(--green)}
+    .dashGrid{
+      display:grid; gap:10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (max-width: 800px){
+      .dashGrid{grid-template-columns:1fr}
+    }
+    .dashItem{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 10px;
+      background:#fbfdff;
+    }
+    .dashItem .name{font-size:12px; font-weight:800; color:#0b1220}
+    .dashItem .who{font-size:12px; color:var(--muted); margin-top:3px}
+    .footerNote{margin-top:10px; font-size:12px; color:var(--muted)}
+  </style>
+</head>
+
+<body>
+<div style="background:#0E2A47;color:#fff;padding:10px 20px;font-family:Inter,Arial,sans-serif;font-size:13px;display:flex;justify-content:space-between;align-items:center;">
+  <span><a href="dashboard.html" style="color:#dfe7ee;text-decoration:none;">&larr; Nexus dashboard</a></span>
+  <span id="nexusWho" style="color:#dfe7ee;"></span>
+</div>
+  <div class="topbar">
+    <h1>Omega Financial – Event SOP Governance Tool (Checklist + Progress + PDF)</h1>
+  </div>
+
+  <div class="container">
+
+    <div class="grid">
+      <!-- INPUTS -->
+      <div class="card">
+        <h2>🧾 Event Details</h2>
+
+        <div class="meta">
+          <div>
+            <label>Event Owner (Name)</label>
+            <input id="eventOwner" type="text" placeholder="Enter Event Owner Name" />
+          </div>
+          <div>
+            <label>Digital Owner (Name)</label>
+            <input id="digitalOwner" type="text" placeholder="Enter Digital Owner Name" />
+          </div>
+          <div>
+            <label>Administrative Owner (Name)</label>
+            <input id="adminOwner" type="text" placeholder="Enter Administrative Owner Name" />
+          </div>
+          <div>
+            <label>Date of Event (MM-DD-YY)</label>
+            <input id="eventDate" type="date" />
+            <div class="pill">📅 <b>Auto-dates</b> will show for “3/2/1 day to go” after SOP loads.</div>
+          </div>
+        </div>
+
+        <div class="btnrow">
+          <button class="btn-primary" id="btnCheck" onclick="checkSOPStatus()">Check SOP Status</button>
+          <button class="btn-green" id="btnComprehensive" onclick="showComprehensiveProgress()" disabled>Show Comprehensive Progress</button>
+          <button class="btn-primary" id="btnSaveNexus" style="background:#D4AF37;color:#0E2A47;" onclick="saveToNexus()" disabled>Save to Nexus (locked report)</button>
+          <span class="muted" style="font-size:12.5px;">PDF downloads are only available from Nexus's Reports section after saving.</span>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="progressRow">
+          <div class="bar"><div id="overallFill" class="fill">0%</div></div>
+          <div>
+            <div class="pct" id="overallPct">Overall: 0%</div>
+            <div class="def" id="overallDef">Deficiency: 100%</div>
+          </div>
+        </div>
+        <div class="footerNote">Tip: Use “Freeze & Finalise Section” once a department completes its part. “Show Comprehensive Progress” freezes everything for final reporting.</div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div class="card">
+        <h2>📊 Quick Snapshot</h2>
+        <div class="muted">After you click <b>Check SOP Status</b>, each section will show a progress bar. After <b>Show Comprehensive Progress</b>, you’ll see a full section-wise dashboard here.</div>
+
+        <div class="dash" id="dashboard">
+          <h3>Section-wise Completion Dashboard</h3>
+          <div class="dashGrid" id="dashGrid"></div>
+          <div class="hr"></div>
+          <div class="progressRow">
+            <div class="bar"><div id="dashOverallFill" class="fill">0%</div></div>
+            <div>
+              <div class="pct" id="dashOverallPct">Overall: 0%</div>
+              <div class="def" id="dashOverallDef">Deficiency: 100%</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTIONS -->
+    <div class="sectionsWrap" id="sectionsWrap"></div>
+
+  </div>
+
+<script>
+/* =========================
+   LOCKED SOP SECTIONS + TASKS
+   (NO wording alteration)
+========================= */
+const SOP = [
+  {
+    id:"sec1",
+    title:"Event Master & Control – overall event lock & closure",
+    ownerType:"event",
+    tasks:[
+      "Date finalisation",
+      "PPT check & finalisation"
+    ]
+  },
+  {
+    id:"sec2",
+    title:"Event Owner – accountability & coordination",
+    ownerType:"event",
+    tasks:[
+      "Invitees list finalisation"
+    ]
+  },
+  {
+    id:"sec3",
+    title:"Telecalling – invitee calling & confirmation",
+    ownerType:"event",
+    tasks:[
+      "Invitees list allotment to Telecaller",
+      "Automated call (if any)"
+    ]
+  },
+  {
+    id:"sec4",
+    title:"Digital Promotion – creatives & campaigns",
+    ownerType:"digital",
+    tasks:[
+      "Invitees list allotment to Digital",
+      "General invitation template",
+      "Video CPC teaser & invitation video",
+      "3 day to go – template & video GIF",
+      "2 day to go – template & video GIF",
+      "1 day to go – template & video GIF",
+      "Hurry up!!! Limited seats available",
+      "WhatsApp",
+      "Emails"
+    ]
+  },
+  {
+    id:"sec5",
+    title:"Tech Event App – app, attendance & feedback",
+    ownerType:"digital",
+    tasks:[
+      "Greetings & attendance management via physical (At the time of CPC / TI)",
+      "Check QR scan and attendance confirmation",
+      "Events app management",
+      "Content development for event app",
+      "Galleries of event app & update on periodic basis",
+      "Attendance management via event app",
+      "Feedback collection (digital / app based)"
+    ]
+  },
+  {
+    id:"sec6",
+    title:"Operations – venue & on‑ground execution",
+    ownerType:"admin",
+    tasks:[
+      "Seating",
+      "Screen arrangement",
+      "Mic arrangement",
+      "Lights & sound (if reqd)",
+      "Pointer remote for PPT",
+      "Stage protocol – banner",
+      "Stage protocol – poster",
+      "Stage protocol – standee",
+      "Reception counter maintenance",
+      "Refreshment & snacks distribution",
+      "Guest welcome – bouquet",
+      "Guest welcome – memento if reqd",
+      "Introduction schedule",
+      "Anchoring & introduction",
+      "Thanks giving & important information"
+    ]
+  },
+  {
+    id:"sec7",
+    title:"Digital Department Requirement",
+    ownerType:"digital",
+    tasks:[
+      "Digital devices and arrangement alike",
+      "tripod alignment",
+      "Video shoot (if reqd)",
+      "Photo shoot (if reqd)",
+      "Corporate video – checked / updated and played",
+      "Presentation -checked / updated and run",
+      "add-ons like HOW to reach us – slide on ppt",
+      "Add → other imp services slide on ppt etc",
+      "Testimonials – shoot and archieve",
+      "Participation for certificate",
+      "Necessary content on app",
+      "More event information on app"
+    ]
+  },
+  {
+    id:"sec8",
+    title:"Photos & Videos – critical archive SOP",
+    ownerType:"digital",
+    tasks:[
+      "Photo of premises",
+      "Photo of institutional brand",
+      "Photo of felicitation",
+      "Photo of anchor addressing the event",
+      "Photo of speech with public attention",
+      "Photo of audience answering and interacting with program aura",
+      "Photo of audience comprehensively",
+      "Short video of speaker addressing the audience",
+      "Short video of speaker Q & A",
+      "Photo of speaker felicitation",
+      "Photos of audience post event",
+      "Photo of audience, management and speaker (group photo)",
+      "Video of audience feedback"
+    ]
+  },
+  {
+    id:"sec9",
+    title:"Attendance & Certificates – eligibility & dispatch",
+    ownerType:"digital",
+    tasks:[
+      "Post event attendance verification",
+      "Attendance certificate check",
+      "Attendance certificate issuance",
+      "Digital reel / content preparation & publishing",
+      "Certificate finalising",
+      "Feedback collection",
+      "Attendee list update and sharing",
+      "Thanks WhatsApp & email",
+      "Post to social media activities"
+    ]
+  },
+  {
+    id:"sec10",
+    title:"Accounts & Closure – expense & financial closure",
+    ownerType:"admin",
+    tasks:[
+      "Bill collection",
+      "Expense settlement",
+      "Account closure of event"
+    ]
+  }
+];
+
+/* =========================
+   STATE
+========================= */
+let frozenSections = new Set();  // sectionId
+let sopRendered = false;
+
+/* =========================
+   HELPERS
+========================= */
+function getOwnerName(ownerType){
+  const eo = document.getElementById("eventOwner").value.trim();
+  const doo = document.getElementById("digitalOwner").value.trim();
+  const ao = document.getElementById("adminOwner").value.trim();
+
+  if(ownerType === "digital") return doo || "Digital Owner (name not entered)";
+  if(ownerType === "admin") return ao || "Administrative Owner (name not entered)";
+  return eo || "Event Owner (name not entered)";
+}
+
+function parseEventDate(){
+  const v = document.getElementById("eventDate").value;
+  if(!v) return null;
+  const d = new Date(v + "T00:00:00");
+  return isNaN(d) ? null : d;
+}
+
+function formatDateReadable(d){
+  // 12 May 2026
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${String(d.getDate()).padStart(2,"0")} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function shiftDays(baseDate, delta){
+  const d = new Date(baseDate);
+  d.setDate(d.getDate()+delta);
+  return d;
+}
+
+function computeTaskLabel(task, eventDate){
+  // Auto date label for "3/2/1 day to go – template & video GIF" in Digital Promotion section
+  if(!eventDate) return task;
+
+  if(task.startsWith("3 day to go")){
+    return `${task} – ${formatDateReadable(shiftDays(eventDate, -3))}`;
+  }
+  if(task.startsWith("2 day to go")){
+    return `${task} – ${formatDateReadable(shiftDays(eventDate, -2))}`;
+  }
+  if(task.startsWith("1 day to go")){
+    return `${task} – ${formatDateReadable(shiftDays(eventDate, -1))}`;
+  }
+  return task;
+}
+
+function sectionStats(sectionId){
+  const secEl = document.getElementById(sectionId);
+  if(!secEl) return {total:0, checked:0, pct:0};
+
+  const boxes = secEl.querySelectorAll('input[type="checkbox"]');
+  const checked = secEl.querySelectorAll('input[type="checkbox"]:checked');
+  const total = boxes.length;
+  const done = checked.length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  return {total, checked:done, pct};
+}
+
+function updateSectionProgress(sectionId){
+  const {pct} = sectionStats(sectionId);
+  const fill = document.querySelector(`#${sectionId} .fill`);
+  const pctText = document.querySelector(`#${sectionId} .secPct`);
+  const defText = document.querySelector(`#${sectionId} .secDef`);
+
+  if(fill){ fill.style.width = pct + "%"; fill.textContent = pct + "%"; }
+  if(pctText){ pctText.textContent = `Section: ${pct}%`; }
+  if(defText){ defText.textContent = `Deficiency: ${100-pct}%`; }
+
+  updateOverallProgress();
+}
+
+function updateOverallProgress(){
+  if(!sopRendered) return;
+  let total=0, done=0;
+
+  SOP.forEach(s=>{
+    const st = sectionStats(s.id);
+    total += st.total;
+    done += st.checked;
+  });
+
+  const pct = total ? Math.round((done/total)*100) : 0;
+
+  const fill = document.getElementById("overallFill");
+  const pctText = document.getElementById("overallPct");
+  const defText = document.getElementById("overallDef");
+
+  fill.style.width = pct + "%";
+  fill.textContent = pct + "%";
+  pctText.textContent = `Overall: ${pct}%`;
+  defText.textContent = `Deficiency: ${100-pct}%`;
+
+  // Also update dashboard overall (if visible)
+  const dFill = document.getElementById("dashOverallFill");
+  const dPct = document.getElementById("dashOverallPct");
+  const dDef = document.getElementById("dashOverallDef");
+  if(dFill){
+    dFill.style.width = pct + "%";
+    dFill.textContent = pct + "%";
+  }
+  if(dPct) dPct.textContent = `Overall: ${pct}%`;
+  if(dDef) dDef.textContent = `Deficiency: ${100-pct}%`;
+
+  // enable comprehensive buttons once SOP is rendered
+  document.getElementById("btnComprehensive").disabled = false;
+  document.getElementById("btnSaveNexus").disabled = false;
+}
+
+/* =========================
+   RENDER
+========================= */
+function checkSOPStatus(){
+  const wrap = document.getElementById("sectionsWrap");
+  const eventDate = parseEventDate();
+
+  // Render all sections (full, none missing)
+  wrap.innerHTML = "";
+  SOP.forEach(section=>{
+    const ownerName = getOwnerName(section.ownerType);
+
+    const sec = document.createElement("div");
+    sec.className = "section";
+    sec.id = section.id;
+
+    sec.innerHTML = `
+      <div class="sectionHeader">
+        <div>
+          <div class="sectionTitle">${section.title}</div>
+          <div class="responsible"><b>Responsible:</b> ${ownerName}</div>
+          ${eventDate ? `<div class="pill">📅 <b>Event Date:</b> ${formatDateReadable(eventDate)}</div>` : `<div class="pill">📅 <b>Event Date:</b> not set</div>`}
+        </div>
+        <div class="progressRow" style="justify-content:flex-end">
+          <div class="bar" style="width:220px"><div class="fill">0%</div></div>
+          <div style="text-align:right">
+            <div class="pct secPct">Section: 0%</div>
+            <div class="def secDef">Deficiency: 100%</div>
+          </div>
+        </div>
+      </div>
+      <div class="sectionBody">
+        <div class="tasks"></div>
+        <div class="sectionBtns">
+          <button class="btn-green" onclick="freezeSection('${section.id}')">Freeze & Finalise Section</button>
+          <button class="btn-gray" onclick="resetSection('${section.id}')">Reset Tab</button>
+        </div>
+      </div>
+    `;
+
+    const tasksDiv = sec.querySelector(".tasks");
+    section.tasks.forEach((t, idx)=>{
+      const label = computeTaskLabel(t, eventDate);
+      const row = document.createElement("div");
+      row.className = "task";
+      row.innerHTML = `
+        <input type="checkbox" onchange="updateSectionProgress('${section.id}')"/>
+        <div class="taskText">${label}</div>
+      `;
+      tasksDiv.appendChild(row);
+    });
+
+    wrap.appendChild(sec);
+    updateSectionProgress(section.id);
+  });
+
+  document.getElementById("sectionsWrap").style.display = "block";
+  sopRendered = true;
+  updateOverallProgress();
+}
+
+/* =========================
+   FREEZE / RESET
+========================= */
+function freezeSection(sectionId){
+  const secEl = document.getElementById(sectionId);
+  if(!secEl) return;
+  secEl.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = true);
+  frozenSections.add(sectionId);
+
+  // visually mark frozen
+  secEl.style.outline = "2px solid rgba(10,109,59,.25)";
+}
+
+function resetSection(sectionId){
+  if(frozenSections.has(sectionId)){
+    alert("This section is frozen and finalised. Reset is disabled.");
+    return;
+  }
+  const secEl = document.getElementById(sectionId);
+  if(!secEl) return;
+  secEl.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked=false; cb.disabled=false; });
+  updateSectionProgress(sectionId);
+}
+
+function freezeAll(){
+  SOP.forEach(s=>freezeSection(s.id));
+}
+
+/* =========================
+   COMPREHENSIVE DASHBOARD
+========================= */
+function showComprehensiveProgress(){
+  if(!sopRendered){
+    alert("Please click 'Check SOP Status' first.");
+    return;
+  }
+  freezeAll();
+
+  const dash = document.getElementById("dashboard");
+  const grid = document.getElementById("dashGrid");
+  grid.innerHTML = "";
+
+  SOP.forEach(s=>{
+    const ownerName = getOwnerName(s.ownerType);
+    const st = sectionStats(s.id);
+
+    const item = document.createElement("div");
+    item.className = "dashItem";
+    item.innerHTML = `
+      <div class="name">${s.title}</div>
+      <div class="who"><b>Responsible:</b> ${ownerName}</div>
+      <div class="progressRow" style="margin-top:8px">
+        <div class="bar"><div class="fill" style="width:${st.pct}%">${st.pct}%</div></div>
+        <div class="def">Deficiency: ${100-st.pct}%</div>
+      </div>
+    `;
+    grid.appendChild(item);
+  });
+
+  dash.style.display = "block";
+  updateOverallProgress();
+}
+
+/* =========================
+   PDF EXPORT (A4)
+   - Graphical bars drawn in PDF (no screenshot needed)
+========================= */
+function stampLogoWatermark(pdf){
+  // Faint Omega Financial icon watermark behind the page content — the
+  // icon only (no wordmark text), so it can never collide unreadably
+  // with the report's own text. Best-effort: jsPDF's rotation pivot
+  // isn't pixel-precise, but close enough for a decorative background.
+  try{
+    pdf.saveGraphicsState();
+    pdf.setGState(new pdf.GState({ opacity: 0.05 }));
+    const w = 90, h = w * (351/250);
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    pdf.addImage(NexusBridge.LOGO_WATERMARK, 'PNG', (pageW - w)/2, (pageH - h)/2, w, h, undefined, undefined, -28);
+    pdf.restoreGraphicsState();
+  }catch(e){ console.warn('Watermark draw failed (non-blocking):', e.message); }
+}
+
+function downloadPDF(){
+  if(!sopRendered){
+    alert("Please click 'Check SOP Status' first.");
+    return;
+  }
+
+  showComprehensiveProgress(); // freezes + ensures dashboard data up-to-date
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({orientation:"portrait", unit:"mm", format:"a4"});
+  stampLogoWatermark(pdf);
+
+  const eventOwner = document.getElementById("eventOwner").value.trim() || "Not entered";
+  const digitalOwner = document.getElementById("digitalOwner").value.trim() || "Not entered";
+  const adminOwner = document.getElementById("adminOwner").value.trim() || "Not entered";
+  const eventDate = parseEventDate();
+  const eventDateText = eventDate ? formatDateReadable(eventDate) : "Not set";
+
+  // Header
+  pdf.setFont("helvetica","bold");
+  pdf.setFontSize(14);
+  pdf.text("Omega Financial – Event SOP Report", 10, 12);
+
+  pdf.setFont("helvetica","normal");
+  pdf.setFontSize(10);
+  pdf.text(`Event Owner: ${eventOwner}`, 10, 20);
+  pdf.text(`Digital Owner: ${digitalOwner}`, 10, 26);
+  pdf.text(`Administrative Owner: ${adminOwner}`, 10, 32);
+  pdf.text(`Event Date: ${eventDateText}`, 10, 38);
+
+  // Accountability stamp — who generated this, on whose behalf, how to
+  // reach the firm, and its permanent reference number, so any copy of
+  // this report can be traced back.
+  const preparedByName = (window.__nexusProfile && (window.__nexusProfile.full_name || window.__nexusProfile.email)) || '';
+  const stampRefId = window.__nexusWatermarkRefId || ('local-' + Date.now());
+  pdf.setFontSize(7.5);
+  pdf.setTextColor(120,120,120);
+  if (preparedByName) pdf.text(`Prepared by: ${preparedByName}`, 138, 18);
+  pdf.text(`Organisation: Omega Financial`, 138, 22.5);
+  pdf.text(`Phone: 9019008100`, 138, 27);
+  pdf.text(`Website: www.omegafinancial.co.in`, 138, 31.5);
+  pdf.text(`Generated: ${new Date().toLocaleString()}`, 138, 36);
+  pdf.text(`Ref: ${stampRefId}`, 138, 40.5);
+  pdf.setTextColor(0,0,0);
+  pdf.setFontSize(10);
+
+  // Overall
+  let total=0, done=0;
+  SOP.forEach(s=>{
+    const st = sectionStats(s.id);
+    total += st.total;
+    done += st.checked;
+  });
+  const overallPct = total ? Math.round((done/total)*100) : 0;
+
+  pdf.setFont("helvetica","bold");
+  pdf.text(`Overall Completion: ${overallPct}% (Deficiency: ${100-overallPct}%)`, 10, 48);
+
+  // Draw overall bar
+  const barX=10, barY=52, barW=190, barH=6;
+  pdf.setDrawColor(220); pdf.setFillColor(229,231,235);
+  pdf.roundedRect(barX, barY, barW, barH, 2, 2, "F");
+  pdf.setFillColor(10,109,59);
+  pdf.roundedRect(barX, barY, (barW*overallPct/100), barH, 2, 2, "F");
+
+  // Section wise
+  pdf.setFont("helvetica","bold");
+  pdf.setFontSize(11);
+  pdf.text("Section-wise Progress & Full Checklist", 10, 66);
+  pdf.setFont("helvetica","normal");
+  pdf.setFontSize(8);
+  pdf.setTextColor(90,90,90);
+  pdf.text("[X] = completed    [ ] = pending — every checklist point is listed below for full analysis.", 10, 70);
+  pdf.setTextColor(0,0,0);
+
+  let y = 76;
+  pdf.setFont("helvetica","normal");
+  pdf.setFontSize(9);
+
+  SOP.forEach(s=>{
+    const st = sectionStats(s.id);
+    const ownerName = getOwnerName(s.ownerType);
+
+    // Page break handling
+    if(y > 265){
+      pdf.addPage(); stampLogoWatermark(pdf);
+      y = 16;
+    }
+
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(10.5);
+    pdf.text(s.title, 10, y);
+    y += 5;
+
+    pdf.setFont("helvetica","normal");
+    pdf.setFontSize(9);
+    pdf.text(`Responsible: ${ownerName}`, 10, y);
+    pdf.text(`Completion: ${st.pct}%   Deficiency: ${100-st.pct}%`, 140, y);
+    y += 5;
+
+    // Draw section bar
+    pdf.setFillColor(229,231,235);
+    pdf.roundedRect(10, y, 190, 5.5, 2, 2, "F");
+    pdf.setFillColor(31,122,224); // blue for section bars
+    pdf.roundedRect(10, y, 190*st.pct/100, 5.5, 2, 2, "F");
+    y += 9;
+
+    // Itemized checklist — every task, ticked or blank, for proper analysis
+    const secEl = document.getElementById(s.id);
+    const rows = secEl ? secEl.querySelectorAll('.task') : [];
+    pdf.setFontSize(8.5);
+    rows.forEach(row=>{
+      if(y > 285){
+        pdf.addPage(); stampLogoWatermark(pdf);
+        y = 16;
+      }
+      const cb = row.querySelector('input[type="checkbox"]');
+      const text = (row.querySelector('.taskText')?.textContent || '').trim();
+      const done = !!(cb && cb.checked);
+
+      pdf.setFont("helvetica","bold");
+      if(done){ pdf.setTextColor(31,111,74); } else { pdf.setTextColor(164,52,42); }
+      pdf.text(done ? "[X]" : "[ ]", 12, y);
+
+      pdf.setFont("helvetica","normal");
+      pdf.setTextColor(40,40,40);
+      const lines = pdf.splitTextToSize(text, 172);
+      pdf.text(lines, 19, y);
+      y += (lines.length * 3.8) + 1.6;
+    });
+    pdf.setTextColor(0,0,0);
+    y += 5;
+  });
+
+  pdf.save("Omega_Event_SOP_Report_A4.pdf");
+
+  // Stash for "Save to Nexus" so we don't have to rebuild the PDF twice
+  window.__nexusPdf = pdf;
+  window.__nexusSummary = { eventOwner, digitalOwner, adminOwner, eventDateText, overallPct,
+    sections: SOP.map(s=>{
+      const st = sectionStats(s.id);
+      const secEl = document.getElementById(s.id);
+      const items = secEl ? Array.from(secEl.querySelectorAll('.task')).map(row=>({
+        label: (row.querySelector('.taskText')?.textContent || '').trim(),
+        done: !!row.querySelector('input[type="checkbox"]')?.checked
+      })) : [];
+      return { title: s.title, ownerName: getOwnerName(s.ownerType), pct: st.pct, items };
+    })
+  };
+}
+
+/* =========================
+   NEXUS INTEGRATION
+========================= */
+async function saveToNexus(){
+  if(!sopRendered){
+    alert("Please click 'Check SOP Status' first.");
+    return;
+  }
+  // Fix the reference id BEFORE building the PDF, so the number printed
+  // on the watermark and the number saved to the database are identical.
+  window.__nexusWatermarkRefId = NexusBridge.newReportId();
+
+  // Ensure we have a fresh, up-to-date PDF snapshot before saving
+  downloadPDFSilently();
+
+  const pdf = window.__nexusPdf;
+  const summary = window.__nexusSummary;
+  if (!pdf){ nexusToast('Could not build the report. Try again.', 'err'); return; }
+
+  const btn = document.getElementById('btnSaveNexus');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try{
+    const blob = pdf.output('blob');
+    await NexusBridge.saveReport({
+      id: window.__nexusWatermarkRefId,
+      toolKey: 'event_sop',
+      sectionKey: 'customer_awareness',
+      clientName: summary.eventOwner,
+      summary: `Event Date: ${summary.eventDateText} · Overall completion: ${summary.overallPct}%`,
+      data: summary,
+      pdfBlob: blob
+    });
+    nexusToast('Saved to Nexus. This report is now locked — only an admin can change it.', 'ok');
+    btn.textContent = 'Saved ✓';
+  }catch(err){
+    console.error(err);
+    nexusToast('Could not save to Nexus: ' + err.message, 'err');
+    btn.disabled = false; btn.textContent = 'Save to Nexus (locked report)';
+  }finally{
+    window.__nexusWatermarkRefId = null;
+  }
+}
+
+// Same as downloadPDF() but skips the file-save dialog — used to refresh
+// window.__nexusPdf right before uploading, without bothering the user
+// with a second download prompt.
+function downloadPDFSilently(){
+  const originalSave = jspdf.jsPDF.prototype.save;
+  jspdf.jsPDF.prototype.save = function(){ /* no-op for this call only */ };
+  downloadPDF();
+  jspdf.jsPDF.prototype.save = originalSave;
+}
+
+(async () => {
+  const ctx = await nexusRequireAuth();
+  if (!ctx) return;
+  window.__nexusProfile = ctx.profile;
+  document.getElementById('nexusWho').textContent = ctx.profile.full_name || ctx.profile.email;
+})();
+</script>
+</body>
+</html>

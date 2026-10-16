@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Reports — Nexus</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nexus.css?v=20260824h"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  .report-card{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .report-card .meta{ font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
+  .report-card h3{ margin:0; font-size:16px; }
+  .empty-state{ text-align:center; padding:60px 20px; color:var(--ink-soft); }
+  .empty-state svg{ margin-bottom:14px; opacity:.5; }
+  .detail-toggle{ font-size:12.5px; font-weight:600; color:var(--navy); background:none; border:none; padding:0; cursor:pointer; text-decoration:underline; }
+  .detail-panel{ display:none; width:100%; margin-top:16px; border-top:1px dashed var(--line); padding-top:16px; }
+  .detail-panel.open{ display:block; }
+  .detail-sec{ margin-bottom:16px; }
+  .detail-sec h4{ margin:0 0 4px; font-size:13.5px; color:var(--navy); }
+  .detail-sec .sec-pct{ font-size:11.5px; color:var(--ink-soft); margin-bottom:8px; }
+  .detail-item{ display:flex; gap:8px; align-items:flex-start; font-size:13px; padding:4px 0; }
+  .detail-item .tick{ flex-shrink:0; width:16px; height:16px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; margin-top:1px; }
+  .detail-item.done .tick{ background: rgba(31,111,74,.15); color: var(--green); }
+  .detail-item.pending .tick{ background: rgba(164,52,42,.12); color: var(--danger); }
+  .detail-item.pending{ color: var(--ink-soft); }
+
+  .filter-bar{ display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; margin-top:20px; }
+  .filter-field{ flex:1; min-width:200px; }
+  .filter-field label{ display:block; margin-bottom:6px; }
+  #toolFilterBox{ position:relative; }
+  #toolFilterBtn{ width:100%; text-align:left; background:#fff; }
+  #toolFilterMenu{
+    display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:20;
+    background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:0 10px 30px rgba(14,42,71,.14);
+    padding:10px; max-height:240px; overflow:auto;
+  }
+  #toolFilterMenu.open{ display:block; }
+  #toolFilterMenu label{ display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:400; text-transform:none; letter-spacing:0; padding:7px 6px; border-radius:6px; cursor:pointer; }
+  #toolFilterMenu label:hover{ background: var(--paper); }
+  .filter-actions{ display:flex; gap:10px; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span class="dot"></span> Nexus</div>
+  <div>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="profile.html">My Profile</a>
+    <a href="policies.html">Policies &amp; Help</a>
+    <a href="#" onclick="nexusSignOut()">Sign out</a>
+  </div>
+</div>
+
+<div class="container" style="padding-top:44px;padding-bottom:60px;max-width:900px;">
+  <a href="#" id="backLink" class="muted" style="font-size:13px;">&larr; Back to section</a>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:10px;">
+    <div>
+      <h1 style="margin:0 0 4px;" id="repTitle">Reports</h1>
+      <p class="muted" id="repDesc">Every report saved from tools in this section.</p>
+    </div>
+  </div>
+
+  <div class="card filter-bar">
+    <div class="filter-field">
+      <label>Search by client name</label>
+      <input type="text" id="clientSearch" placeholder="e.g. Rajesh Kumar" oninput="debouncedApplyFilters()"/>
+    </div>
+    <div class="filter-field" id="toolFilterBox">
+      <label>Filter by tool</label>
+      <button type="button" class="btn btn-outline" id="toolFilterBtn" onclick="toggleToolMenu(event)">All tools</button>
+      <div id="toolFilterMenu"></div>
+    </div>
+    <div class="filter-actions">
+      <button class="btn btn-primary" onclick="applyFilters()">Search</button>
+      <button class="btn btn-outline" onclick="clearFilters()">Clear</button>
+    </div>
+  </div>
+  <p class="muted" id="filterNote" style="font-size:12px;margin-top:8px;"></p>
+
+  <div id="repList" style="margin-top:20px;display:flex;flex-direction:column;gap:14px;"></div>
+</div>
+
+<script src="supabase-client.js?v=20260824h"></script>
+<script src="auth-guard.js?v=20260824h"></script>
+<script>
+const TOOL_NAMES = {
+  retirement_planner: 'Retirement Planner',
+  cba_tool: 'Client CBA Tool',
+  table_performance_manager: 'Table Performance Manager',
+  event_sop: 'Event SOP Governance',
+  iap_proposal: 'IAP Proposal Builder'
+};
+
+let SECTION_KEY = null;
+let SELECTED_TOOLS = [];
+let debounceTimer = null;
+
+function debouncedApplyFilters(){
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(applyFilters, 350);
+}
+
+function toggleToolMenu(e){
+  e.stopPropagation();
+  document.getElementById('toolFilterMenu').classList.toggle('open');
+}
+document.addEventListener('click', () => document.getElementById('toolFilterMenu').classList.remove('open'));
+
+async function buildToolFilterMenu(){
+  // Picklist sourced from every tool in the whole Nexus universe, not
+  // just this section — selecting a tool from elsewhere searches across
+  // all sections for it.
+  const { data: allTools } = await nexus.from('tools').select('*').order('sort_order');
+  const menu = document.getElementById('toolFilterMenu');
+  menu.innerHTML = (allTools || []).map(t => `
+    <label>
+      <input type="checkbox" value="${t.key}" onchange="onToolCheck()"/>
+      ${t.name}
+    </label>
+  `).join('');
+}
+
+function onToolCheck(){
+  SELECTED_TOOLS = Array.from(document.querySelectorAll('#toolFilterMenu input:checked')).map(i => i.value);
+  const btn = document.getElementById('toolFilterBtn');
+  btn.textContent = SELECTED_TOOLS.length ? `${SELECTED_TOOLS.length} tool${SELECTED_TOOLS.length>1?'s':''} selected` : 'All tools';
+  applyFilters();
+}
+
+function clearFilters(){
+  document.getElementById('clientSearch').value = '';
+  document.querySelectorAll('#toolFilterMenu input').forEach(i => i.checked = false);
+  SELECTED_TOOLS = [];
+  document.getElementById('toolFilterBtn').textContent = 'All tools';
+  applyFilters();
+}
+
+async function applyFilters(){
+  const term = document.getElementById('clientSearch').value.trim();
+
+  let query = nexus.from('reports').select('*').order('created_at', { ascending:false });
+
+  if (SELECTED_TOOLS.length){
+    // A tool filter searches across the whole universe, not just this section.
+    query = query.in('tool_key', SELECTED_TOOLS);
+    document.getElementById('filterNote').textContent = 'Searching across all sections for the selected tool(s).';
+  } else {
+    query = query.eq('section_key', SECTION_KEY);
+    document.getElementById('filterNote').textContent = '';
+  }
+
+  if (term){
+    query = query.ilike('client_name', `%${term}%`);
+  }
+
+  const { data: reports, error } = await query;
+  renderReports(reports, error);
+}
+
+(async () => {
+  const ctx = await nexusRequireAuth();
+  if (!ctx) return;
+  await nexusEnsureDeclaration(ctx.profile);
+  const isAdmin = ctx.profile.role === 'admin';
+  window.__nexusProfile = ctx.profile;
+  window.__nexusIsAdmin = isAdmin;
+
+  const key = new URLSearchParams(location.search).get('s');
+  SECTION_KEY = key;
+  document.getElementById('backLink').href = `section.html?s=${encodeURIComponent(key||'')}`;
+
+  const { data: sec } = await nexus.from('sections').select('*').eq('key', key).single();
+  if (sec){
+    document.getElementById('repTitle').textContent = `${sec.name} — Reports`;
+  }
+
+  await buildToolFilterMenu();
+
+  // RLS already limits non-admins to their own reports; admins see everyone's.
+  const { data: reports, error } = await nexus
+    .from('reports')
+    .select('*')
+    .eq('section_key', key)
+    .order('created_at', { ascending:false });
+
+  renderReports(reports, error);
+})();
+
+function renderReports(reports, error){
+  const isAdmin = window.__nexusIsAdmin;
+  const list = document.getElementById('repList');
+  if (error){
+    list.innerHTML = `<p class="muted">${error.message}</p>`;
+    return;
+  }
+  if (!reports || !reports.length){
+    list.innerHTML = `
+      <div class="card empty-state">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        <div>No reports match this search.</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = '';
+  reports.forEach((r, idx) => {
+    const card = document.createElement('div');
+    card.className = 'card report-card';
+    const hasItemized = r.tool_key === 'event_sop' && r.data && Array.isArray(r.data.sections);
+
+    card.innerHTML = `
+      <div style="flex:1;min-width:220px;">
+        <h3>${r.client_name || 'Untitled'} <span class="badge" style="margin-left:8px;">${TOOL_NAMES[r.tool_key] || r.tool_key}</span></h3>
+        <div class="meta">${r.summary || ''}</div>
+        <div class="meta">Saved by ${r.created_by_name || '—'} · ${new Date(r.created_at).toLocaleString()}</div>
+        ${hasItemized ? `<button class="detail-toggle" onclick="toggleDetail(${idx})" style="margin-top:8px;">View full checklist &darr;</button>` : ''}
+        ${hasItemized ? buildDetailPanel(r.data, idx) : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+        ${r.pdf_path ? `<button class="btn btn-gold" onclick="downloadReport('${r.pdf_path}','${(r.client_name||'report').replace(/[^a-z0-9]+/gi,'_')}')">Download PDF</button>` : ''}
+        ${isAdmin ? `<button class="btn btn-danger" style="font-size:12.5px;padding:8px 14px;" onclick="deleteReport('${r.id}')">Delete</button>` : ''}
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+async function deleteReport(id){
+  if (!confirm('Delete this report permanently? This cannot be undone.')) return;
+  const { error } = await nexus.from('reports').delete().eq('id', id);
+  if (error) return nexusToast(error.message, 'err');
+  nexusLogEvent(window.__nexusProfile, 'report_deleted', { reportId: id });
+  nexusToast('Report deleted.', 'ok');
+  applyFilters();
+}
+
+function buildDetailPanel(data, idx){
+  const sections = data.sections || [];
+  const rows = sections.map(s => `
+    <div class="detail-sec">
+      <h4>${s.title}</h4>
+      <div class="sec-pct">Responsible: ${s.ownerName || '—'} · ${s.pct}% complete</div>
+      ${(s.items||[]).map(it => `
+        <div class="detail-item ${it.done ? 'done' : 'pending'}">
+          <span class="tick">${it.done ? '✓' : '—'}</span>
+          <span>${it.label}</span>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+  return `<div class="detail-panel" id="detailPanel${idx}">${rows}</div>`;
+}
+
+function toggleDetail(idx){
+  const panel = document.getElementById('detailPanel' + idx);
+  if (panel) panel.classList.toggle('open');
+}
+
+async function downloadReport(path, niceName){
+  const { data, error } = await nexus.storage.from('reports').createSignedUrl(path, 120);
+  if (error) return nexusToast(error.message, 'err');
+  const a = document.createElement('a');
+  a.href = data.signedUrl;
+  a.download = niceName + '.pdf';
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+</script>
+</body>
+</html>

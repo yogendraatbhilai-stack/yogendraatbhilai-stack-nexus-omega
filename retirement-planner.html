@@ -1,0 +1,570 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Retirement Planning – Smart HTML Tool – v19 (Aligned + Watermark)</title>
+<style>
+  :root{ --bg:#f6f8fb; --text:#0f172a; --muted:#5b6b83; --panel:#ffffff; --border:#e5eaf3; --elev:#f9fbff; --primary:#2563eb; --accent:#16a34a; --chip:#0ea5e9; --table-head:#eef2ff; --ink-soft:#475569; }
+  [data-theme="dark"]{ --bg:#0b1220; --text:#e8eef8; --muted:#9db0c9; --panel:#0f172a; --border:#20304f; --elev:#131c2f; --primary:#3b82f6; --accent:#22c55e; --chip:#0ea5e9; --table-head:#0f213f; --ink-soft:#cbd5e1; }
+  html,body{height:100%}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  *,*:before,*:after{box-sizing:border-box}
+  .shell{max-width:1200px; margin:0 auto; padding:20px}
+  .header{position:sticky; top:0; z-index:10; background:var(--bg); border-bottom:1px solid var(--border)}
+  .header-inner{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 4px}
+  .brand{display:flex; align-items:center; gap:12px}
+  .brand-logo{height:46px; width:auto; object-fit:contain; border-radius:6px; background:#fff; padding:2px; border:1px solid var(--border)}
+  .brand-title{display:flex; flex-direction:column}
+  .brand-title h1{margin:0; font-size:18px}
+  .brand-title .note{color:var(--muted); font-size:12px}
+  .advisor{text-align:right; font-size:12px; line-height:1.35}
+  .advisor .name{font-weight:800; color:#0f172a}
+  .advisor .muted{color:var(--muted)}
+
+  .toolbar{display:flex; gap:8px}
+  .btn{cursor:pointer; border:1px solid var(--border); background:#fff; color:var(--text); padding:8px 12px; border-radius:10px; font-weight:600}
+  .btn-primary{background:var(--primary); border-color:var(--primary); color:#fff}
+  .btn-ghost{background:transparent}
+  .btn-small{padding:6px 10px; font-size:12px}
+
+  .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:16px; margin-top:16px}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px}
+  .span-6{grid-column:span 6}
+  .span-12{grid-column:span 12}
+  @media (max-width:1080px){ .span-6,.span-12{grid-column:span 12} }
+  h2{margin:0 0 10px; font-size:16px}
+  h3{margin:10px 0 6px; font-size:14px; color:var(--muted)}
+  label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px}
+  input,select{width:100%; padding:10px 12px; background:var(--elev); color:var(--text); border:1px solid var(--border); border-radius:10px; font-size:14px}
+  input[readonly]{opacity:.9}
+  .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+  .kpi{border:1px dashed var(--border); border-radius:12px; padding:12px; background:linear-gradient(180deg,rgba(2,6,23,.02),rgba(2,6,23,0))}
+  .kpi .title{font-size:12px; color:var(--muted)}
+  .kpi .value{font-size:20px; font-weight:800; margin-top:2px}
+  .chips{display:flex; flex-wrap:wrap; gap:6px}
+  .chip{display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; border:1px solid var(--border); background:#fff; font-size:12px}
+  [data-theme="dark"] .chip{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0));}
+  .chip-dot{width:8px; height:8px; border-radius:999px}
+  table{width:100%; border-collapse:collapse}
+  th,td{border-bottom:1px solid var(--border); padding:8px 6px; font-size:13px}
+  th{text-align:left; color:var(--text); background:var(--table-head)}
+  .right{text-align:right}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace}
+  .fundrow{display:flex; gap:8px; margin-bottom:6px}
+  .fundrow input{flex:1}
+  canvas{background:var(--elev); border:1px solid var(--border); border-radius:14px}
+
+  .app{display:block}
+  .report{display:none}
+
+  /* ===================== PRINT: Alignment + Watermark + 2-Page ===================== */
+  @media print{
+    @page{ size:A4; margin:10mm; }
+    body{background:#fff; color:#000}
+    /* Hide app, show report */
+    .app{display:none}
+    .report{display:block}
+
+    /* Ensure report content aligns perfectly to page content box (same as footer) */
+    .report, .report .shell{ max-width:none; width:auto; margin:0; padding:0; }
+
+    /* Watermark (centered, faint, below content) */
+    .r-watermark{ position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-18deg); opacity:0.06; z-index:0; pointer-events:none; width:150mm; }
+    .r-watermark img{ width:100%; height:auto; display:block }
+
+    /* Keep all report blocks above the watermark */
+    .r-header, .r-card, .page-footer{ position:relative; z-index:1 }
+
+    /* Header & basics */
+    .r-header{display:flex; align-items:center; justify-content:space-between; gap:8mm; margin:0 0 3mm 0}
+    .r-logo{height:16mm; width:auto; object-fit:contain}
+    .r-advisor{text-align:right; font-size:9.8px; line-height:1.35}
+    .r-advisor .name{font-weight:800; color:#1f315c}
+
+    /* Tighter layout for 2-page lock */
+    .r-card{break-inside:avoid; margin:0 0 5mm 0}
+    .r-h1{font-size:17px; margin:0 0 1mm 0; color:#1f315c}
+    .r-sub{color:#444; margin:0 0 3.5mm 0; font-size:9.8px}
+    .r-sec h2{font-size:12.6px; margin:0 0 1mm 0; color:#1f315c; border-bottom:1.4px solid #dbe1ee; padding-bottom:1mm}
+    .r-sec table{width:100%; border-collapse:collapse; margin:1mm 0 1.8mm 0}
+    .r-sec th{background:#eef2ff; color:#1f315c}
+    .r-sec th,.r-sec td{border:1px solid #cfd6e6; padding:2.5px 3px; font-size:9.6px; text-align:left}
+    .r-small{font-size:9.6px; color:#444; line-height:1.35}
+
+    /* Visuals */
+    .r-img-row{display:grid; grid-template-columns:1fr 1fr; gap:4.5mm}
+    .r-img-row img{width:100%; height:56mm; object-fit:contain; border:1px solid #cfd6e6; border-radius:4px}
+
+    .r-sec.disclaimer{ page-break-inside:avoid; break-inside:avoid; }
+
+    /* Footer aligned with page box */
+    .page-footer{position:fixed; bottom:6mm; left:10mm; right:10mm; font-size:9px; color:#666; display:flex; justify-content:space-between; z-index:2}
+    .page-footer .right{ text-align:right }
+    .page-footer .left strong{ color:#1f315c }
+    .page-footer .page:after{ content: "Page " counter(page) " of " counter(pages); }
+  }
+</style>
+</head>
+<body data-theme="light">
+<div style="background:#0E2A47;color:#fff;padding:10px 20px;font-family:Inter,Arial,sans-serif;font-size:13px;display:flex;justify-content:space-between;align-items:center;"><span><a href="dashboard.html" style="color:#dfe7ee;text-decoration:none;">&larr; Nexus dashboard</a></span><span id="nexusWho" style="color:#dfe7ee;"></span></div>
+  <div class="header">
+    <div class="shell header-inner">
+      <div class="brand">
+        <img src="data:image/png;base64,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" class="brand-logo" alt="OMEGA FINANCIAL logo" />
+        <div class="brand-title">
+          <h1>Retirement Planning – Smart Tool <span class="note">v19</span></h1>
+          <div class="note">Aligned PDF • Watermark • 2‑page fit • Disclaimer guaranteed • Funds fixed</div>
+        </div>
+      </div>
+      <div class="advisor">
+        <div class="name">OMEGA FINANCIAL</div>
+        <div class="muted">Advisor Desk</div>
+        <div class="muted">(add phone / email in header if needed)</div>
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-ghost btn-small" id="themeBtn">Toggle Theme</button>
+        <button class="btn btn-ghost btn-small" id="resetBtn">Reset</button>
+        <span class="muted" style="font-size:12.5px;">PDF downloads are only available from Nexus's Reports section after saving, to keep every report traceable.</span>
+        <button class="btn btn-primary" id="nexusSaveBtn" style="background:#D4AF37;color:#0E2A47;">Save to Nexus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== APP (SCREEN) ===================== -->
+  <div class="app shell">
+    <div class="grid">
+      <div class="card span-6">
+        <h2>Client & Corpus</h2>
+        <div class="row">
+          <div><label for="name">Name</label><input id="name" placeholder="Client Name" /></div>
+          <div><label for="dob">Date of Birth</label><input type="date" id="dob" /></div>
+        </div>
+        <div class="row">
+          <div><label for="mobile">Mobile</label><input id="mobile" type="tel" placeholder="10-digit number" /></div>
+        </div>
+        <div class="row">
+          <div><label>Age (auto)</label><input id="age" readonly /></div>
+          <div><label for="corpus">Retirement Corpus (₹)</label><input type="number" id="corpus" value="5000000" min="0" step="1000" /></div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <div><label for="pensionPct">Pension Percentage (%)</label><input type="number" id="pensionPct" value="7" min="0" max="100" step="0.1" /></div>
+          <div><label>Vacation SIP (2% of Corpus / 12)</label><input id="vacationSIP" readonly /></div>
+        </div>
+      </div>
+
+      <div class="card span-6">
+        <h2>Assumptions</h2>
+        <div class="row">
+          <div><label for="risk">Risk Profile</label>
+            <select id="risk"><option>Conservative</option><option>Moderate</option><option>Aggressive</option></select>
+          </div>
+          <div><label>Monthly Pension (auto)</label><input id="monthlyPension" readonly /></div>
+        </div>
+        <h3>Annual Returns</h3>
+        <div class="row">
+          <div><label for="rLiquid">Liquid (%)</label><input type="number" id="rLiquid" value="6" min="0" max="30" step="0.1" /></div>
+          <div><label for="rFD">FD/Bond (%)</label><input type="number" id="rFD" value="7" min="0" max="30" step="0.1" /></div>
+        </div>
+        <div class="row">
+          <div><label for="rMAAF">MAAF (%)</label><input type="number" id="rMAAF" value="9" min="0" max="30" step="0.1" /></div>
+          <div><label for="rHybrid">Hybrid (%)</label><input type="number" id="rHybrid" value="10" min="0" max="30" step="0.1" /></div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h2>Fund Selections (multiple per category)</h2>
+        <div class="grid" style="gap:12px">
+          <div class="span-6"><label>Liquid Funds</label><div id="liquidList"></div><button class="btn btn-ghost btn-small" id="addLiquid">+ Add Liquid</button></div>
+          <div class="span-6"><label>FD / Bond</label><div id="fdList"></div><button class="btn btn-ghost btn-small" id="addFD">+ Add FD/Bond</button></div>
+          <div class="span-6"><label>MAAF (Multi‑Asset Allocation)</label><div id="maafList"></div><button class="btn btn-ghost btn-small" id="addMAAF">+ Add MAAF</button></div>
+          <div class="span-6"><label>Hybrid</label><div id="hybridList"></div><button class="btn btn-ghost btn-small" id="addHybrid">+ Add Hybrid</button></div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h2>Snapshot</h2>
+        <div class="kpis" style="margin-top:8px">
+          <div class="kpi"><div class="title">Monthly Pension</div><div class="value" id="kpiPension">–</div></div>
+          <div class="kpi"><div class="title">Vacation SIP / month</div><div class="value" id="kpiVacation">–</div></div>
+          <div class="kpi"><div class="title">Total Pension Allocation (Today)</div><div class="value" id="kpiPensionAlloc">–</div></div>
+          <div class="kpi"><div class="title">Total Portfolio Expected CAGR</div><div class="value" id="kpiCAGR">–</div></div>
+        </div>
+        <div style="margin-top:10px" class="chips" id="snapCategories"></div>
+        <div style="margin-top:6px" class="chips" id="snapAsset"></div>
+      </div>
+
+      <div class="card span-6">
+        <h2>Part 1 – Pension Aspect (72 months)</h2>
+        <table>
+          <thead><tr><th>Tranche</th><th>Purpose</th><th>Recommended</th><th class="right">Invest Today (₹)</th></tr></thead>
+          <tbody>
+            <tr><td>Liquid</td><td>Pay months 1–24</td><td id="rfLiquidList"><span class="note">Add funds above</span></td><td class="right mono" id="invLiquid">–</td></tr>
+            <tr><td>FD/Bond</td><td>Matures month 24 → months 25–48</td><td id="rfFDList"><span class="note">Add funds above</span></td><td class="right mono" id="invFD">–</td></tr>
+            <tr><td>MAAF</td><td>Matures month 48 → months 49–72</td><td id="rfMAAFList"><span class="note">Add funds above</span></td><td class="right mono" id="invMAAF">–</td></tr>
+            <tr><th colspan="3">Total Pension Allocation</th><th class="right mono" id="totalPension">–</th></tr>
+          </tbody>
+        </table>
+        <div class="note" style="margin-top:6px">PV of 24‑month blocks uses Liquid monthly rate; FD & MAAF discount to today at their own monthly rates.</div>
+      </div>
+
+      <div class="card span-6">
+        <h2>Part 2 – Capital Appreciation (6 years)</h2>
+        <table>
+          <tbody>
+            <tr><th>Corpus</th><td class="right mono" id="caCorpus">–</td></tr>
+            <tr><th>Total Pension Allocation</th><td class="right mono" id="caPensionAlloc">–</td></tr>
+            <tr><th>Amount left for CA</th><td class="right mono" id="caLeft">–</td></tr>
+          </tbody>
+        </table>
+        <h3 style="margin-top:8px">Allocation by Risk: <span id="riskName" class="note">Conservative</span></h3>
+        <table>
+          <thead><tr><th>Fund</th><th>Alloc %</th><th>Recommended</th><th class="right">Invested (₹)</th><th class="right">Maturity @6Y (₹)</th></tr></thead>
+          <tbody>
+            <tr><td>MAAF</td><td id="maafPct">–</td><td id="rfMAAFList2"><span class="note">Add funds above</span></td><td class="right mono" id="maafAmt">–</td><td class="right mono" id="maafMat">–</td></tr>
+            <tr><td>Hybrid</td><td id="hybPct">–</td><td id="rfHybridList"><span class="note">Add funds above</span></td><td class="right mono" id="hybAmt">–</td><td class="right mono" id="hybMat">–</td></tr>
+            <tr><th colspan="4">Total Expected Maturity (6Y)</th><th class="right mono" id="caTotalMat">–</th></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card span-12">
+        <h2>Dashboard</h2>
+        <div class="grid" style="gap:16px">
+          <div class="span-5"><h3>Capital Allocation (Category‑wise)</h3><canvas id="pieCat" width="520" height="300"></canvas></div>
+          <div class="span-4"><h3>Expected Maturity Value (6Y)</h3><canvas id="barMat" width="420" height="300"></canvas></div>
+          <div class="span-3"><h3>Corpus Asset Allocation</h3><canvas id="pieED" width="320" height="300"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h2>Cash Flow Display – Pension Source by Month (1–72)</h2>
+        <div class="grid" style="gap:16px; align-items:start">
+          <div class="span-7">
+            <table id="cashTable"><thead><tr><th>Month</th><th>Source</th><th class="right">Pension Paid (₹)</th></tr></thead><tbody></tbody></table>
+          </div>
+          <div class="span-5">
+            <h3>Initial vs Final (Capital Appreciation)</h3>
+            <canvas id="cfBar" width="500" height="300"></canvas>
+            <div class="note" style="margin-top:6px">Withdrawals (72 × pension) are funded by the Pension Aspect ladder; chart compares Initial Corpus vs CA Maturity.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===================== REPORT (PRINT) ===================== -->
+  <div class="report">
+    <!-- Watermark (print-only) -->
+    <div class="r-watermark"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQQAAACtCAYAAABWbAGYAAAfDklEQVR4nO3deZwdVZk38N85p9a79k3v6U53EsKWYRECL6O8yCAEEBMQZNEXxAURBUFURkWUpkEQ3ABxkIkiA8MqDoGwDIviBJDVEARlkZClt3R3Or3epW5VnfO8f3R39oTMENJp5/l+PveTfG6dOvXUqVvPPXXq1G2AMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHG2N8tMdEB7Cj1nzp8LyuTPtzY0nXahrrOXLT4vlbATHRcjE0mfxcJYcaX5x2sE8mFIptoMJ39I/K5twMUgkWrhDwPy5aVJzo+xiYLOdEBvFdNX5x3JGXTi2TabzCDhefw51XnI4g85TpnTSN9S/Xs6tREx8jYZDGpE8K0Lxx3ArKp++A6dXq4sFj0DH2i/flXbjUmOtlEus9xvU+55dR/1NfXV010rIxNBpP2kmHaOfM/KytSNwrP8c1Q4RH0dp/RduczA+PL62fO/L+ubd2tpGwIy+VnTTk8rbOzs2MiY2ZsVzcpE0LTuSdeIDL+T4VtKT2UvyN8Y9k5PU+8Wti0XMOMGfvZlnWvZak9wjB8LSqWTl29evWbExEzY5PBpEsITV+cd4GozF4vlIQZzC9oe67tK1iyJNpa+aqGht0Tnnef7dj7xGG4wlB0avvy9j/tzJgZmywm2xiCEs/8bS6tGX4LQ8Wr236+8NxtJQMA6OvsfDsulY6LS+UnbduZAZJn7qxgGZtsJltC0MqIGvnUm4l44Qv3AdDbs1JXV1d7MGfmtaEjBqWB9z7HyNikNdkSArTWKy3bmmb53qK6xsYPb886TWcdd4Yzq+YOHLlvhZ5aMfJ+x8jYZDXpEoLS5vwoDB+3HbvO8737mmbO/Ni2yjd96YQvoDJ7s7KtDCSW4ICmX+ysWBmbbCbdoCIAVFZWppMVmVttzz0xjnQxKpbO6urouHvTck3nnXiRSPlXC9dSZjD/X6p38JMr7n6yZyJiZmwymJQJYYzd0NDwU8tzvwRDJg7DCzo7O38FQGPOHLvp0OktSHqXkABoqHhf8Z3Oz/U/+uLwRAfN2K5s0iSEJmRz8tSDv2fqc3trMlAAIAWhd+gfKaYsoqjTHsnvu/x3S4Z2u/DU803G/1lsDPTK7g75zNtvgiCFhCSCTRIv+NL6zjJ+zoGxjVgTHcD2mDFjRq3W+i5IeYSqzkDGZjSTCQJVpCBsCxjOP7L8mruHACAqRr+FkqeIzv7DnKWraq1kohFEAAEgA23MoWGhOG1qOv3lrpGRtRO6c4ztQnaVhOBWT6tuzKQzggIKly9f3rbhwjA233cT/hFRe+/dOuMsBjD6YLPUwGhfQSWV85/j5dsWLFw9c+4HTw7faD8gCrXRCUtAA4hj0kKQ3K3uA2Jq0+nKtr+F2x/9FkZTBbLZbEVFXUUFkSvM3/7W3QGUdtL+M7ZLmPBLhmw2W5GekrvTsu0jSetQ7FazFLPq/1p6O39RzxNPFACgcfr0RZ7vzw+D4AttK1bc/F632fCNkz5tZ7O36cHiX2Yu6T5g8eLFccP06Yco27oNSjYbMm1i7/rnyzr8594HX+BBSPa/xoT2ELLZbC5dmbvH8xNzoyBYoaf4d6vZjReIdOIw11YzZ1R+5MwVdz/ZAyJDRBCOsnfEdimILUpqgChevHhxXD9z5qG2bf3Wcuy6sBj8GR/eMy+nVX3aGczv3njKR07uuPfJzv/OPhml9rCIbAA0Po3SBjD+f4toZHBw8DUA1Hz44V6xIjww1jEBgBCCAICIBCwA8eg6StmW0x+u7Hr6T+3JZHJfIUQGlrXutrEFiDge7enAFpR0nKU9PT2FdDq9h2VZNVEEWIjEWHUEgGzbFgCM53mvrF69urjJrripVOog27aHBwYGXtvO3ReJRGJ/KWXKAsa3JdZ/zGLYtm0cx1maz+dnGGP8Uqm0JJ1Oz1JK1RJR+9DQ0MqtVZ5KpfYWQmRHRkaWAtho/Md13Zm2najP5weWAthoXzKZzBRjzN4ABvL5/Otbqz+RSOwPQBaLxVcAUDabnSGlbNisYBRRBAghxBrP8zpLpdL+cRy3B0HQtmnRVCo1eyzml7DuaK4PzfO8fYQQbaVSaZd48G7CEkJdXV21nfDvcTzviDgMV5SC8sd7X1r+auN+M95WtrpBZhNHaykeavrK/FPN/a/EEACM3CHzJjQMbAAkUG7ee+ZHIZzblLKqwnL5udLw8El2yj5YFoNbrFzqH7WUj9R/5ujTVt/6+Ls+FFVZV3dQwvPuImCW0TokELkEIcY6Yi6IpJKOkpISmcyvutrazp0OxMuqKs71KzOnmyg2EBDjHTcar1hJgUK5x+jefwKARDr9K9fz/k8Ux2uEMRqjK4wmFEBqbeLBoHRYVVXVP3l+4gYi4xtjyiAfAIhAEEIagCQR4iAoHQpgo5O+urr2a77v/UBrnTfGfHhoaGjpdjStk0qn73Jsew+t9RqijZbRWJyhlGJuNltxE4A9S6XOaV4icVnST3xKa90nbfu8gb6+32ypcs/3r3Fs5yjLsvYcGBhoH38/mUzWZrLZ3zu2Mz2Zcq/v6e6+cKOgHOcQz/cfERCBn0xevqan5+oNm3eMyGSz/06G7GKxuHdlZfWn/YT3cxCljaEyEQkhxOgvcPlAArDLcXQXGXNtLpd7JgzD7wdB8L0NK0yn03umM5mnlbKmuL7/tb7e3us2XJ5KpfZPpzNPBUH526VS6ZrtaN/33YQkhIaGhkbL9++2HevQMCgvC8LwpN7OztcAoOPmh26Z9vljO0Uuc4vMJg7SgfUQ1eeW0UBJk7XjJlIREchoS8C6SilVFYflJ8qxPmPNmjW9uOGBBxvPOvo40pnbZUVyPyXokYYz5n6q8/YnXthWnY5SFyllzSoVC1+NyuXfEZEINzhZAcB33Srfc2+3lPpCdXX1j1bo/rXh6uJFTsqbo5L+XhRrorFVpACREBKxjqkQnOUVzQAASwqpAHQHI9EHjVEjRMMCSI9tYQRIp5GQMnI9vwUC5aBYOj4M0eG6gsZjKQPwhCAiEslksmNgYN2T40ilUnu7nnOxIdMhlaxKJJM/GRoaOgbrOzlbbVZLKZtI/FVrPbdYlAbIb3riIZ/PD0xtaLClVAAAJRSIKCQBk0ml7nEta+/u7u7vY5Op6UoqkkptVl8qlb7CUlYzafOO63rnVVZW3r927dr/Gl8uhCApFYyOB33Xu6qubuo+hcLIBSObDChLKQEBA8DxPPfrSiqrUMjPI6J3UIaAi3W9OCKSQoghIqtBSAls/l0lk6nMjy2lEkSm3fO8S6uqqh7p6+v724btpSwLUka7zE/97fSEUNNUM1M53n/YtvWBclD+cxBGJ6/p6Fi2YZn2Xz/6eNPpx86No/gOlUt/gD4ye2r87LJXZNdAuCNikForaSkYyBTF2tHAwqIaPHPNW2vy42U6bn78xdrTDj/aMbhdZZOHGikfnnr2xz7f9cuHF221YkNZo+M4DHD/wED/Zt1HACgAqG1sfM21ZaNVMlZYV32Uo0SO+of/H1nWM7BVQhgyBIAIEFJAF4PL7WKwJJ4+5UYAn4QAiEgPDfW0Yd3vRubXbySfRyqVqhZCVOgoXrl27drfA8DIJpO2tzKHW2Uy2WuFkMlCUDrGVupY3/NbqmpqPtvX2/vLd2tbIgIEhb29vdseexHCjOdJIUgaMvn+vr6jc7kprX4icVn91MZ9RoYHv5zP5/vW1w0hBGj8sgoAqqurj3E97+wwiu4slIPLK5LJ530/cR2w9tCx5h7bBhAEYYtSYqrvJ1osS/2DUurMwcHBV9cHL4hGm94SQiS01j19fX2PYryNN2jicVNqa6cREUC0UUaora39jOe584JScHVIemHK95+1XffHAD6+rj7Yo02wC80X3qmhNFRX7+856Uccx/lAGJSfL5TDeZsmg3Ftdzz6etg7eCwGhheo2CyWB854xf+Hhpd2RBwm1O/oocJvaaTwB2GJ68uJ9BlrXl+z2eHuuWfxSrGse74ZyC+UnlcpK1K/aTxn/le2VTUBZFnK2XYAJEAAQgBph0Rt5seF3vyAGS58V0gJEhAQgqRtSZ0Pnum68cFroprsLdqz9wAQCwgthaysrZ/6YO3UqffXTZ16f21d/QO1dVPvr6uvf7C6uvr8fD5fJqLxj5vaUhhVdXUfrauvv6eqqurw8fdqamrOclz3mDAs/7y/t/f5oFi8LoqjZZ7nXZnL5Zq2o3m1ABqrq2uvrK6tvbK6uvrK6traK2tra6+sqau7qqau7ksAINZfQggAIENWsVhc2dnZcXKpGFzlus7JudyU31dVVc0Zr1iIdesAGB2Qdn3/WkNmsBiFLSNr174Vlsstlm3vX1tb+82NoiJACCr19PRcNlIsfFpKuVsmU7G4qrb2tHUlRs+G8frNaPNhm8fSHh1L2Gh0vqKiotlx3atjHb9TKhV+2N/T82IYhDe4jju/srL69E1W3pXywc7rIcw+ZbZTHMxcJtr6clG5/FSAwqn9ndv+FukdnWZ8zo6OpefXj/8BwB+2p2zbw88MzJo161PlY/b5qcomz0VF+obpXz15eOX1v71t89Ljl/HvZvQLLkRIKghjWZdLJ2dU3y4eemhudPwJR1q51MegjdKloF93951Zd/Zx51m5zLHRmoGXgNFvOwESylKBEBQBUsAYACAhhDK0biyTNutfb8BWanfX8U4tmeLjABZns9npruddFcXxsqBUagWAoaGhQct1L0olkve7nvdjAKdh8+vvdYQQRkpZoSzrExBjV95CAQIkAYtALwK4SQAbnkaCRkN1AAx1d3ddUlVb+2rC929KJlN/gJTn9PX23gXQRl1r309ebNv23qVC4evDa9YsA4Cenp5/ndrQeIrred+qqqpa1NfXt2S0xQkY+7yv7e29XWSr3vAz/m3pRPJuq65u9+7u7qsFhKaxMqPlt9V6W+f7/jVKqppisXDO0NDQAACUSoXLbdua5/veDz3P+68gCEbHQASwK3URdlpCCEdCQXNm7YFZtZ302vLP9T6zfNLczlu2bFkZy5ad1/SpoxJoqjkTtjV7iwWFEABkGI6822PZZmzokBDEgiINe0rmUP3Rj7boN985S+67+8sy6U+l/sLXybfTdjZ5xejEKjm+HQmItV3t7adh85FrAEAqlarC+vGLLcYjiPKGDEaTCpBIJH4opaosFgtnjX+QAWBtb+8Ddn39LZ7vf66mpmZhb2/vXVvbMQJsQ+b17tWdB2MLA3fr31s3dipGTwiBDcv39fTck8vlXk+mM79OJpJ32vX1e0IIRwhJrusGVVVVc1zPvTAsR093d3ffuME2ymE5+KrlpP/oef7PABwuhNAQG+fpvqG+Jck4eUQ2m7vR8xNX1NVNnSOVqjBa58eCk2NJaovtu/FOCYyf1NXV1Sd5nn9aqRTc2dvbe/94maGhoQHbtr+WSqcfzFVW/mh1Z+cnEY3ttRL/s8zzPthpqSm7JmsoDGPUVhxgDtrzzupTDp+1vevuN3e/JHb8nIn1R3E7NEybdo58Yfl888ybUdzR173FQlJGSilpe94hGB3l2+yVrc1Otx1rBhGZQjiSJ6kEhIDRhkQ2c5Fsqpuj+0fO1muHF0SF0n/Ylbk7hOskQQRhjX9wpCAB6ft+DYDUll5CCIIQWilZlclkdttgWXrs3wyEOEAKgSiigcqamo+7nndKuRzcsra394FNd214aOgSHcedru//JJfLTdtWowJiPAmZTV7j740jAAZyXXrY6BgPDAy8VhgZPiosB7e5ntfiut7RAAqlUinp+v71AHQ5KH4Vm9yC7Ovre7kcBD9xPPdDNfX15ymlinI0V2904hUKhd6uro7TioXSJY7rfNy2rBlSyhiAFiCtlKrI5XJ7bXIMMxu8fGB0nEcIiqZMmZLxfP+nsY67wzD41qZt09fX91A5CG/1Pe+0+vr6E5UyJakkhIG7leOYxk4e59tpG1uyZEnUdGDDN4joViuTOASofnTsdt6Sra3TOHv2FFtHvxhqmHbQtPN3f1X0589tu+Ox1e81loZTjzgO1dnLBZHQpejG1bc8ss3JTvWNjefbnnudUEqis/8m88eXF2ypXKj1LZYxH/F8/676xsZeQWQMjX3Qx74bpaUyUtleHIY3l4DVaR25MAQYI4SllOX7twVv937wiN/97tznvnj8zTLp70NhDEgBUY5H52EIWFKpuuyUylcrQBpEY8MFAgRIo3UclIpH6Cj+leu530xnMq8mk6m8MSQAAalABCEty64Kw/JfwrDYl85WLIqiuDsKB7+7pX0rFourU0HwbT+Z/HfX8/4FwMkYHQXZiCH4kkyE0WS71dFzTeQqEj4ASZpsI42PLST9gYGBIQCframre9Vz/R8AsL1E4nuu4x5aKha+39fXt8XboXEYXlO27BNcx/1RqVT8sUMACdrSPBbd27v6qilTpryZSKYWGKIMgCCM47sTfqI1mUov8RPJQRCJ8UYmgiAYGUfRQiHEvxoCIGXC8byf2LbTPJwfOau/v3+L8wrK5dIlylLHKsu+CVDfNgZwXeeSurr6r4xeQ4nROfYEQYBljP52b2/vr7bWjjvaTp+p2Pzpo/Y2ucwdKps8QBeCHj2c/0LXr/7zoc3KzZ5dB9L3WlL93/Afd4OYmoPpH7mg418W3vBeY2jad/ezzezmH2JGTYWINJmR4IrOBQ+0Ygsf4KnNzd9wXOdHEFKEYfDDrhWrLt5SuXG5mpp9FdQhQpKtANKAgAaMAtRYl5iAlWu6u38PIKo74oBmlcseZFypldYgZSkzUvyrM+KsjKe5H4MkgZgMtAaKwWDng8/9obK2dp6yZB00KRgz9iElAaUADRgRmSiI7h0eHh6qqqo9VgjThPXfwKMXx0oJYcxwsVh8DECl6/tHktZL+vv7n99G08lcLncaFFIDJO/G2rWb3qhQuVzuVK21Hh4e/u222qmysvLjRJTt7++/M5vNHg6gcWho6B5sY7p4trLyn6Qxs4RlaSlJCCN+s2bN5oPB45LJ3D5ewjrMxPEAgEws48Uja0fe2mr5ior9lDF7DQ8P3wtAVlVVHS2EmDG2eHxAkzC6Y9LE8TLHcZYGYXiCJeVyImoWQpTXrl17D7ZxqZFO5z7oOPLAOKa3oNDkWpaN8WM4xhhASigi+uPWkt77YUKmLledeFi911h9q6pIzjXlqKwHixd2LVh00/jyaXvuOVUI3GfZ1iG6ELxE8/Y3oiJ9iBkofK39ht9e9163P62u4RyZcH8Y79O4Ru7duBsJgPKlW+PB/Hk9tz+x7lZVQ3PzFY7nfpcAlINy6+pVqy57r9tmbFc2IROT+hY+vbr2jLknktE/s7Kpz2NK8hf1Xz5+Vq7G/c7Ir5+vklI8YFvWQWFQejUsFk6xbPVzJQCQ3jEJzJbCdpyMfnnFIppeeavwvMtVJvkZqVTT9HNP+tzKG+9b1djcdLXtud8iAsrl0sWrV7VfvUO2zSaN77V+74PSyDf6+/tLVVVVBxpjlrS2tv6358K0tLRYUsqDW1panht/75+vuSZtDQ56QoiGq6666pUdGvh7MNEPN4mGL51wmZVJXGocC9E7Xb+0X1ixn5NMHKLD8tKgHJ3YvXLlqsavfuIJlU0fZfqHvt7+84XXvteNTpvW/GU3lbgxCIJ/71ix4sxpX5x/ocikrhG+4+h88Y94YMlyx7I+TQIUhtE3OleseM/bZNt2ySWXzAAQW5bV4HneW0EQNGuthVJqf8dxHr7kkkvW/OAHP5geRdFHhBB/MMbMIqIqIhoB4FiW9RIRHUIUUUVF1UODg4Pz4jgOpZQrHMfpCYJgHynlUqXUDCLyjDHNtm0vjqLoUKXUX4vFYq9KJiusOE4C6DNK1dtAgzGmARIpCSmNMXnLsl767ne/+2JLS0vCtu2TiahLCPFXGDNfKP1sGMISQuyrhX7TVW4URdHrUsrDpCN1HMRdjmUdboC/aq1PEUIsEkIMRlEkiegApdQiAHtpracrpR5vbW3d8uD1+2iiH3+mzpseaGk8e14PgvgCa+mqI5VSM6JS6emYcHr3ypWj92odG8KxIBz7XW8BbR9jIATE2NzZ9gUPXtf0xfl9puz8GC++XSeJ5sRGD5pYX9q5cuV7HrNg704I4QghPkpE+wdR9LSUsomIqqMo6ovj+FQA/xJF0ZfDMOwWQpyllEoaY14WSu0HY4ZjE39CkCgQycLg4ODFJOktKaUL4KQwDFcKpY4B0cNENJOIKuPY9BCFuxFREsCTrutaFnCcFqIGUL2SYmGEUgD6BYluQ2YPInonjuNjALzoOM7xWut+AGsBfI6Ax3SI40lQVgrzlBLqOCHEsFKq0cDsJiFj27YPgxAPKBEnNaHNUghNTMdYlmWMMU/BmC+SEq4Q4k9E8XwA7zozdEeb6IQAAOj45UM3zm5uvi9PNIWEoCgMV617+o4gMK9jrfHclbS6f8/a2qmfBDTGB9GUAoQxWkr7dx0dHf3jde5+zscaQtc/zBAZrTV0GAJaA0QCSzsOFhEgxPrJqG0LHrx9zw8d8GRp9aArfEHRSFl3dXW1byFc9j5QSr1NQnxdEC2VREdawJ1GqLlG6A4h5cqWlhZJRIqI+pRS7UQ0y7KsvxDRcARtW2Q1jw7ECU1CKGiylFI2Ef1ZCPEJIcQjEJhvtLlJCHGCMPFyKFsIIazW1tZ+ALj88svrANkrJe1FUj6qIKdF0COkyVdCBBr4ExHNBkanjktJSmskMDbQqIQiA5O3LPtPsTH/EMfxy5C40Jb2xSY2x8MYMkIIIsS2Zcs4ji0hhCATK0BYQgllQXYFJnpZSrnNHw9+v+wSCQEAXl+1qhvA5l0kAQor3rjTq8jMtV37PLsifd7oTTMJIoIOI5j69Bpx8B7PNObxhY6b7+0HgHIy9R2VTZyLWEMSwSIDkAApAbQP9oZ/63k2dqzvb7ipt55d2rVz9pZtqrW11XzzO9+52QLabdt/PUT8YgSs8Tx7DsX0Vmtrq2lpabnRtu3DiegvSql3lFIdxphBZZQCYEuJA4UQzxqtrwQwD0DBGPOglGbYthOvBEGwpvWy1qeu+P4VkeM4M8tx/JwZHeEHAGit7wWQ1xpPQ2OlslWTo5zVpbB0mLTt50FUhI0niUhcdtllDyvgZGlZA6VS6d88z5uvST+glBJhGBZs237STSTeyOfzvwgRrlRKPaaNKQkhjlBKPRrH8Z9iwJFa3wuICgAfIBL/Kh27Ku15w6VS6ZmJOA4TPYaw3epnzjzUta2vSwGbYkMQgkw5DszMqgPNQbs1W0nXMUPFC9uvu/f62rlzk85e6Xuh5D4kEAnL6hbGuAAghBT0Wtsr5Wf+fHFPodA70fvFdoyWlpbZSim69NJL35joWCazSZMQtqTpgpPOQjrxUyFFxgwX78iXhs4bWPC7IQCiedascwRwFQkxTBR/pW3Zioew/l78LvO4KWO7kl3nqYr/pqZzT/pnkfB+KYAM9Y9c2/5K32fHkgEAkA3caSQesBy7WUrrroYZTSdjfKosY2yLJl0PYdb157vR8q7LRcr/JoigB0auaP/Foku3Ulw1zJxxres655tYR5GOL+pcvvJnOzVgxiaRSddD0I+9fIbw3XMp1qQHRr6xjWQAALpz+YqvxuXyZUIK27bs6xumN52904JlbJKZfAnhtba96fevLaeB/Jntv1j00+1YhdqWr2wN88ULhSEthPrQ+x4kY5PULnPbcXtJy1JqMNgvemTpPhj9JaB3/ZPw9fPmJNDcOCv+2+rltKJvB01uYuzvz6TrIRjgYQ0z4KSS32qeOfOW+vr6xLbK506Zk7WmN91jTcl+Re43o9GaUfPIzoqVsclm0g0qAkBdXd2H3WTyXsu2aqIwXCS0+cyqVasGNyt3yrHVVn3yTqsieRQVgqIZKX++fcED90xAyIxNCpMyIQBAbUPDIa7n3uM4TnMYhk8Vo/iTfW1t6348pfGUjzSI+orfqIr0h3S+lJf9Q59Z9W+P3TeRMTO2q5t0lwzjejo7Xwij+LgwjN50HOfDvm39Z11T02wAqDjpg82ivuJBqyL1IVMMhjE4dDonA8be3aTtIYyrbmyclfC8hZZj7xMWS20ml/waDtvjO3ZFeo7Ol1abfOH0zgWPbNcvLDP2v92kTwgAUD9zZpNFdKdQci86dK+irM1MM0G5XecLp3X9+rHn3r0Gxhjwd5IQAKCysjItp6Rnqj3rHdt1yBRK3Z2PvrhL/AFNxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDH2P/D/AYJ6bBLHr4TPAAAAAElFTkSuQmCC" alt="OMEGA FINANCIAL watermark" /></div>
+
+    <div class="r-header">
+      <div class="r-left">
+        <img src="data:image/png;base64,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" class="r-logo" alt="OMEGA FINANCIAL logo" />
+      </div>
+      <div class="r-advisor">
+        <div class="name">OMEGA FINANCIAL</div>
+        <div>Advisor Desk</div>
+      </div>
+    </div>
+
+    <div class="r-card"><h1 class="r-h1" id="rptTitle">RETIREMENT PLANNING REPORT</h1><div class="r-sub" id="rptSub">Prepared for the client</div></div>
+
+    <div class="r-card r-sec"><h2>Synopsis</h2>
+      <p class="r-small" id="synopsis">Navigating Retirement: A Strategic Approach to Financial Security<br><br>
+      Retirement often presents a dual challenge: diminishing regular income streams alongside increasing expenses, including healthcare, lifestyle adjustments, and the persistent impact of inflation. This report is structured to proactively address this reality through four key pillars: <b>Capital Appreciation</b>, <b>Liquidity</b>, <b>Competitive Cash Flow (Pension)</b>, and <b>Tax Efficiency</b>.<br><br>
+      Our core strategy employs a powerful yet simple hack: separating capital appreciation from pension withdrawals. By preserving the growth-oriented portion of your assets for an extended period, we harness the full power of compounding. Simultaneously, a well-structured pension ladder ensures a consistent and reliable monthly cash flow, providing financial stability throughout your retirement years.</p>
+    </div>
+
+    <div class="r-card r-sec"><h2>Client Summary</h2>
+      <table><tbody>
+        <tr><th>Client</th><td id="r_name">–</td><th>Age</th><td id="r_age">–</td></tr>
+        <tr><th>Date of Birth</th><td id="r_dob">–</td><th>Retirement Corpus</th><td id="r_corpus">–</td></tr>
+        <tr><th>Pension %</th><td id="r_ppct">–</td><th>Monthly Pension</th><td id="r_pens">–</td></tr>
+        <tr><th>Vacation SIP / month</th><td id="r_vac">–</td><th>Risk Profile</th><td id="r_risk">–</td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="r-card r-sec"><h2>Plan Overview</h2>
+      <table><tbody>
+        <tr><th>Total Pension Allocation (today)</th><td id="r_pensionAlloc">–</td></tr>
+        <tr><th>Amount left for Capital Appreciation</th><td id="r_caLeft">–</td></tr>
+        <tr><th>Total Expected Maturity (6Y – CA bucket)</th><td id="r_caMat">–</td></tr>
+        <tr><th>Total Portfolio Expected CAGR</th><td id="r_cagr">–</td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="r-card r-sec"><h2>Pension Aspect (72 months)</h2>
+      <table><thead><tr><th>Tranche</th><th>Purpose</th><th>Invest Today (₹)</th></tr></thead><tbody>
+        <tr><td>Liquid</td><td>Pay months 1–24</td><td id="r_liq">–</td></tr>
+        <tr><td>FD/Bond</td><td>Matures month 24 → months 25–48</td><td id="r_fd">–</td></tr>
+        <tr><td>MAAF</td><td>Matures month 48 → months 49–72</td><td id="r_maafP">–</td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="r-card r-sec"><h2>Capital Appreciation</h2>
+      <table><thead><tr><th>Fund</th><th>Allocation %</th><th>Invested (₹)</th><th>Maturity @6Y (₹)</th></tr></thead><tbody>
+        <tr><td>MAAF</td><td id="r_maafPct">–</td><td id="r_maafAmt">–</td><td id="r_maafMat">–</td></tr>
+        <tr><td>Hybrid</td><td id="r_hybPct">–</td><td id="r_hybAmt">–</td><td id="r_hybMat">–</td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="r-card r-sec"><h2>Recommended Funds</h2>
+      <table><thead><tr><th>Category</th><th>Recommendations</th></tr></thead><tbody>
+        <tr><td>Liquid</td><td id="r_rfLiquid">–</td></tr>
+        <tr><td>FD/Bond</td><td id="r_rfFD">–</td></tr>
+        <tr><td>MAAF</td><td id="r_rfMAAF">–</td></tr>
+        <tr><td>Hybrid</td><td id="r_rfHyb">–</td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="r-card r-sec"><h2>Visuals</h2>
+      <div class="r-img-row" style="margin-top:1mm">
+        <div><div class="r-small" style="margin:0 0 1mm 0">Capital Allocation (Category‑wise)</div><img id="r_img_pieCat" alt="Category Pie" /></div>
+        <div><div class="r-small" style="margin:0 0 1mm 0">Expected Maturity Value (6Y)</div><img id="r_img_barMat" alt="Maturity Bar" /></div>
+      </div>
+      <div class="r-img-row" style="margin-top:4mm">
+        <div><div class="r-small" style="margin:0 0 1mm 0">Retirement Corpus Asset Allocation</div><img id="r_img_pieED" alt="Equity-Debt Pie" /></div>
+        <div><div class="r-small" style="margin:0 0 1mm 0">Initial vs Final (Capital Appreciation)</div><img id="r_img_cfBar" alt="Initial vs Final" /></div>
+      </div>
+    </div>
+
+    <div class="r-card r-sec disclaimer">
+      <h2>Disclaimer</h2>
+      <div class="r-small">This report is for illustration and planning purposes only. The returns, yields, and product assumptions used are indicative and not guaranteed. Actual outcomes can vary due to market risk, product costs, taxation and regulatory changes. Please evaluate suitability, tax implications and product documents before implementation. The advisor and preparer accept no liability for decisions taken based on this report.</div>
+    </div>
+
+    <div class="page-footer">
+      <div class="left"><strong>OMEGA FINANCIAL</strong> • Retirement Planning Report</div>
+      <div class="page right"></div>
+    </div>
+  </div>
+
+<script>
+  const $ = (id)=>document.getElementById(id);
+  const fmt = (v)=> isFinite(v) ? v.toLocaleString('en-IN',{maximumFractionDigits:0}) : '–';
+  const state = {};
+
+  function addFundRow(containerId, placeholder){ const cont=$(containerId); if(!cont) return; const row=document.createElement('div'); row.className='fundrow'; const inp=document.createElement('input'); inp.placeholder=placeholder; inp.addEventListener('input', recompute); const del=document.createElement('button'); del.textContent='✕'; del.className='btn btn-ghost btn-small'; del.addEventListener('click',()=>{ row.remove(); recompute(); }); row.append(inp, del); cont.appendChild(row); }
+  function getFunds(containerId){ const cont=$(containerId); if(!cont) return []; return Array.from(cont.querySelectorAll('input')).map(i=>i.value.trim()).filter(t=>t.length>0); }
+  function chipsToPlain(list){ return (list && list.length)? list.join(', ') : '–'; }
+
+  function pie(canvas, data, colors, labels){ const ctx=canvas.getContext('2d'); if(!ctx) return; ctx.clearRect(0,0,canvas.width,canvas.height); const total=data.reduce((a,b)=>a+b,0)||1; let a0=-Math.PI/2; const cx=canvas.width/2, cy=canvas.height/2, r=Math.min(cx,cy)-18; data.forEach((val,i)=>{ const a1=a0+(val/total)*Math.PI*2; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,a0,a1); ctx.closePath(); ctx.fillStyle=colors[i%colors.length]; ctx.fill(); a0=a1; }); ctx.font='12px sans-serif'; labels.forEach((lb,i)=>{ ctx.fillStyle=colors[i]; ctx.fillRect(12,12+i*18,10,10); ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--muted'); const pct=Math.round((data[i]/total)*100); ctx.fillText(`${lb} – ${isFinite(pct)?pct:0}%`, 28, 21+i*18); }); }
+  function bar(canvas, labels, values, colors){ const ctx=canvas.getContext('2d'); if(!ctx) return; ctx.clearRect(0,0,canvas.width,canvas.height); const W=canvas.width,H=canvas.height,pad=36,n=values.length,gap=18,bw=((W-2*pad)-(n-1)*gap)/n,maxV=Math.max(1,...values); ctx.strokeStyle=getComputedStyle(document.body).getPropertyValue('--border'); ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.stroke(); for(let i=0;i<n;i++){ const v=values[i]; const h=(H-2*pad)*(v/maxV); const x=pad+i*(bw+gap); const y=H-pad-h; const grad=ctx.createLinearGradient(0,y,0,y+h); grad.addColorStop(0, colors[i%colors.length]); grad.addColorStop(1, '#0ea5e933'); ctx.fillStyle=grad; ctx.fillRect(x,y,bw,h); ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--muted'); ctx.font='12px sans-serif'; ctx.fillText(labels[i], x, H-pad+14); ctx.fillText(fmt(v), x, y-4); } }
+
+  function splitsFor(risk){ return risk==='Moderate'?{maaf:0.60,hyb:0.40}:risk==='Aggressive'?{maaf:0.50,hyb:0.50}:{maaf:0.70,hyb:0.30}; }
+  function calcAge(d){ if(!d) return ''; const dt=new Date(d); if(isNaN(dt)) return ''; const t=new Date(); let a=t.getFullYear()-dt.getFullYear(); const m=t.getMonth()-dt.getMonth(); if(m<0||(m===0&&t.getDate()<dt.getDate())) a--; return a; }
+  function irrMonthly(cashflows){ const npv=(r)=>cashflows.reduce((s,cf,i)=>s+cf/Math.pow(1+r,i),0); let lo=-0.9, hi=5.0; let fLo=npv(lo), fHi=npv(hi), tries=0; while(fLo*fHi>0 && tries<25){ hi*=1.5; fHi=npv(hi); tries++; } if(fLo*fHi>0) return null; for(let i=0;i<120;i++){ const mid=(lo+hi)/2; const fMid=npv(mid); if(Math.abs(fMid)<1e-10) return mid; if(fLo*fMid<0){ hi=mid; fHi=fMid; } else { lo=mid; fLo=fMid; } } return (lo+hi)/2; }
+
+  function recompute(){
+    const corpus = parseFloat(($('corpus').value||'0').replace(/,/g,''))||0;
+    const pensionPct = (parseFloat($('pensionPct').value||'0')||0)/100.0;
+    const rLiquidA = (parseFloat($('rLiquid').value||'0')||0)/100.0;
+    const rFDA = (parseFloat($('rFD').value||'0')||0)/100.0;
+    const rMAAFA = (parseFloat($('rMAAF').value||'0')||0)/100.0;
+    const rHybridA = (parseFloat($('rHybrid').value||'0')||0)/100.0;
+    const rL=rLiquidA/12, rF=rFDA/12, rM=rMAAFA/12;
+
+    const name = $('name').value.trim(); const mobile = $('mobile').value.trim(); const dob = $('dob').value; const age = calcAge(dob);
+
+    const monthlyPension = (corpus*pensionPct)/12; const vacationSIP = (0.02*corpus)/12;
+    $('monthlyPension').value = `₹ ${fmt(monthlyPension)}`; $('vacationSIP').value = `₹ ${fmt(vacationSIP)}`; $('kpiPension').textContent = `₹ ${fmt(monthlyPension)}`; $('kpiVacation').textContent = `₹ ${fmt(vacationSIP)}`; $('age').value = age;
+
+    const n=24; const pvBlock = monthlyPension>0 ? (rL>0 ? monthlyPension*(1-Math.pow(1+rL,-n))/rL : monthlyPension*n) : 0;
+    const invLiquid = pvBlock; const invFD = pvBlock>0 ? pvBlock/Math.pow(1+rF,24) : 0; const invMAAF = pvBlock>0 ? pvBlock/Math.pow(1+rM,48) : 0; const totalPension = invLiquid+invFD+invMAAF;
+
+    $('invLiquid').textContent = `₹ ${fmt(invLiquid)}`; $('invFD').textContent = `₹ ${fmt(invFD)}`; $('invMAAF').textContent = `₹ ${fmt(invMAAF)}`; $('totalPension').textContent = `₹ ${fmt(totalPension)}`; $('kpiPensionAlloc').textContent = `₹ ${fmt(totalPension)}`;
+
+    const caLeft = Math.max(corpus-totalPension,0); $('caCorpus').textContent = `₹ ${fmt(corpus)}`; $('caPensionAlloc').textContent = `₹ ${fmt(totalPension)}`; $('caLeft').textContent = `₹ ${fmt(caLeft)}`;
+
+    const risk = $('risk').value; $('riskName').textContent = risk; const sp = splitsFor(risk);
+    const maafAmt = caLeft*sp.maaf, hybAmt = caLeft*sp.hyb; const maafMat = maafAmt*Math.pow(1+rMAAFA,6); const hybMat = hybAmt*Math.pow(1+rHybridA,6); const caTotalMat = maafMat+hybMat;
+
+    $('maafPct').textContent = `${Math.round(sp.maaf*100)}%`; $('hybPct').textContent = `${Math.round(sp.hyb*100)}%`;
+    $('maafAmt').textContent = `₹ ${fmt(maafAmt)}`; $('hybAmt').textContent = `₹ ${fmt(hybAmt)}`; $('maafMat').textContent = `₹ ${fmt(maafMat)}`; $('hybMat').textContent = `₹ ${fmt(hybMat)}`; $('caTotalMat').textContent = `₹ ${fmt(caTotalMat)}`;
+
+    const lf = getFunds('liquidList'); const ff = getFunds('fdList'); const mf = getFunds('maafList'); const hf = getFunds('hybridList');
+    const chip = (arr,color)=> (arr.length? arr.map(n=>`<span class=\"chip\"><span class=\"chip-dot\" style=\"background:${color}\"></span>${n}</span>`).join(' ') : '<span class=\"note\">–</span>');
+    $('rfLiquidList').innerHTML = chip(lf,'#0ea5e9'); $('rfFDList').innerHTML = chip(ff,'#38bdf8'); $('rfMAAFList').innerHTML = chip(mf,'#16a34a'); $('rfMAAFList2').innerHTML = chip(mf,'#16a34a'); $('rfHybridList').innerHTML = chip(hf,'#60a5fa');
+
+    const catLiquid = invLiquid, catFD = invFD, catMAAF = invMAAF + maafAmt, catHybrid = hybAmt;
+    const cats = [ ['Liquid',catLiquid,'#0ea5e9'], ['FD/Bond',catFD,'#38bdf8'], ['MAAF',catMAAF,'#16a34a'], ['Hybrid',catHybrid,'#60a5fa'] ];
+    $('snapCategories').innerHTML = cats.filter(c=>c[1]>0).map(([n,v,c])=>`<span class=\"chip\"><span class=\"chip-dot\" style=\"background:${c}\"></span>${n}: ₹ ${fmt(v)}</span>`).join('');
+
+    const equity = maafAmt*0.35 + hybAmt*0.65; const debt = corpus - equity;
+    $('snapAsset').innerHTML = [ `<span class=\"chip\"><span class=\"chip-dot\" style=\"background:#f59e0b\"></span>Equity: ₹ ${fmt(equity)}</span>`, `<span class=\"chip\"><span class=\"chip-dot\" style=\"background:#64748b\"></span>Debt: ₹ ${fmt(debt)}</span>` ].join('');
+
+    const tbody = $('cashTable').querySelector('tbody'); tbody.innerHTML='';
+    for(let m=1;m<=72;m++){ const src = m<=24? 'Liquid' : (m<=48? 'FD/Bond' : 'MAAF'); const tr=document.createElement('tr'); tr.innerHTML = `<td>${m}</td><td>${src}</td><td class=\"right mono\">₹ ${fmt(monthlyPension)}</td>`; tbody.appendChild(tr); }
+
+    const cfs=[-corpus]; for(let t=1;t<=72;t++) cfs.push(monthlyPension); cfs[72]+=caTotalMat; const r_m=irrMonthly(cfs); const cagr=(r_m==null)?null:Math.pow(1+r_m,12)-1; $('kpiCAGR').textContent = cagr==null? '–' : (cagr*100).toFixed(2)+'%';
+
+    pie($('pieCat'), [catLiquid,catFD,catMAAF,catHybrid], ['#0ea5e9','#38bdf8','#16a34a','#60a5fa'], ['Liquid','FD/Bond','MAAF','Hybrid']);
+    bar($('barMat'), ['MAAF','Hybrid','Total'], [maafMat,hybMat,caTotalMat], ['#16a34a','#60a5fa','#8b5cf6']);
+    pie($('pieED'), [equity,debt], ['#f59e0b','#64748b'], ['Equity','Debt']);
+    bar($('cfBar'), ['Initial Corpus','CA Maturity (6Y)'], [corpus,caTotalMat], ['#93c5fd','#16a34a']);
+
+    snapshotChartsToReport();
+
+    state.name = name; state.mobile = mobile; state.dob = dob; state.age = age; state.corpus=corpus; state.pensionPct=pensionPct; state.monthlyPension=monthlyPension; state.vacationSIP=vacationSIP;
+    state.invLiquid=invLiquid; state.invFD=invFD; state.invMAAF=invMAAF; state.totalPension=totalPension; state.caLeft=caLeft; state.risk=risk; state.maafPct=sp.maaf; state.hybPct=sp.hyb;
+    state.maafAmt=maafAmt; state.hybAmt=hybAmt; state.maafMat=maafMat; state.hybMat=hybMat; state.caTotalMat=caTotalMat; state.equity=equity; state.debt=debt; state.f_liq=lf; state.f_fd=ff; state.f_maaf=mf; state.f_hyb=hf; state.cagr=(cagr==null?null:(cagr*100).toFixed(2)+'%');
+  }
+
+  function snapshotChartsToReport(){ const setImg = (imgId, canvasId)=>{ const cv=$(canvasId); const im=document.getElementById(imgId); if(cv && im && cv.toDataURL){ try{ im.src=cv.toDataURL('image/png'); }catch(e){} } }; setImg('r_img_pieCat','pieCat'); setImg('r_img_barMat','barMat'); setImg('r_img_pieED','pieED'); setImg('r_img_cfBar','cfBar'); }
+
+  function fillReport(){ const nm = state.name? state.name : 'Client'; document.getElementById('rptTitle').textContent = `RETIREMENT PLANNING REPORT FOR MR. ${nm.toUpperCase()}`; document.getElementById('rptSub').textContent = `Prepared on ${new Date().toLocaleDateString()} | Risk Profile: ${state.risk||'–'}`; document.getElementById('r_name').textContent = nm; document.getElementById('r_age').textContent = state.age||'–'; document.getElementById('r_dob').textContent = state.dob? new Date(state.dob).toLocaleDateString() : '–'; document.getElementById('r_corpus').textContent = `₹ ${fmt(state.corpus||0)}`; document.getElementById('r_ppct').textContent = state.pensionPct? (state.pensionPct*100).toFixed(2)+'%' : '–'; document.getElementById('r_pens').textContent = `₹ ${fmt(state.monthlyPension||0)}`; document.getElementById('r_vac').textContent = `₹ ${fmt(state.vacationSIP||0)}`; document.getElementById('r_risk').textContent = state.risk||'–'; document.getElementById('r_pensionAlloc').textContent = `₹ ${fmt(state.totalPension||0)}`; document.getElementById('r_caLeft').textContent = `₹ ${fmt(state.caLeft||0)}`; document.getElementById('r_caMat').textContent = `₹ ${fmt(state.caTotalMat||0)}`; document.getElementById('r_cagr').textContent = state.cagr || '–'; document.getElementById('r_liq').textContent = `₹ ${fmt(state.invLiquid||0)}`; document.getElementById('r_fd').textContent = `₹ ${fmt(state.invFD||0)}`; document.getElementById('r_maafP').textContent = `₹ ${fmt(state.invMAAF||0)}`; document.getElementById('r_maafPct').textContent = state.maafPct? Math.round(state.maafPct*100)+'%' : '–'; document.getElementById('r_hybPct').textContent = state.hybPct? Math.round(state.hybPct*100)+'%' : '–'; document.getElementById('r_maafAmt').textContent = `₹ ${fmt(state.maafAmt||0)}`; document.getElementById('r_hybAmt').textContent = `₹ ${fmt(state.hybAmt||0)}`; document.getElementById('r_maafMat').textContent = `₹ ${fmt(state.maafMat||0)}`; document.getElementById('r_hybMat').textContent = `₹ ${fmt(state.hybMat||0)}`; document.getElementById('r_rfLiquid').textContent = chipsToPlain(state.f_liq); document.getElementById('r_rfFD').textContent = chipsToPlain(state.f_fd); document.getElementById('r_rfMAAF').textContent = chipsToPlain(state.f_maaf); document.getElementById('r_rfHyb').textContent = chipsToPlain(state.f_hyb); }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    addFundRow('liquidList','e.g., ABC Liquid Fund'); addFundRow('fdList','e.g., XYZ Corporate Bond / 24M FD'); addFundRow('maafList','e.g., PQR Multi-Asset Allocation'); addFundRow('hybridList','e.g., LMN Hybrid Aggressive');
+
+    document.getElementById('addLiquid').addEventListener('click', ()=> addFundRow('liquidList','Add another'));
+    document.getElementById('addFD').addEventListener('click', ()=> addFundRow('fdList','Add another'));
+    document.getElementById('addMAAF').addEventListener('click', ()=> addFundRow('maafList','Add another'));
+    document.getElementById('addHybrid').addEventListener('click', ()=> addFundRow('hybridList','Add another'));
+
+    ['name','dob','corpus','pensionPct','rLiquid','rFD','rMAAF','rHybrid','risk'].forEach(id=> document.getElementById(id).addEventListener('input', recompute));
+
+    document.getElementById('resetBtn').addEventListener('click', ()=>{
+      document.getElementById('name').value=''; document.getElementById('dob').value=''; document.getElementById('corpus').value=5000000; document.getElementById('pensionPct').value=7; document.getElementById('rLiquid').value=6; document.getElementById('rFD').value=7; document.getElementById('rMAAF').value=9; document.getElementById('rHybrid').value=10; document.getElementById('risk').value='Conservative';
+      ['liquidList','fdList','maafList','hybridList'].forEach(id=> document.getElementById(id).innerHTML='');
+      addFundRow('liquidList','e.g., ABC Liquid Fund'); addFundRow('fdList','e.g., XYZ Corporate Bond / 24M FD'); addFundRow('maafList','e.g., PQR Multi-Asset Allocation'); addFundRow('hybridList','e.g., LMN Hybrid Aggressive');
+      recompute();
+    });
+
+    document.getElementById('themeBtn').addEventListener('click', ()=>{ const root=document.body; const next=root.getAttribute('data-theme')==='dark'?'light':'dark'; root.setAttribute('data-theme',next); });
+
+    // Direct print/PDF download removed by design — reports are only
+    // available from Nexus's Reports section after "Save to Nexus", so
+    // every copy stays traceable and watermarked.
+
+    // Repeated attempts to reactivate this tool's print styling via CSS
+    // (three different ways, across several rounds) never visibly took
+    // effect in the captured PDF — strong evidence something about how
+    // the capture library clones content prevents an injected stylesheet
+    // from working at all here. Inline styles can't have that failure
+    // mode: no stylesheet, no cascade, no cloning step to go wrong — we
+    // set the exact property directly on the exact element, and
+    // cloneNode() always carries inline styles over faithfully. This is
+    // the guaranteed-to-work approach, mirroring this tool's own print
+    // sizing values exactly (from its @media print block above).
+    function applyRetirementCompactInlineStyles(root){
+      const touched = [];
+      function remember(node){ touched.push({ node, prevCss: node.style.cssText }); }
+      function set(selector, styles){
+        root.querySelectorAll(selector).forEach(node => {
+          remember(node);
+          Object.assign(node.style, styles);
+        });
+      }
+      set('.r-header', { gap: '8mm', margin: '0 0 3mm 0' });
+      set('.r-advisor', { fontSize: '9.8px', lineHeight: '1.35' });
+      set('.r-logo', { height: '16mm', width: 'auto', objectFit: 'contain' });
+      // This tool's own built-in decorative watermark only gets its
+      // fixed/rotated/faint positioning from the print CSS we're no
+      // longer activating — outside of that it was rendering as a full-size,
+      // in-flow image, which is what was showing up as an extra oversized
+      // "second logo" stacked above the real one. Hiding it outright.
+      root.querySelectorAll('.r-watermark').forEach(node => { remember(node); node.style.display = 'none'; });
+      set('.r-card', { margin: '0 0 5mm 0' });
+      set('.r-h1', { fontSize: '17px', margin: '0 0 1mm 0' });
+      set('.r-sub', { fontSize: '9.8px', margin: '0 0 3.5mm 0' });
+      set('.r-sec h2', { fontSize: '12.6px', margin: '0 0 1mm 0', paddingBottom: '1mm' });
+      set('.r-sec table', { margin: '1mm 0 1.8mm 0' });
+      set('.r-sec th', { padding: '2.5px 3px', fontSize: '9.6px' });
+      set('.r-sec td', { padding: '2.5px 3px', fontSize: '9.6px' });
+      set('.r-small', { fontSize: '9.6px', lineHeight: '1.35' });
+      set('.r-img-row', { gap: '4.5mm' });
+      set('.r-img-row img', { height: '56mm' });
+      return function restoreRetirementStyles(){
+        touched.forEach(({ node, prevCss }) => { node.style.cssText = prevCss; });
+      };
+    }
+
+document.getElementById('nexusSaveBtn').addEventListener('click', async ()=>{
+      const btn = document.getElementById('nexusSaveBtn');
+      btn.disabled = true; const originalLabel = btn.textContent; btn.textContent = 'Saving…';
+      try{
+        fillReport(); snapshotChartsToReport();
+        const profile = await NexusBridge.currentProfile();
+        const refId = NexusBridge.newReportId();
+
+        // The .report element is CSS `display:none` outside of print mode,
+        // and html2canvas can't capture a hidden element. Temporarily show
+        // it exactly as print mode would, capture it, then restore.
+        const reportEl = document.querySelector('.report');
+        const appEl = document.querySelector('.app');
+        // .page-footer is meant for real browser pagination (position:fixed,
+        // repeats per physical printed page, shows a "Page X of Y" counter
+        // that's only meaningful during actual printing). Captured as a
+        // single flat image instead, it doesn't repeat correctly and was
+        // leaking a stray fragment onto its own near-blank trailing page —
+        // so it's hidden for this capture; our own accountability stamp
+        // already covers who generated the report and when.
+        const pageFooterEl = document.querySelector('.page-footer');
+        const prev = {
+          appDisplay: appEl.style.display,
+          reportDisplay: reportEl.style.display,
+          reportMaxWidth: reportEl.style.maxWidth,
+          reportWidth: reportEl.style.width,
+          reportMargin: reportEl.style.margin,
+          pageFooterDisplay: pageFooterEl ? pageFooterEl.style.display : null
+        };
+        appEl.style.display = 'none';
+        reportEl.style.display = 'block';
+        reportEl.style.maxWidth = 'none';
+        reportEl.style.width = '190mm'; // exactly matches this tool's own @page{margin:10mm} on A4
+        reportEl.style.margin = '0';
+        if (pageFooterEl) pageFooterEl.style.display = 'none';
+        const restoreCompactStyles = applyRetirementCompactInlineStyles(reportEl);
+
+        let blob;
+        try{
+          blob = await NexusBridge.captureElementAsPdf(reportEl, 'Retirement_Planning_Report.pdf', false,
+            { name: profile.full_name || profile.email, refId });
+        } finally {
+          restoreCompactStyles();
+          appEl.style.display = prev.appDisplay;
+          reportEl.style.display = prev.reportDisplay;
+          reportEl.style.maxWidth = prev.reportMaxWidth;
+          reportEl.style.width = prev.reportWidth;
+          reportEl.style.margin = prev.reportMargin;
+          if (pageFooterEl) pageFooterEl.style.display = prev.pageFooterDisplay;
+        }
+
+        await NexusBridge.saveReport({
+          id: refId,
+          toolKey: 'retirement_planner',
+          sectionKey: 'sales',
+          clientName: state.name || 'Client',
+          clientContact: state.mobile || null,
+          summary: `Corpus ₹${fmt(state.corpus||0)} · Monthly pension ₹${fmt(state.monthlyPension||0)} · Risk: ${state.risk||'–'}`,
+          data: NexusBridge.toSafeJSON(state),
+          pdfBlob: blob
+        });
+        nexusToast('Saved to Nexus. This report is now locked — only an admin can change it.', 'ok');
+        btn.textContent = 'Saved ✓';
+      }catch(err){
+        console.error(err);
+        nexusToast('Could not save to Nexus: ' + err.message, 'err');
+        btn.disabled = false; btn.textContent = originalLabel;
+      }
+    });
+
+    recompute();
+  });
+
+  window.addEventListener('beforeprint', ()=>{ fillReport(); snapshotChartsToReport(); });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-client.js?v=20260824h"></script>
+<script src="auth-guard.js?v=20260824h"></script>
+<script src="nexus-bridge.js?v=20260824h"></script>
+<script>(async()=>{const ctx=await nexusRequireAuth(); if(!ctx) return; const el=document.getElementById("nexusWho"); if(el) el.textContent = ctx.profile.full_name || ctx.profile.email;})();</script>
+</body>
+</html>

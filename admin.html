@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Admin — Nexus</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nexus.css?v=20260824h"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  .tab-panel{ display:none; margin-top:26px; }
+  .tab-panel.active{ display:block; }
+  .row-actions{ display:flex; gap:8px; }
+  .row-actions button{ padding:7px 12px; font-size:12.5px; }
+  .perm-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:24px; margin-top:18px; }
+  .perm-block h4{ margin:0 0 10px; font-size:14px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; }
+  .perm-item{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); }
+  .switch{ position:relative; display:inline-block; width:40px; height:22px; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .slider{ position:absolute; cursor:pointer; inset:0; background:#cfd6dc; border-radius:100px; transition:.15s; }
+  .slider::before{ content:""; position:absolute; height:16px; width:16px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.15s; }
+  input:checked + .slider{ background: var(--green); }
+  input:checked + .slider::before{ transform: translateX(18px); }
+  select.user-select{ max-width:340px; }
+  .admin-hero{
+    background: linear-gradient(120deg, var(--navy) 0%, #123a5e 100%);
+    color:#fff; border-radius: 18px; padding: 32px 32px; margin-top: 26px;
+    position:relative; overflow:hidden;
+  }
+  .admin-hero::after{
+    content:""; position:absolute; right:-60px; top:-60px; width:220px; height:220px;
+    background: radial-gradient(circle, rgba(212,175,55,.26), transparent 70%);
+  }
+  .admin-hero h1{ color:#fff; margin:0 0 6px; font-size:27px; }
+  .admin-hero p{ color:#cfd9e3; margin:0; font-size:14px; }
+  .pill-nav a{ background:#fff; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span class="dot"></span> Nexus <span style="color:#dfe7ee;font-weight:400;font-size:13px;">— Admin</span></div>
+  <div>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="profile.html">My Profile</a>
+    <a href="policies.html">Policies &amp; Help</a>
+    <a href="#" onclick="nexusSignOut()">Sign out</a>
+  </div>
+</div>
+
+<div class="container" style="padding-top:0;padding-bottom:70px;">
+  <div class="admin-hero">
+    <h1>Admin panel</h1>
+    <p>Manage who's in Nexus, what they can open, and every report ever saved.</p>
+  </div>
+
+  <div class="pill-nav" style="margin-top:26px;">
+    <a href="#" class="tab-btn active" data-tab="users" onclick="showTab(event,'users')">Users</a>
+    <a href="#" class="tab-btn" data-tab="permissions" onclick="showTab(event,'permissions')">Permissions</a>
+    <a href="#" class="tab-btn" data-tab="reports" onclick="showTab(event,'reports')">Reports</a>
+    <a href="#" class="tab-btn" data-tab="audit" onclick="showTab(event,'audit')">Audit Log</a>
+    <a href="#" class="tab-btn" data-tab="analysis" onclick="showTab(event,'analysis')">Analysis</a>
+  </div>
+
+  <!-- USERS -->
+  <div class="tab-panel active" id="tab-users">
+    <div class="card">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th></th></tr></thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PERMISSIONS -->
+  <div class="tab-panel" id="tab-permissions">
+    <div class="card">
+      <label>Choose a user</label>
+      <select id="permUserSelect" class="user-select" onchange="loadPermissionsFor(this.value)"></select>
+      <div class="perm-grid" id="permGrid" style="display:none;">
+        <div class="perm-block">
+          <h4>Sections</h4>
+          <div id="permSections"></div>
+        </div>
+        <div class="perm-block">
+          <h4>Individual tools</h4>
+          <div id="permTools"></div>
+        </div>
+      </div>
+      <p class="muted" id="permHint" style="font-size:13px;margin-top:16px;">Turning a section off hides every tool inside it for this user, regardless of individual tool switches.</p>
+    </div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="tab-panel" id="tab-reports">
+    <div class="card">
+      <table>
+        <thead><tr><th>Saved</th><th>Tool</th><th>Client</th><th>By</th><th></th></tr></thead>
+        <tbody id="reportsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- AUDIT LOG -->
+  <div class="tab-panel" id="tab-audit">
+    <div class="card">
+      <p class="muted" style="font-size:13px;margin-top:0;">A permanent record of every login, saved report, and permission change. Nothing here can ever be edited or removed — showing the most recent 200 events.</p>
+      <table>
+        <thead><tr><th>When</th><th>Who</th><th>Event</th><th>Details</th></tr></thead>
+        <tbody id="auditBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ANALYSIS -->
+  <div class="tab-panel" id="tab-analysis">
+    <div class="card">
+      <div class="pill-nav" id="durationPills">
+        <a href="#" class="dur-btn active" data-dur="week" onclick="setDuration(event,'week')">This week</a>
+        <a href="#" class="dur-btn" data-dur="month" onclick="setDuration(event,'month')">This month</a>
+        <a href="#" class="dur-btn" data-dur="quarter" onclick="setDuration(event,'quarter')">This quarter</a>
+        <a href="#" class="dur-btn" data-dur="year" onclick="setDuration(event,'year')">This year</a>
+        <a href="#" class="dur-btn" data-dur="custom" onclick="setDuration(event,'custom')">Custom</a>
+      </div>
+      <div id="customRangeRow" style="display:none;gap:12px;align-items:flex-end;margin-top:16px;">
+        <div><label>From</label><input type="date" id="customFrom"/></div>
+        <div><label>To</label><input type="date" id="customTo"/></div>
+        <button class="btn btn-primary" style="height:44px;" onclick="loadAnalysis()">Apply</button>
+      </div>
+      <p class="muted" id="rangeLabel" style="font-size:12.5px;margin-top:16px;"></p>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <h3 style="margin-top:0;">Proposals by user &amp; tool</h3>
+      <p class="muted" style="font-size:12.5px;">Number of reports saved in the selected period.</p>
+      <table>
+        <thead><tr id="matrixHead"></tr></thead>
+        <tbody id="matrixBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <h3 style="margin-top:0;">Client list — Retirement Planner &amp; CBA Tool</h3>
+      <p class="muted" style="font-size:12.5px;">Every client proposal generated in the selected period, with the advisor and contact number on file.</p>
+      <table>
+        <thead><tr><th>Date</th><th>Advisor</th><th>Tool</th><th>Client</th><th>Contact</th></tr></thead>
+        <tbody id="clientListBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="supabase-client.js?v=20260824h"></script>
+<script src="auth-guard.js?v=20260824h"></script>
+<script>
+let PROFILE, USERS = [], SECTIONS = [], TOOLS = [];
+let currentDuration = 'week';
+
+function showTab(e, tab){
+  e.preventDefault();
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active', p.id==='tab-'+tab));
+}
+
+(async () => {
+  const ctx = await nexusRequireAdmin();
+  if (!ctx) return;
+  await nexusEnsureDeclaration(ctx.profile);
+  PROFILE = ctx.profile;
+
+  const { data: sections } = await nexus.from('sections').select('*').order('sort_order');
+  const { data: tools } = await nexus.from('tools').select('*').order('sort_order');
+  SECTIONS = sections || []; TOOLS = tools || [];
+
+  await loadUsers();
+  await loadReports();
+  await loadAuditLog();
+  await loadAnalysis();
+})();
+
+/* ---------------- USERS ---------------- */
+async function loadUsers(){
+  const { data, error } = await nexus.from('profiles').select('*').order('created_at');
+  if (error) return nexusToast(error.message, 'err');
+  USERS = data || [];
+
+  const body = document.getElementById('usersBody');
+  body.innerHTML = '';
+  const sel = document.getElementById('permUserSelect');
+  sel.innerHTML = '';
+
+  USERS.forEach(u => {
+    const tr = document.createElement('tr');
+    const statusBadgeClass = u.status === 'pending' ? 'gold' : (u.status === 'blocked' ? 'locked' : '');
+    tr.innerHTML = `
+      <td>${u.full_name || '—'}</td>
+      <td>${u.email}</td>
+      <td><span class="badge ${u.role==='admin'?'gold':''}">${u.role}</span></td>
+      <td><span class="badge ${statusBadgeClass}">${u.status}</span></td>
+      <td class="muted">${new Date(u.created_at).toLocaleDateString()}</td>
+      <td class="row-actions">
+        <button class="btn-outline" onclick="toggleRole('${u.id}','${u.role}')">${u.role==='admin' ? 'Make user' : 'Make admin'}</button>
+        ${u.status === 'pending'
+          ? `<button class="btn-primary" onclick="approveUser('${u.id}')">Approve</button>`
+          : `<button class="${u.status==='blocked' ? 'btn-primary' : 'btn-danger'}" onclick="toggleBlock('${u.id}','${u.status}')">${u.status==='blocked' ? 'Unblock' : 'Block'}</button>`
+        }
+      </td>
+    `;
+    body.appendChild(tr);
+
+    const opt = document.createElement('option');
+    opt.value = u.id;
+    opt.textContent = `${u.full_name || u.email} (${u.email})`;
+    sel.appendChild(opt);
+  });
+
+  if (USERS.length) loadPermissionsFor(sel.value);
+}
+
+async function toggleRole(userId, currentRole){
+  if (userId === PROFILE.id) return nexusToast("You can't change your own role here.", 'err');
+  const newRole = currentRole === 'admin' ? 'user' : 'admin';
+  const { error } = await nexus.from('profiles').update({ role: newRole }).eq('id', userId);
+  if (error) return nexusToast(error.message, 'err');
+  nexusLogEvent(PROFILE, 'role_changed', { targetUserId: userId, newRole });
+  nexusToast('Role updated.', 'ok');
+  loadUsers();
+}
+
+async function toggleBlock(userId, currentStatus){
+  if (userId === PROFILE.id) return nexusToast("You can't block yourself.", 'err');
+  const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked';
+  const { error } = await nexus.from('profiles').update({ status: newStatus }).eq('id', userId);
+  if (error) return nexusToast(error.message, 'err');
+  nexusLogEvent(PROFILE, newStatus === 'blocked' ? 'user_blocked' : 'user_unblocked', { targetUserId: userId });
+  nexusToast(newStatus === 'blocked' ? 'User blocked.' : 'User unblocked.', 'ok');
+  loadUsers();
+}
+
+async function approveUser(userId){
+  const { error } = await nexus.from('profiles').update({ status: 'active' }).eq('id', userId);
+  if (error) return nexusToast(error.message, 'err');
+  nexusLogEvent(PROFILE, 'user_approved', { targetUserId: userId });
+  nexusToast('User approved — they can now sign in.', 'ok');
+  loadUsers();
+}
+
+/* ---------------- PERMISSIONS ---------------- */
+async function loadPermissionsFor(userId){
+  if (!userId) return;
+  document.getElementById('permGrid').style.display = 'grid';
+
+  const { data: secRows } = await nexus.from('user_section_access').select('*').eq('user_id', userId);
+  const { data: toolRows } = await nexus.from('user_tool_access').select('*').eq('user_id', userId);
+  const secMap = {}; (secRows||[]).forEach(r => secMap[r.section_id] = r.allowed);
+  const toolMap = {}; (toolRows||[]).forEach(r => toolMap[r.tool_id] = r.allowed);
+
+  const secWrap = document.getElementById('permSections');
+  secWrap.innerHTML = '';
+  SECTIONS.forEach(s => {
+    const checked = secMap[s.id] !== false;
+    secWrap.insertAdjacentHTML('beforeend', `
+      <div class="perm-item">
+        <span>${s.name}</span>
+        <label class="switch"><input type="checkbox" ${checked?'checked':''}
+          onchange="setSectionAccess('${userId}', ${s.id}, this.checked)"><span class="slider"></span></label>
+      </div>`);
+  });
+
+  const toolWrap = document.getElementById('permTools');
+  toolWrap.innerHTML = '';
+  TOOLS.forEach(t => {
+    const checked = toolMap[t.id] !== false;
+    toolWrap.insertAdjacentHTML('beforeend', `
+      <div class="perm-item">
+        <span>${t.name}</span>
+        <label class="switch"><input type="checkbox" ${checked?'checked':''}
+          onchange="setToolAccess('${userId}', ${t.id}, this.checked)"><span class="slider"></span></label>
+      </div>`);
+  });
+}
+
+async function setSectionAccess(userId, sectionId, allowed){
+  const { error } = await nexus.from('user_section_access')
+    .upsert({ user_id: userId, section_id: sectionId, allowed }, { onConflict: 'user_id,section_id' });
+  if (error) return nexusToast(error.message, 'err');
+  nexusLogEvent(PROFILE, 'section_access_changed', { targetUserId: userId, sectionId, allowed });
+  nexusToast('Saved.', 'ok');
+}
+async function setToolAccess(userId, toolId, allowed){
+  const { error } = await nexus.from('user_tool_access')
+    .upsert({ user_id: userId, tool_id: toolId, allowed }, { onConflict: 'user_id,tool_id' });
+  if (error) return nexusToast(error.message, 'err');
+  nexusLogEvent(PROFILE, 'tool_access_changed', { targetUserId: userId, toolId, allowed });
+  nexusToast('Saved.', 'ok');
+}
+
+/* ---------------- REPORTS ---------------- */
+async function loadReports(){
+  const { data, error } = await nexus.from('reports').select('*').order('created_at', { ascending:false });
+  if (error) return nexusToast(error.message, 'err');
+  const body = document.getElementById('reportsBody');
+  body.innerHTML = '';
+  (data||[]).forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="muted">${new Date(r.created_at).toLocaleString()}</td>
+      <td>${r.tool_key}</td>
+      <td>${r.client_name || '—'}</td>
+      <td>${r.created_by_name || '—'}</td>
+      <td class="row-actions">
+        ${r.pdf_path ? `<button class="btn-outline" onclick="viewPdf('${r.pdf_path}')">View PDF</button>` : ''}
+        <button class="btn-danger" onclick="deleteReport('${r.id}')">Delete</button>
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+  if (!data || !data.length) body.innerHTML = '<tr><td colspan="5" class="muted">No reports saved yet.</td></tr>';
+}
+
+async function viewPdf(path){
+  const { data, error } = await nexus.storage.from('reports').createSignedUrl(path, 120);
+  if (error) return nexusToast(error.message, 'err');
+  window.open(data.signedUrl, '_blank');
+}
+
+async function deleteReport(id){
+  if (!confirm('Delete this report permanently? This cannot be undone.')) return;
+  const { error } = await nexus.from('reports').delete().eq('id', id);
+  if (error) return nexusToast(error.message, 'err');
+  nexusLogEvent(PROFILE, 'report_deleted', { reportId: id });
+  nexusToast('Report deleted.', 'ok');
+  loadReports();
+}
+
+/* ---------------- AUDIT LOG ---------------- */
+const AUDIT_EVENT_LABELS = {
+  login: 'Signed in',
+  blocked_login_attempt: 'Blocked account tried to sign in',
+  report_saved: 'Saved a report',
+  report_deleted: 'Deleted a report',
+  role_changed: 'Changed a role',
+  user_blocked: 'Blocked a user',
+  user_approved: 'Approved a new user',
+  pending_login_attempt: 'Unapproved account tried to sign in',
+  user_unblocked: 'Unblocked a user',
+  section_access_changed: 'Changed section access',
+  tool_access_changed: 'Changed tool access',
+  declaration_accepted: 'Accepted the declaration',
+  print_shortcut_blocked: 'Tried to print directly (blocked)',
+  print_attempt_detected: 'Triggered a print action',
+  profile_updated: 'Updated their own profile',
+  password_changed: 'Changed their own password'
+};
+
+function summarizeAuditDetails(eventType, details){
+  if (!details) return '';
+  switch(eventType){
+    case 'report_saved': return `${details.toolKey || ''}${details.clientName ? ' — ' + details.clientName : ''}`;
+    case 'report_deleted': return details.reportId ? `Ref ${details.reportId}` : '';
+    case 'role_changed': return `New role: ${details.newRole || '—'}`;
+    case 'section_access_changed': return `Section #${details.sectionId} → ${details.allowed ? 'allowed' : 'restricted'}`;
+    case 'tool_access_changed': return `Tool #${details.toolId} → ${details.allowed ? 'allowed' : 'restricted'}`;
+    case 'declaration_accepted': return details.version ? `Version ${details.version}` : '';
+    default: return '';
+  }
+}
+
+async function loadAuditLog(){
+  const { data, error } = await nexus
+    .from('audit_log')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(200);
+  const body = document.getElementById('auditBody');
+  if (error){
+    body.innerHTML = `<tr><td colspan="4" class="muted">${error.message}</td></tr>`;
+    return;
+  }
+  if (!data || !data.length){
+    body.innerHTML = '<tr><td colspan="4" class="muted">No events logged yet.</td></tr>';
+    return;
+  }
+  body.innerHTML = '';
+  data.forEach(ev => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="muted">${new Date(ev.created_at).toLocaleString()}</td>
+      <td>${ev.user_name || '—'}</td>
+      <td>${AUDIT_EVENT_LABELS[ev.event_type] || ev.event_type}</td>
+      <td class="muted">${summarizeAuditDetails(ev.event_type, ev.details)}</td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+/* ---------------- ANALYSIS ---------------- */
+const TOOL_LABELS = {
+  retirement_planner: 'Retirement Planner',
+  cba_tool: 'CBA Tool',
+  table_performance_manager: 'Table Performance',
+  event_sop: 'Event SOP',
+  iap_proposal: 'IAP Proposal'
+};
+
+function setDuration(e, dur){
+  e.preventDefault();
+  currentDuration = dur;
+  document.querySelectorAll('.dur-btn').forEach(b => b.classList.toggle('active', b.dataset.dur === dur));
+  document.getElementById('customRangeRow').style.display = dur === 'custom' ? 'flex' : 'none';
+  if (dur !== 'custom') loadAnalysis();
+}
+
+// Returns [startDate, endDate] (Date objects) for the selected preset,
+// or from the custom date inputs.
+function getDurationRange(){
+  const now = new Date();
+  let start, end;
+  if (currentDuration === 'week'){
+    const day = now.getDay(); // 0 = Sunday
+    start = new Date(now); start.setDate(now.getDate() - day); start.setHours(0,0,0,0);
+    end = new Date(); 
+  } else if (currentDuration === 'month'){
+    start = new Date(now.getFullYear(), now.getMonth(), 1);
+    end = new Date();
+  } else if (currentDuration === 'quarter'){
+    const q = Math.floor(now.getMonth() / 3);
+    start = new Date(now.getFullYear(), q * 3, 1);
+    end = new Date();
+  } else if (currentDuration === 'year'){
+    start = new Date(now.getFullYear(), 0, 1);
+    end = new Date();
+  } else { // custom
+    const fromVal = document.getElementById('customFrom').value;
+    const toVal = document.getElementById('customTo').value;
+    start = fromVal ? new Date(fromVal + 'T00:00:00') : new Date(0);
+    end = toVal ? new Date(toVal + 'T23:59:59') : new Date();
+  }
+  return [start, end];
+}
+
+async function loadAnalysis(){
+  const [start, end] = getDurationRange();
+  document.getElementById('rangeLabel').textContent =
+    `Showing: ${start.toLocaleDateString()} – ${end.toLocaleDateString()}`;
+
+  const { data, error } = await nexus
+    .from('reports')
+    .select('tool_key, client_name, client_contact, created_by_name, created_at')
+    .gte('created_at', start.toISOString())
+    .lte('created_at', end.toISOString())
+    .order('created_at', { ascending: false });
+
+  if (error){
+    document.getElementById('matrixBody').innerHTML = `<tr><td class="muted">${error.message}</td></tr>`;
+    return;
+  }
+
+  const rows = data || [];
+  const toolKeys = Object.keys(TOOL_LABELS);
+
+  // ---- matrix: user x tool ----
+  const byUser = {};
+  rows.forEach(r => {
+    const u = r.created_by_name || 'Unknown';
+    byUser[u] = byUser[u] || {};
+    byUser[u][r.tool_key] = (byUser[u][r.tool_key] || 0) + 1;
+  });
+
+  const head = document.getElementById('matrixHead');
+  head.innerHTML = '<th>User</th>' + toolKeys.map(k => `<th>${TOOL_LABELS[k]}</th>`).join('') + '<th>Total</th>';
+
+  const body = document.getElementById('matrixBody');
+  const users = Object.keys(byUser).sort();
+  if (!users.length){
+    body.innerHTML = `<tr><td colspan="${toolKeys.length + 2}" class="muted">No reports saved in this period.</td></tr>`;
+  } else {
+    body.innerHTML = '';
+    users.forEach(u => {
+      const counts = byUser[u];
+      const total = toolKeys.reduce((sum, k) => sum + (counts[k] || 0), 0);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${u}</td>` +
+        toolKeys.map(k => `<td>${counts[k] || 0}</td>`).join('') +
+        `<td><b>${total}</b></td>`;
+      body.appendChild(tr);
+    });
+    // grand total row
+    const grand = toolKeys.map(k => users.reduce((s,u) => s + (byUser[u][k]||0), 0));
+    const grandTotal = grand.reduce((a,b)=>a+b,0);
+    const trTotal = document.createElement('tr');
+    trTotal.style.fontWeight = '700';
+    trTotal.innerHTML = `<td>All users</td>` + grand.map(c=>`<td>${c}</td>`).join('') + `<td>${grandTotal}</td>`;
+    body.appendChild(trTotal);
+  }
+
+  // ---- client list: retirement_planner + cba_tool only ----
+  const clientRows = rows.filter(r => r.tool_key === 'retirement_planner' || r.tool_key === 'cba_tool');
+  const clBody = document.getElementById('clientListBody');
+  if (!clientRows.length){
+    clBody.innerHTML = '<tr><td colspan="5" class="muted">No client proposals in this period.</td></tr>';
+  } else {
+    clBody.innerHTML = '';
+    clientRows.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="muted">${new Date(r.created_at).toLocaleDateString()}</td>
+        <td>${r.created_by_name || '—'}</td>
+        <td>${TOOL_LABELS[r.tool_key] || r.tool_key}</td>
+        <td>${r.client_name || '—'}</td>
+        <td>${r.client_contact || '—'}</td>
+      `;
+      clBody.appendChild(tr);
+    });
+  }
+}
+</script>
+</body>
+</html>

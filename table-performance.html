@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Omega Financial | Table Performance Manager</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', function(){
+    if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  });
+</script>
+<style>
+:root{
+  --navy:#0b1a2e; --navy2:#0f2540; --panel:#122c4a; --panel2:#0d2038;
+  --gold:#d4af37; --gold-soft:#f0d98c; --green:#3ea373; --red:#e0605a; --amber:#e0a75a;
+  --ink:#eaf1f8; --ink-dim:#a9bdd4; --line:#1e3a5c;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:linear-gradient(180deg,var(--navy) 0%, #081422 100%);color:var(--ink);
+  font-family:"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh;}
+header{padding:22px 28px 16px;border-bottom:1px solid var(--line);
+  background:linear-gradient(90deg,#081422,#0d2038 60%,#081422);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+header .brand{display:flex;flex-direction:column;}
+header .brand .k{font-size:11px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;}
+header .brand h1{margin:2px 0 0;font-size:22px;font-weight:700;color:var(--ink);}
+header .brand small{color:var(--ink-dim);}
+.today{font-size:13px;color:var(--ink-dim);text-align:right;}
+nav.tabs{display:flex;gap:6px;padding:14px 28px 0;flex-wrap:wrap;border-bottom:1px solid var(--line);
+  background:#081422;}
+nav.tabs button{background:transparent;border:none;color:var(--ink-dim);padding:10px 14px;
+  font-size:13px;font-weight:600;letter-spacing:.3px;cursor:pointer;border-bottom:3px solid transparent;
+  border-radius:6px 6px 0 0;}
+nav.tabs button:hover{color:var(--ink);background:#0f2540;}
+nav.tabs button.active{color:var(--gold-soft);border-bottom:3px solid var(--gold);background:#0f2540;}
+main{padding:22px 28px 60px;max-width:1280px;margin:0 auto;}
+.panel{display:none;}
+.panel.active{display:block;animation:fade .25s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;}
+.card h2{margin:0 0 4px;font-size:16px;color:var(--gold-soft);}
+.card h3.sec{margin:18px 0 4px;font-size:13.5px;color:var(--gold-soft);}
+.card p.sub{margin:0 0 14px;color:var(--ink-dim);font-size:12.5px;}
+.grid{display:grid;gap:14px;}
+.grid.cols-4{grid-template-columns:repeat(4,1fr);}
+.grid.cols-3{grid-template-columns:repeat(3,1fr);}
+.grid.cols-2{grid-template-columns:repeat(2,1fr);}
+@media(max-width:900px){.grid.cols-4,.grid.cols-3,.grid.cols-2{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){.grid.cols-4,.grid.cols-3,.grid.cols-2{grid-template-columns:1fr;}}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+.stat .k{font-size:10.5px;letter-spacing:1.5px;color:var(--ink-dim);text-transform:uppercase;}
+.stat .v{font-size:20px;font-weight:700;margin-top:4px;}
+.stat .v.green{color:var(--green);} .stat .v.red{color:var(--red);} .stat .v.gold{color:var(--gold-soft);}
+label{display:block;font-size:12px;color:var(--ink-dim);margin:0 0 5px;font-weight:600;}
+input,select,textarea{width:100%;background:#0a1a2c;border:1px solid var(--line);color:var(--ink);
+  border-radius:7px;padding:9px 10px;font-size:13.5px;font-family:inherit;}
+textarea{resize:vertical;min-height:80px;line-height:1.5;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end;}
+.field{flex:1;min-width:150px;}
+button.btn{background:var(--gold);color:#1a1200;border:none;border-radius:7px;padding:10px 18px;
+  font-weight:700;font-size:13px;cursor:pointer;letter-spacing:.2px;}
+button.btn:hover{background:var(--gold-soft);}
+button.btn.secondary{background:transparent;border:1px solid var(--gold);color:var(--gold-soft);}
+button.btn.secondary:hover{background:#15304f;}
+button.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink-dim);}
+button.btn.danger{background:transparent;border:1px solid var(--red);color:var(--red);}
+button.btn.small{padding:6px 11px;font-size:12px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);}
+th{color:var(--gold-soft);font-size:11px;text-transform:uppercase;letter-spacing:.5px;background:#0d2038;}
+tr:hover td{background:#0f2540;}
+.tag{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.tag.ok{background:#1c3a2c;color:var(--green);} .tag.no{background:#3a1c1c;color:var(--red);}
+.tag.wait{background:#3a301c;color:var(--amber);}
+.badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700;background:#0d2038;border:1px solid var(--line);}
+.weekgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+.weekcard{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:14px;}
+.weekcard h3{margin:0 0 6px;font-size:14px;color:var(--gold-soft);}
+.weekcard .dates{font-size:11.5px;color:var(--ink-dim);margin-bottom:10px;}
+.lottery-wheel{font-size:22px;font-weight:800;text-align:center;padding:16px;background:#081422;
+  border-radius:8px;border:1px dashed var(--gold);margin:10px 0;color:var(--gold-soft);min-height:30px;}
+.winner-card{border:1px solid var(--gold);background:linear-gradient(135deg,#122c4a,#0d2038);border-radius:10px;
+  padding:18px;text-align:center;}
+.winner-card.unqualified{border-color:var(--line);opacity:.75;}
+.winner-card .crown{font-size:26px;}
+.winner-card .name{font-size:20px;font-weight:800;color:var(--gold-soft);margin:6px 0 2px;}
+.winner-card .role{color:var(--ink-dim);font-size:12px;}
+.winner-card .score{margin-top:10px;font-size:26px;font-weight:800;}
+.winner-card .qualnote{margin-top:8px;font-size:11px;color:var(--amber);}
+.note{font-size:12px;color:var(--ink-dim);background:#0d2038;border-left:3px solid var(--gold);padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0;}
+.pill-toggle{display:flex;gap:6px;flex-wrap:wrap;}
+.pill{padding:6px 12px;border-radius:20px;border:1px solid var(--line);cursor:pointer;font-size:12px;color:var(--ink-dim);}
+.pill.on{background:var(--gold);color:#1a1200;border-color:var(--gold);font-weight:700;}
+.icon-btn{background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;}
+hr.div{border:none;border-top:1px solid var(--line);margin:16px 0;}
+.flexbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;}
+#toast{position:fixed;bottom:20px;right:20px;background:var(--gold);color:#1a1200;padding:12px 18px;
+  border-radius:8px;font-weight:700;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.4);display:none;z-index:999;}
+.small-note{font-size:11.5px;color:var(--ink-dim);margin-top:6px;}
+.policy-section{margin-bottom:18px;}
+.policy-section h3{color:var(--gold-soft);font-size:14px;margin-bottom:6px;}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:900px){.split{grid-template-columns:1fr;}}
+.subcard{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:14px;}
+.subcard h4{margin:0 0 8px;color:var(--gold-soft);font-size:13px;}
+.refbox{background:#081422;border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--ink-dim);margin-bottom:8px;}
+.histcard{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:12px 14px;margin-bottom:10px;}
+.histcard h4{margin:0 0 6px;color:var(--gold-soft);font-size:13.5px;}
+</style>
+</head>
+<body>
+<div style="background:#0E2A47;color:#fff;padding:10px 20px;font-family:Inter,Arial,sans-serif;font-size:13px;display:flex;justify-content:space-between;align-items:center;"><span><a href="dashboard.html" style="color:#dfe7ee;text-decoration:none;">&larr; Nexus dashboard</a></span><span id="nexusWho" style="color:#dfe7ee;"></span></div>
+
+<header>
+  <div class="brand">
+    <span class="k">Omega Financial · Probus Finserve</span>
+    <h1>Table Performance Manager</h1>
+    <small>Weekly rotational leadership · Mentor governance · Monthly recognitions</small>
+  </div>
+  <div class="today">
+    <div id="clock"></div>
+    <div style="color:var(--gold-soft);font-weight:700;" id="activeWeekChip">Loading…</div>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="dashboard" class="active">Dashboard</button>
+  <button data-tab="setup">Setup &amp; Roster</button>
+  <button data-tab="lottery">Weekly Lottery</button>
+  <button data-tab="daily">Daily Report</button>
+  <button data-tab="winners">Monthly Winners</button>
+  <button data-tab="history">History &amp; Backup</button>
+  <button data-tab="policy">Policies &amp; Norms</button>
+</nav>
+
+<main>
+
+<!-- ================= DASHBOARD ================= -->
+<section class="panel active" id="panel-dashboard">
+  <div class="card">
+    <h2>This Month at a Glance</h2>
+    <p class="sub">Snapshot of the active Table cycle. Set the working month in <b>Setup &amp; Roster</b>.</p>
+    <div class="grid cols-4" id="dashStats"></div>
+  </div>
+  <div class="card">
+    <h2>Week-by-Week Status</h2>
+    <p class="sub">Every month always has exactly 4 weeks — lengths are auto-split (some 7 days, some 8) to cover the full month.</p>
+    <div class="weekgrid" id="dashWeeks"></div>
+  </div>
+  <div class="card">
+    <h2>Roster Eligibility Snapshot</h2>
+    <div id="dashRoster"></div>
+  </div>
+</section>
+
+<!-- ================= SETUP & ROSTER ================= -->
+<section class="panel" id="panel-setup">
+  <div class="card">
+    <h2>1 · Select the Working Month</h2>
+    <p class="sub">All weekly lotteries, daily reports and monthly winners are scoped to this month.</p>
+    <div class="row">
+      <div class="field" style="max-width:220px;">
+        <label>Month</label>
+        <input type="month" id="monthPicker">
+      </div>
+      <button class="btn secondary" id="btnLoadMonth">Load / Create Month</button>
+    </div>
+    <div class="small-note">4 weeks are generated automatically the first time a month is loaded — lengths are randomised (7 or 8 days) but always add up to the full month, and stay fixed once created.</div>
+  </div>
+
+  <div class="card">
+    <h2>2 · Add / Update This Month's Roster — Name, Designation, Business Points</h2>
+    <p class="sub">This is the reliable way to bring in the CRM report every month. Business Points is the evaluation criterion for Mentor suggestions and the Sales Champion award. One member per line: <b>Name, Designation, Business Points</b> (comma or tab separated — pasting from Excel works too). Loading this while a month is active also saves a snapshot for that month, so history and month-on-month comparisons stay accurate even as the roster changes later.</p>
+    <textarea id="quickRoster" placeholder="e.g.
+Rashmita Das, BDE, 744.58
+Deepak Kumar Singh, RM, 109
+Udit Sahu, BDE, -159.38" style="min-height:160px;"></textarea>
+    <div class="row" style="margin-top:10px;">
+      <button class="btn" id="btnQuickLoad">Load / Update Roster</button>
+    </div>
+    <div class="small-note" id="quickStatus"></div>
+  </div>
+
+  <div class="card">
+    <h2>2b · Optional — Try Uploading the CRM PDF Directly</h2>
+    <p class="sub">Best-effort only. Many CRM exports are saved as flattened <b>images</b> with no real text inside the PDF — in that case no tool can extract text from it, because there is nothing to extract. If you see "no rows matched" or "no selectable text," use the Quick Add box above instead.</p>
+    <div class="row">
+      <div class="field"><label>Upload PDF</label><input type="file" id="pdfInput" accept="application/pdf"></div>
+      <button class="btn secondary" id="btnParsePdf">Try Parse PDF</button>
+    </div>
+    <div class="small-note" id="parseStatus"></div>
+    <hr class="div">
+    <label>Or paste report text here (only works if the source PDF has real, selectable text)</label>
+    <textarea id="pasteText" placeholder="Paste report text here — only useful if you can actually select/copy text from the PDF…"></textarea>
+    <div class="row" style="margin-top:10px;"><button class="btn secondary" id="btnParsePaste">Parse Pasted Text</button></div>
+  </div>
+
+  <div class="card">
+    <h2>3 · Team Roster (editable)</h2>
+    <p class="sub">Every non-lottery-eligible member becomes an automatic <b>Table Participant</b> for the week. Toggle eligibility per the New-Member Criteria (see Policies tab).</p>
+    <div class="row" style="margin-bottom:10px;">
+      <div class="field"><label>Add member — Name</label><input id="newName" placeholder="Full name"></div>
+      <div class="field" style="max-width:160px;"><label>Profile</label>
+        <select id="newProfile"><option>BDE</option><option>BDM</option><option>RM</option><option>SRM</option><option>Ops</option><option>Other</option></select>
+      </div>
+      <div class="field" style="max-width:150px;"><label>Business Points</label><input type="number" id="newBp" step="0.01"></div>
+      <div class="field" style="max-width:170px;"><label>Joining date</label><input type="date" id="newJoin"></div>
+      <button class="btn small" id="btnAddMember">+ Add Member</button>
+    </div>
+    <div style="overflow-x:auto;">
+    <table id="rosterTable"><thead><tr>
+      <th>Member</th><th>Profile</th><th>Joined</th><th>Business Points</th><th>Eligible for Lottery</th><th>Note</th><th></th>
+    </tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WEEKLY LOTTERY ================= -->
+<section class="panel" id="panel-lottery">
+  <div class="card">
+    <h2>Weeks in Selected Month</h2>
+    <p class="sub">Exactly 4 weeks, auto-split from the month's total days (some 7-day, some 8-day). Pick a week to run its lottery, set its target, and assign the month's Mentor.</p>
+    <div class="weekgrid" id="weekSelector"></div>
+  </div>
+
+  <div class="card" id="lotteryCard" style="display:none;">
+    <div class="flexbar">
+      <h2 style="margin:0;" id="lotteryTitle">Week</h2>
+      <span class="badge" id="lotteryDates"></span>
+    </div>
+
+    <div class="grid cols-2">
+      <div>
+        <h3 style="color:var(--gold-soft);font-size:13px;">Table Leader — Random Lottery</h3>
+        <p class="small-note" id="eligibleCount"></p>
+        <div class="lottery-wheel" id="wheel">Ready to draw</div>
+        <div class="row">
+          <button class="btn" id="btnDraw">🎲 Draw Table Leader</button>
+          <button class="btn ghost" id="btnClearLeader">Clear</button>
+        </div>
+      </div>
+      <div>
+        <h3 style="color:var(--gold-soft);font-size:13px;">Table Mentor — Qualification-Based Suggestion</h3>
+        <p class="small-note">One Mentor supports all weeks of the month. Ranked by Business Points, tenure and rotation fairness.</p>
+        <select id="mentorSelect"></select>
+        <div class="row" style="margin-top:8px;">
+          <button class="btn secondary small" id="btnSuggestMentor">Suggest Top Candidates</button>
+          <button class="btn small" id="btnSetMentor">Confirm Mentor for Month</button>
+        </div>
+        <div id="mentorSuggestions" class="small-note"></div>
+      </div>
+    </div>
+
+    <hr class="div">
+    <h3 style="color:var(--gold-soft);font-size:13px;">Weekly Table Target</h3>
+    <div class="grid cols-4">
+      <div class="field"><label>AUM Target (₹)</label><input type="number" id="tAum"></div>
+      <div class="field"><label>SIP Target (₹)</label><input type="number" id="tSip"></div>
+      <div class="field"><label>Business Points Target</label><input type="number" id="tBp"></div>
+      <div class="field"><label>Meetings Target</label><input type="number" id="tMeet"></div>
+      <div class="field"><label>New Clients Target</label><input type="number" id="tClients"></div>
+    </div>
+    <div class="row" style="margin-top:10px;"><button class="btn" id="btnSaveTarget">Save Week Target</button></div>
+  </div>
+</section>
+
+<!-- ================= DAILY REPORT ================= -->
+<section class="panel" id="panel-daily">
+  <div class="card">
+    <h2>Today's Table Activity</h2>
+    <p class="sub">Logged under the active week's Table Leader. Date below = today's huddle date.</p>
+    <div class="row">
+      <div class="field" style="max-width:190px;"><label>Date (Today)</label><input type="date" id="dailyDate"></div>
+      <div class="field"><label>Week / Leader</label><input id="dailyWeekLabel" disabled></div>
+    </div>
+  </div>
+
+  <div class="split">
+    <div class="card">
+      <h2>① Sales Proposed for Today — Morning Huddle</h2>
+      <p class="sub">What the team commits to achieving today. Recorded at the start of the day.</p>
+      <div class="grid cols-2">
+        <div class="field"><label>Meetings Planned</label><input type="number" id="pMeet"></div>
+        <div class="field"><label>New Clients Targeted</label><input type="number" id="pClients"></div>
+        <div class="field"><label>AUM Proposed (₹)</label><input type="number" id="pAum"></div>
+        <div class="field"><label>SIP Proposed (₹)</label><input type="number" id="pSip"></div>
+        <div class="field"><label>Business Points Proposed</label><input type="number" id="pBp"></div>
+      </div>
+      <div class="row" style="margin-top:10px;"><button class="btn small" id="btnSaveProposed">Save Today's Proposed Sales</button></div>
+    </div>
+
+    <div class="card">
+      <h2>② Sales Done Yesterday — Morning Report</h2>
+      <p class="sub" id="yestLabel">What was actually achieved out of yesterday's proposed sales.</p>
+      <div class="refbox" id="yestProposedRef">Yesterday's proposed figures will appear here once a date is picked.</div>
+      <div class="grid cols-2">
+        <div class="field"><label>Meetings Actually Held</label><input type="number" id="aMeet"></div>
+        <div class="field"><label>New Clients Actually Added</label><input type="number" id="aClients"></div>
+        <div class="field"><label>AUM Actually Mobilised (₹)</label><input type="number" id="aAum"></div>
+        <div class="field"><label>SIP Actually Mobilised (₹)</label><input type="number" id="aSip"></div>
+        <div class="field"><label>Business Points Actually Earned</label><input type="number" id="aBp"></div>
+      </div>
+      <div class="row" style="margin-top:10px;"><button class="btn small" id="btnSaveAchieved">Save Yesterday's Completion</button></div>
+      <div class="small-note" id="completionSummary"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="sec">Team Attendance &amp; Notes (today)</h3>
+    <div class="grid cols-3">
+      <div class="field"><label>Team Attendance Today</label><input type="number" id="dAtt"></div>
+      <div class="field"><label>Table Leader's Notes / Action Points</label><textarea id="dLeaderNote"></textarea></div>
+      <div class="field"><label>Mentor's Remark</label><textarea id="dMentorNote"></textarea></div>
+    </div>
+    <div class="row" style="margin-top:12px;">
+      <button class="btn small" id="btnSaveMeta">Save Attendance &amp; Notes</button>
+      <button class="btn" id="btnSaveDailyNexus" style="background:#d4af37;color:#0b1a2e;">Save to Nexus</button>
+      <span class="muted" style="font-size:12.5px;align-self:center;">PDF downloads are only available from Nexus's Reports section after saving.</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Week-to-Date Log</h2>
+    <table id="dailyLogTable"><thead><tr>
+      <th>Date</th><th>Proposed BP</th><th>Achieved BP</th><th>Meetings (P/A)</th><th>New Clients (P/A)</th><th>Attend.</th><th></th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+</section>
+
+<!-- ================= MONTHLY WINNERS ================= -->
+<section class="panel" id="panel-winners">
+  <div class="card">
+    <h2>Monthly Recognitions — Threshold-Qualified</h2>
+    <p class="sub">Each award requires crossing its qualifying threshold (edit thresholds in Policies &amp; Norms) — the top performer is only recognised if they actually clear the bar, otherwise the award shows "No qualifier this month."</p>
+    <button class="btn secondary" id="btnCompute">↻ Compute Winners</button>
+  </div>
+  <div class="grid cols-3" id="winnerCards"></div>
+
+  <div class="card">
+    <h2>Table Leader Achievement — Week by Week</h2>
+    <table id="leaderScoreTable"><thead><tr>
+      <th>Week</th><th>Leader</th><th>AUM %</th><th>SIP %</th><th>BP %</th><th>Meetings %</th><th>New Clients %</th><th>Overall %</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="card">
+    <h2>Sales Champion — Full Ranking (Business Points)</h2>
+    <p class="sub" id="thresholdRecap"></p>
+    <table id="championTable"><thead><tr>
+      <th>Rank</th><th>Member</th><th>Profile</th><th>Business Points</th><th>Threshold</th><th>Qualified?</th><th>New Clients</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+</section>
+
+<!-- ================= HISTORY & BACKUP ================= -->
+<section class="panel" id="panel-history">
+  <div class="card">
+    <h2>Continuity — Export &amp; Import Full Backup</h2>
+    <p class="sub">This tool stores everything in this browser only. If you open a freshly re-downloaded copy of the file, or switch devices/browsers, the data will look empty even though nothing is "wrong" — it simply hasn't been restored yet. Export a backup whenever you finish working, and import it the next time you open the tool (even a new copy of the file) to continue exactly where you left off, with full month-on-month history intact.</p>
+    <div class="row">
+      <button class="btn" id="btnExportBackup">⬇ Export Full Backup (.json)</button>
+      <div class="field"><label>Import Backup</label><input type="file" id="importBackupInput" accept="application/json"></div>
+      <button class="btn secondary" id="btnImportBackup">Import &amp; Restore</button>
+    </div>
+    <div class="small-note" id="backupStatus"></div>
+  </div>
+
+  <div class="card">
+    <h2>Month-on-Month Continuity</h2>
+    <p class="sub">When you load a previous month's roster via Quick Add (Setup tab, after switching the Month picker to that month), this tool automatically snapshots it. The Mentor-of-the-Month score for any month then automatically pulls the immediately preceding month's average Business Points for its month-on-month component — no manual re-entry needed.</p>
+  </div>
+
+  <div class="card">
+    <h2>All Saved Months</h2>
+    <div id="historyList"></div>
+  </div>
+</section>
+
+<!-- ================= POLICIES ================= -->
+<section class="panel" id="panel-policy">
+  <div class="card">
+    <div class="flexbar"><h2 style="margin:0;">Recognition Thresholds</h2>
+      <button class="btn secondary small" id="btnSaveThresholds">Save Thresholds</button></div>
+    <p class="sub">A member only wins a monthly recognition if they cross their threshold. Edit freely — changes apply the next time winners are computed.</p>
+    <div class="grid cols-3">
+      <div class="field"><label>Table Leader of the Month — min. Overall Achievement %</label><input type="number" id="thLeader"></div>
+      <div class="field"><label>Table Mentor of the Month — min. Composite Score %</label><input type="number" id="thMentor"></div>
+      <div class="field"><label>Sales Champion — BDE min. Business Points</label><input type="number" id="thBDE"></div>
+      <div class="field"><label>Sales Champion — RM min. Business Points</label><input type="number" id="thRM"></div>
+      <div class="field"><label>Sales Champion — SRM min. Business Points</label><input type="number" id="thSRM"></div>
+      <div class="field"><label>Sales Champion — Other profiles min. Business Points</label><input type="number" id="thDefault"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="flexbar"><h2 style="margin:0;">Table Performance — Policies, Rules &amp; Qualification Norms</h2>
+      <button class="btn secondary small" id="btnSavePolicy">Save Edits</button></div>
+    <p class="sub">Editable reference copy. Saved locally on this device (use History &amp; Backup to keep it permanently). Print this tab for circulation.</p>
+    <div id="policyBody"></div>
+  </div>
+</section>
+
+</main>
+<div id="toast"></div>
+
+<script>
+/* ============================= POLICY TEXT ============================= */
+const DEFAULT_POLICY = {
+  eligibility: `ELIGIBILITY OF NEW MEMBERS FOR THE TABLE LOTTERY
+1. A new joiner enters an "Observation Month": eligible to participate at a Table from day one, but not eligible to be drawn as Table Leader or Mentor until one full calendar month of service is completed AND the member has attended at least one Table cycle as a participant.
+2. Induction gate: the member must have completed Omega/Probus onboarding and basic AMFI/IRDAI compliance induction, signed off by L&D, before entering the lottery pool.
+3. Conduct gate: no member under an active disciplinary action, PIP, or compliance flag is eligible, irrespective of tenure.
+4. Rank-blind pool: once the above gates are cleared, the member enters the SAME lottery pool as every other eligible member — BDE, BDM, RM and SRM stand on equal footing for the draw. Designation/rank plays no role in eligibility to lead.
+5. Eligibility, once granted, is standing (does not need to be re-earned monthly) unless suspended for cause by the Head of Sales.
+6. The Head of Sales may grant an exception (early eligibility) in writing for a specific member; this must be recorded as a note against that member in the roster.`,
+
+  tableRules: `TABLE — GENERAL RULES &amp; REGULATIONS
+1. Definition: the "Table" is the full sales team under the Head of Sales, run as a monthly cycle sub-divided into exactly 4 weeks.
+2. Week structure: each month is split into 4 weeks whose lengths are auto-computed from the total days in the month (a mix of 7-day and 8-day weeks so the full month is always covered exactly) — this replaces a strict Monday-Saturday calendar-week structure.
+3. One leadership per member per month: a member who has already served as Table Leader in the current calendar month is automatically excluded from the lottery pool for the remaining weeks of that month.
+4. Transparent draw: the weekly lottery is run in front of the team (or its result announced immediately) using the randomiser in this tool.
+5. Weekly Table Target: set by the Head of Sales in consultation with the Mentor, ordinarily the monthly KRA/Business Point target apportioned across the 4 weeks.
+6. Daily morning huddle is mandatory, chaired by that week's Table Leader. Two things are logged every day: (a) sales proposed for today, at the start of the huddle, and (b) sales actually completed yesterday, measured against what was proposed the day before.
+7. Every member other than the sitting Table Leader is, by default, a Table Participant for that week.
+8. Escalation path: Participant → Table Leader → Table Mentor → Head of Sales.`,
+
+  leaderRules: `TABLE LEADER — ROLE, RESPONSIBILITIES &amp; RULES
+Role: acts as senior supervisor of the Table for the week — an additional weekly responsibility layered on the member's regular sales role, not a designation change.
+Responsibilities:
+1. Convene and chair the daily morning huddle; capture today's proposed sales and yesterday's actual completion.
+2. Consolidate the Daily Report before end of day.
+3. Flag at-risk members (e.g. proposed-vs-achieved conversion gaps) to the Mentor promptly.
+4. Own the week's collective target while continuing to deliver personal sales numbers.
+5. Cannot alter who participates, and cannot re-enter the lottery for the remainder of the same calendar month once drawn.
+Conduct:
+6. No favouritism in meeting facilitation or credit allocation; disputes go to the Mentor / Head of Sales.`,
+
+  mentorRules: `TABLE MENTOR — ROLE, RESPONSIBILITIES &amp; PERFORMANCE ASSESSMENT
+Role: one Mentor is appointed by the Head of Sales for the full calendar month and supports all Table Leaders across that month's 4 weeks.
+Responsibilities:
+1. Observe / join daily morning huddles periodically and coach the sitting Leader.
+2. Review the Daily Report — proposed vs achieved — and flag conversion gaps or shortfalls.
+3. Hold a weekly check-in with the Head of Sales on Table progress against target.
+4. Document coaching notes in the tool for every week mentored.
+Performance Assessment of the Mentor (composite score, weights configurable via the thresholds panel):
+  • 50% — Average of the weekly Table achievement % across all weeks mentored that month.
+  • 30% — Month-on-month improvement in the Table's average Business Points versus the previous month (computed automatically from the saved roster snapshot of the prior month, where available).
+  • 20% — Coaching engagement: coaching notes actually logged versus weeks mentored.
+A Mentor with unresolved escalations left unaddressed at month-end is capped at a maximum composite score of 60%.
+A Mentor is only recognised as "Mentor of the Month" if the composite score clears the qualifying threshold set on the Policies tab (default 75%).`,
+
+  mentorQualification: `TABLE MENTOR — QUALIFICATION NORMS FOR THE NEXT MONTH
+1. Minimum 6 months' tenure at Omega Financial / Probus Finserve.
+2. Strong Business Points performance in the immediately preceding month, or top-3 Business Points performer that month as a fallback if no one clears the norm.
+3. No active disciplinary, compliance or conduct flag.
+4. Is NOT also serving as a Table Leader for any week of the month being mentored.
+5. Has NOT mentored in either of the two immediately preceding months, unless no other qualified candidate is available (rotation principle).
+6. Written willingness to take on the role, and endorsement by at least one RM/Team Lead.
+The Head of Sales makes the final appointment; "Suggest Top Candidates" in the Weekly Lottery tab ranks eligible members by Business Points, tenure and rotation fairness to assist — not replace — that decision.`,
+
+  scoring: `MONTHLY RECOGNITIONS — SCORING BASIS
+All three recognitions require crossing a qualifying threshold (set in the Recognition Thresholds panel above) — being merely the best available is not enough; the bar itself must be cleared, or the award is withheld for that month.
+1. TABLE LEADER OF THE MONTH — the Leader whose week produced the highest Overall Achievement % (weighted average of Achieved/Target across AUM, SIP, Business Points, Meetings and New Clients), provided that % is at or above the Leader qualifying threshold.
+2. TABLE MENTOR OF THE MONTH — the composite Mentor score (see Mentor Rules), provided it is at or above the Mentor qualifying threshold.
+3. SALES CHAMPION OF THE MONTH — the individual with the highest Business Points, provided those points exceed the threshold set for their designation (BDE / RM / SRM / Other have separate thresholds). Ties are broken by New Clients added, then AUM movement.
+If nobody clears a given threshold in a given month, that recognition is withheld for that month rather than awarded to whoever merely ranked highest.`
+};
+
+/* ============================= STATE ============================= */
+const DEFAULT_THRESHOLDS = { leaderPct:75, mentorPct:75, championBDE:1500, championRM:2000, championSRM:2500, championDefault:1500 };
+const state = {
+  roster: [],
+  months: {},
+  policy: {...DEFAULT_POLICY},
+  thresholds: {...DEFAULT_THRESHOLDS},
+  activeMonth: null,
+};
+let editingWeekIdx = null;
+
+function uid(){return 'm'+Math.random().toString(36).slice(2,9);}
+function save(){ localStorage.setItem('tpm_state_v2', JSON.stringify(state)); }
+function load(){
+  const raw = localStorage.getItem('tpm_state_v2');
+  if(raw){ try{ Object.assign(state, JSON.parse(raw)); }catch(e){} }
+  if(!state.policy) state.policy = {...DEFAULT_POLICY};
+  if(!state.thresholds) state.thresholds = {...DEFAULT_THRESHOLDS};
+}
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block';
+  clearTimeout(window._toastTimer);
+  window._toastTimer=setTimeout(()=>t.style.display='none',2600);
+}
+function fmtINR(n){ n=Number(n)||0; return '₹'+n.toLocaleString('en-IN',{maximumFractionDigits:0}); }
+function fmtDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtDateDisp(s){ const d=new Date(s+'T00:00:00'); return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}); }
+function addDaysStr(dateStr, n){ const d=new Date(dateStr+'T00:00:00'); d.setDate(d.getDate()+n); return fmtDate(d); }
+
+/* ============================= TABS ============================= */
+document.getElementById('tabs').addEventListener('click',e=>{
+  if(e.target.tagName!=='BUTTON') return;
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById('panel-'+e.target.dataset.tab).classList.add('active');
+  const t = e.target.dataset.tab;
+  if(t==='dashboard') renderDashboard();
+  if(t==='lottery') renderLottery();
+  if(t==='daily') renderDaily();
+  if(t==='winners') renderWinners();
+  if(t==='history') renderHistory();
+  if(t==='policy') renderPolicy();
+});
+function tickClock(){ document.getElementById('clock').textContent = new Date().toLocaleString('en-IN',{dateStyle:'full',timeStyle:'short'}); }
+setInterval(tickClock,30000); tickClock();
+
+/* ============================= MONTH / WEEK HELPERS ============================= */
+function monthKeyOf(dateObj){ return dateObj.getFullYear()+'-'+String(dateObj.getMonth()+1).padStart(2,'0'); }
+function prevMonthKey(monthKey){
+  const [y,m] = monthKey.split('-').map(Number);
+  const d = new Date(y, m-2, 1); // m-1 is current month index(0-based); minus 1 more = prev month
+  return monthKeyOf(d);
+}
+function daysInMonth(monthKey){
+  const [y,m] = monthKey.split('-').map(Number);
+  return new Date(y, m, 0).getDate();
+}
+function computeWeeks(monthKey){
+  // Exactly 4 weeks, lengths randomised (7 or 8 days) but always summing to the full month.
+  const [y,m] = monthKey.split('-').map(Number);
+  const total = daysInMonth(monthKey);
+  const base = Math.floor(total/4);
+  const rem = total - base*4; // 0..3
+  const lengths = [base,base,base,base];
+  const idxs = [0,1,2,3];
+  for(let i=idxs.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const tmp=idxs[i]; idxs[i]=idxs[j]; idxs[j]=tmp; }
+  for(let i=0;i<rem;i++){ lengths[idxs[i]] += 1; }
+  const weeks=[]; let dayCursor=1;
+  for(let w=0; w<4; w++){
+    const start = new Date(y, m-1, dayCursor);
+    const end = new Date(y, m-1, dayCursor + lengths[w] - 1);
+    weeks.push({index:w, start:fmtDate(start), end:fmtDate(end), leaderId:null, mentorId:null,
+      target:{aum:0,sip:0,bp:0,meetings:0,newClients:0}, daily:{}});
+    dayCursor += lengths[w];
+  }
+  return weeks;
+}
+function ensureMonth(monthKey){
+  if(!state.months[monthKey]){
+    state.months[monthKey] = {weeks: computeWeeks(monthKey), mentorId:null, servedLeaders:[], rosterSnapshot:null};
+  }
+  return state.months[monthKey];
+}
+function memberName(id){ const m=state.roster.find(r=>r.id===id); return m?m.name:'—'; }
+function findWeekForDate(monthKey, dateStr){ const mo = ensureMonth(monthKey); return mo.weeks.find(w=> dateStr>=w.start && dateStr<=w.end); }
+function blankEntry(){ return {proposed:{meetings:0,newClients:0,aum:0,sip:0,bp:0}, achieved:{meetings:0,newClients:0,aum:0,sip:0,bp:0}, attendance:0, leaderNote:'', mentorNote:''}; }
+function getEntry(w, dateStr){ if(!w.daily[dateStr]) w.daily[dateStr] = blankEntry(); return w.daily[dateStr]; }
+function peekEntry(w, dateStr){ return w.daily[dateStr] || blankEntry(); } // read-only: never creates state
+
+/* ============================= SETUP: MONTH LOAD ============================= */
+document.getElementById('btnLoadMonth').addEventListener('click',()=>{
+  const v = document.getElementById('monthPicker').value;
+  if(!v){ toast('Pick a month first'); return; }
+  state.activeMonth = v; ensureMonth(v); save();
+  toast('Month '+v+' loaded ('+ensureMonth(v).weeks.length+' weeks, '+daysInMonth(v)+' days)');
+  renderRoster(); renderLottery(); renderDashboard();
+});
+(function initMonth(){ document.getElementById('monthPicker').value = monthKeyOf(new Date()); })();
+
+/* ============================= ROSTER ============================= */
+function addMember(name, profile, join, extra){
+  if(!name) return null;
+  const existing = state.roster.find(r=>r.name.trim().toLowerCase()===name.trim().toLowerCase());
+  if(existing){ Object.assign(existing, extra||{}); if(profile) existing.profile=profile; return existing; }
+  const m = {id:uid(), name:name.trim(), profile:profile||'BDE', join:join||'', eligible:true, note:'',
+    kra:0, aum:0, sip:0, bp:0, meetings:0, newClients:0, activation:0, ...(extra||{})};
+  state.roster.push(m);
+  return m;
+}
+function snapshotRosterForActiveMonth(){
+  if(!state.activeMonth) return;
+  const mo = ensureMonth(state.activeMonth);
+  mo.rosterSnapshot = state.roster.map(m=>({id:m.id,name:m.name,profile:m.profile,bp:m.bp||0,newClients:m.newClients||0,aum:m.aum||0,kra:m.kra||0}));
+}
+document.getElementById('btnAddMember').addEventListener('click',()=>{
+  const n=document.getElementById('newName').value.trim();
+  if(!n){ toast('Enter a name'); return; }
+  addMember(n, document.getElementById('newProfile').value, document.getElementById('newJoin').value,
+    {bp: Number(document.getElementById('newBp').value)||0});
+  document.getElementById('newName').value=''; document.getElementById('newBp').value='';
+  save(); renderRoster();
+  toast('Member added');
+});
+function renderRoster(){
+  const tb = document.querySelector('#rosterTable tbody'); tb.innerHTML='';
+  state.roster.forEach(m=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${m.name}</td>
+      <td>${m.profile}</td>
+      <td><input type="date" value="${m.join||''}" style="width:140px" data-f="join"></td>
+      <td><input type="number" step="0.01" value="${m.bp||0}" style="width:100px" data-f="bp"></td>
+      <td><span class="pill ${m.eligible?'on':''}" data-f="eligible">${m.eligible?'Eligible':'Not Eligible'}</span></td>
+      <td><input value="${m.note||''}" placeholder="note" data-f="note" style="min-width:140px"></td>
+      <td><button class="icon-btn" title="Remove">✕</button></td>`;
+    tr.querySelector('[data-f=join]').addEventListener('change',e=>{m.join=e.target.value; save();});
+    tr.querySelector('[data-f=bp]').addEventListener('change',e=>{m.bp=Number(e.target.value)||0; save(); renderDashboard();});
+    tr.querySelector('[data-f=note]').addEventListener('change',e=>{m.note=e.target.value; save();});
+    tr.querySelector('[data-f=eligible]').addEventListener('click',()=>{ m.eligible=!m.eligible; save(); renderRoster(); });
+    tr.querySelector('.icon-btn').addEventListener('click',()=>{
+      if(confirm('Remove '+m.name+' from roster?')){ state.roster = state.roster.filter(x=>x.id!==m.id); save(); renderRoster(); }
+    });
+    tb.appendChild(tr);
+  });
+}
+
+/* ---- Quick Add: Name, Designation, Business Points ---- */
+document.getElementById('btnQuickLoad').addEventListener('click',()=>{
+  const raw = document.getElementById('quickRoster').value;
+  if(!raw.trim()){ toast('Paste at least one row first'); return; }
+  const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  let count=0, skipped=0;
+  lines.forEach(line=>{
+    const parts = line.split(/\t|,/).map(p=>p.trim()).filter(p=>p!=='');
+    if(parts.length<2){ skipped++; return; }
+    const name = parts[0];
+    let bp = 0, profile = 'BDE';
+    const nums = parts.filter(p=>/^-?[\d,]+\.?\d*$/.test(p));
+    if(nums.length){ bp = parseFloat(nums[nums.length-1].replace(/,/g,'')); }
+    const nonNum = parts.slice(1).filter(p=>!/^-?[\d,]+\.?\d*$/.test(p));
+    if(nonNum.length) profile = nonNum[0].toUpperCase();
+    if(!name || !/[A-Za-z]/.test(name)){ skipped++; return; }
+    addMember(name, profile, '', {bp});
+    count++;
+  });
+  snapshotRosterForActiveMonth();
+  save(); renderRoster();
+  document.getElementById('quickStatus').textContent =
+    'Loaded '+count+' member(s)'+(skipped?', skipped '+skipped+' unrecognised line(s)':'')+
+    (state.activeMonth? '. Snapshot saved for '+state.activeMonth+' — this feeds history and month-on-month comparisons.':'. Load a month first to also save a snapshot for history.');
+  toast('Roster updated');
+});
+
+/* ---- report text parsing (best-effort PDF/paste path) ---- */
+function parseReportText(text){
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  let found=0;
+  const finRe = /^([A-Za-z][A-Za-z .'-]{2,40}?)\s+(BDE|BDM|RM|SRM|Ops|Manager)\s+Rs\.?\s*([-\d,]+\.?\d*)\s+Rs\.?\s*([-\d,]+\.?\d*)\s+(-?[\d,]+\.?\d*)\s+(-?[\d.]+)\s*%/i;
+  const actRe = /^([A-Za-z][A-Za-z .'-]{2,40}?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*%/;
+  lines.forEach(line=>{
+    let mm = line.match(finRe);
+    if(mm){ const [,name,profile,aum,sip,bp,kra] = mm;
+      addMember(name, profile.toUpperCase(), '', {aum: parseFloat(aum.replace(/,/g,'')), sip: parseFloat(sip.replace(/,/g,'')),
+        bp: parseFloat(bp.replace(/,/g,'')), kra: parseFloat(kra)});
+      found++; return; }
+    mm = line.match(actRe);
+    if(mm){ const [,name,iap,meetings,newClients,activation] = mm;
+      const existing = state.roster.find(r=>r.name.trim().toLowerCase()===name.trim().toLowerCase());
+      if(existing){ existing.meetings=parseInt(meetings); existing.newClients=parseInt(newClients); existing.activation=parseInt(activation); found++; } }
+  });
+  if(found>0) snapshotRosterForActiveMonth();
+  return found;
+}
+document.getElementById('btnParsePaste').addEventListener('click',()=>{
+  const t = document.getElementById('pasteText').value;
+  if(!t.trim()){ toast('Paste some report text first'); return; }
+  const n = parseReportText(t);
+  save(); renderRoster();
+  document.getElementById('parseStatus').textContent = 'Parsed '+n+' matched line(s) from pasted text. Review the roster table below.';
+  toast('Parsed pasted text');
+});
+document.getElementById('btnParsePdf').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('parseStatus');
+  if (typeof pdfjsLib === 'undefined') {
+    statusEl.innerHTML = "\u26a0 The PDF reader library could not load (usually no internet at this moment, or blocked on this network). Please use <b>Quick Add Roster</b> above instead.";
+    return;
+  }
+  const f = document.getElementById('pdfInput').files[0];
+  if(!f){ toast('Choose a PDF first'); return; }
+  statusEl.textContent = 'Reading PDF…';
+  try{
+    const buf = await f.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+    let fullText='';
+    for(let p=1;p<=pdf.numPages;p++){
+      const page = await pdf.getPage(p);
+      const content = await page.getTextContent();
+      const buckets = [];
+      content.items.forEach(it=>{
+        const y = it.transform[5];
+        let bucket = buckets.find(b=> Math.abs(b.y - y) < 3);
+        if(!bucket){ bucket = {y, text:''}; buckets.push(bucket); }
+        bucket.text += (bucket.text ? ' ' : '') + it.str;
+      });
+      buckets.sort((a,b)=> b.y - a.y);
+      buckets.forEach(b=> fullText += b.text + '\n');
+    }
+    const n = parseReportText(fullText);
+    save(); renderRoster();
+    if(n>0){ statusEl.textContent = 'Parsed '+n+' matched line(s) from the PDF. Review the roster table below.'; }
+    else if(fullText.trim().length < 20){
+      statusEl.innerHTML = "\u26a0 This PDF has <b>no selectable text</b> \u2014 it was exported as flattened images. Please use <b>Quick Add Roster</b> above instead.";
+    } else {
+      statusEl.innerHTML = 'The PDF has text, but no rows matched the expected layout. Please use <b>Quick Add Roster</b> above instead.';
+    }
+    toast(n>0 ? 'PDF processed' : 'PDF read, but could not extract rows');
+  }catch(err){
+    statusEl.innerHTML = 'PDF read failed: <i>'+err.message+'</i>. Please use <b>Quick Add Roster</b> above instead.';
+  }
+});
+
+/* ============================= LOTTERY ============================= */
+function renderLottery(){
+  if(!state.activeMonth){ document.getElementById('weekSelector').innerHTML = '<p class="small-note">Load a month in Setup &amp; Roster first.</p>'; return; }
+  const mo = ensureMonth(state.activeMonth);
+  const wrap = document.getElementById('weekSelector'); wrap.innerHTML='';
+  mo.weeks.forEach(w=>{
+    const days = (new Date(w.end)-new Date(w.start))/86400000 + 1;
+    const div = document.createElement('div'); div.className='weekcard';
+    div.innerHTML = `<h3>Week ${w.index+1} <span class="badge">${days} days</span></h3>
+      <div class="dates">${fmtDateDisp(w.start)} – ${fmtDateDisp(w.end)}</div>
+      <div>Leader: <b>${w.leaderId? memberName(w.leaderId): '<span style="color:var(--amber)">Not drawn</span>'}</b></div>
+      <div>Mentor: <b>${mo.mentorId? memberName(mo.mentorId): '<span style="color:var(--amber)">Not set</span>'}</b></div>
+      <div class="row" style="margin-top:8px;"><button class="btn small secondary">Open</button></div>`;
+    div.querySelector('button').addEventListener('click',()=>openWeek(w.index));
+    wrap.appendChild(div);
+  });
+  document.getElementById('activeWeekChip').textContent = state.activeMonth? state.activeMonth : '';
+  populateMentorSelect();
+}
+function populateMentorSelect(){
+  const sel = document.getElementById('mentorSelect'); if(!sel) return;
+  sel.innerHTML = '<option value="">— choose mentor —</option>' +
+    state.roster.map(m=>`<option value="${m.id}">${m.name} (${m.profile}${m.bp? ', BP '+m.bp.toFixed(1):''})</option>`).join('');
+}
+function openWeek(idx){
+  editingWeekIdx = idx;
+  const mo = ensureMonth(state.activeMonth);
+  const w = mo.weeks[idx];
+  document.getElementById('lotteryCard').style.display='block';
+  document.getElementById('lotteryTitle').textContent = 'Week '+(idx+1)+' Lottery & Target';
+  document.getElementById('lotteryDates').textContent = fmtDateDisp(w.start)+' – '+fmtDateDisp(w.end);
+  document.getElementById('wheel').textContent = w.leaderId? '🏆 '+memberName(w.leaderId) : 'Ready to draw';
+  ['tAum','tSip','tBp','tMeet','tClients'].forEach((id,i)=>{
+    const keys=['aum','sip','bp','meetings','newClients'];
+    document.getElementById(id).value = w.target[keys[i]] || '';
+  });
+  const eligible = getEligiblePool();
+  document.getElementById('eligibleCount').textContent = eligible.length+' eligible member(s) in this draw: '+
+    (eligible.map(m=>m.name).join(', ')||'none — check Roster eligibility / already-served exclusions.');
+  populateMentorSelect();
+  if(mo.mentorId) document.getElementById('mentorSelect').value = mo.mentorId;
+  document.getElementById('mentorSuggestions').innerHTML='';
+  if(document.getElementById('lotteryCard').scrollIntoView) document.getElementById('lotteryCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function getEligiblePool(){
+  const mo = ensureMonth(state.activeMonth);
+  return state.roster.filter(m=> m.eligible && !mo.servedLeaders.includes(m.id));
+}
+document.getElementById('btnDraw').addEventListener('click',()=>{
+  const mo = ensureMonth(state.activeMonth);
+  const w = mo.weeks[editingWeekIdx];
+  const pool = getEligiblePool();
+  if(pool.length===0){ toast('No eligible members left to draw from'); return; }
+  const wheel = document.getElementById('wheel');
+  let spins=0; const maxSpins=18;
+  const timer = setInterval(()=>{
+    const pick = pool[Math.floor(Math.random()*pool.length)];
+    wheel.textContent = pick.name;
+    spins++;
+    if(spins>=maxSpins){
+      clearInterval(timer);
+      const winner = pool[Math.floor(Math.random()*pool.length)];
+      wheel.textContent = '🏆 '+winner.name;
+      w.leaderId = winner.id;
+      mo.servedLeaders.push(winner.id);
+      save(); renderLottery(); renderDashboard();
+      toast(winner.name+' drawn as Table Leader for Week '+(editingWeekIdx+1));
+    }
+  },90);
+});
+document.getElementById('btnClearLeader').addEventListener('click',()=>{
+  const mo = ensureMonth(state.activeMonth);
+  const w = mo.weeks[editingWeekIdx];
+  if(w.leaderId){ mo.servedLeaders = mo.servedLeaders.filter(id=>id!==w.leaderId); w.leaderId=null; save(); }
+  document.getElementById('wheel').textContent='Ready to draw';
+  renderLottery();
+});
+document.getElementById('btnSuggestMentor').addEventListener('click',()=>{
+  const candidates = state.roster.filter(m=>{
+    let tenureOk = true;
+    if(m.join){ const months = (new Date(state.activeMonth+'-01') - new Date(m.join))/(1000*3600*24*30.4); tenureOk = months>=6; }
+    return tenureOk;
+  }).sort((a,b)=> (b.bp||0)-(a.bp||0));
+  const top = candidates.slice(0,3);
+  document.getElementById('mentorSuggestions').innerHTML = top.length?
+    'Suggested (by Business Points &amp; tenure): '+top.map((m,i)=>(i+1)+'. '+m.name+' — '+(m.bp||0).toFixed(1)+' BP').join(' &nbsp;|&nbsp; ')
+    : 'No candidate meets the 6-month tenure norm yet — use the fallback top-3 Business Point performers instead.';
+});
+document.getElementById('btnSetMentor').addEventListener('click',()=>{
+  const mo = ensureMonth(state.activeMonth);
+  const id = document.getElementById('mentorSelect').value;
+  if(!id){ toast('Choose a mentor'); return; }
+  mo.mentorId = id; save(); renderLottery(); renderDashboard();
+  toast(memberName(id)+' confirmed as Table Mentor for '+state.activeMonth);
+});
+document.getElementById('btnSaveTarget').addEventListener('click',()=>{
+  const mo = ensureMonth(state.activeMonth);
+  const w = mo.weeks[editingWeekIdx];
+  w.target = {
+    aum: Number(document.getElementById('tAum').value)||0, sip: Number(document.getElementById('tSip').value)||0,
+    bp: Number(document.getElementById('tBp').value)||0, meetings: Number(document.getElementById('tMeet').value)||0,
+    newClients: Number(document.getElementById('tClients').value)||0,
+  };
+  save(); toast('Week '+(editingWeekIdx+1)+' target saved'); renderDashboard();
+});
+
+/* ============================= DAILY REPORT ============================= */
+document.getElementById('dailyDate').addEventListener('change', loadDailyForDate);
+function currentMonthKeyForDate(dateStr){ return dateStr.slice(0,7); }
+function loadDailyForDate(){
+  const dateStr = document.getElementById('dailyDate').value;
+  if(!dateStr) return;
+  const mk = currentMonthKeyForDate(dateStr);
+  state.activeMonth = mk; ensureMonth(mk);
+  const w = findWeekForDate(mk, dateStr);
+  const mo = ensureMonth(mk);
+  if(!w){ document.getElementById('dailyWeekLabel').value='No week found for this date'; return; }
+  document.getElementById('dailyWeekLabel').value =
+    'Week '+(w.index+1)+' · Leader: '+(w.leaderId?memberName(w.leaderId):'not drawn')+' · Mentor: '+(mo.mentorId?memberName(mo.mentorId):'not set');
+
+  const today = peekEntry(w, dateStr);
+  document.getElementById('pMeet').value = today.proposed.meetings||'';
+  document.getElementById('pClients').value = today.proposed.newClients||'';
+  document.getElementById('pAum').value = today.proposed.aum||'';
+  document.getElementById('pSip').value = today.proposed.sip||'';
+  document.getElementById('pBp').value = today.proposed.bp||'';
+  document.getElementById('dAtt').value = today.attendance||'';
+  document.getElementById('dLeaderNote').value = today.leaderNote||'';
+  document.getElementById('dMentorNote').value = today.mentorNote||'';
+
+  const yestDate = addDaysStr(dateStr,-1);
+  const yestMk = currentMonthKeyForDate(yestDate);
+  const yestW = findWeekForDate(yestMk, yestDate);
+  document.getElementById('yestLabel').textContent = 'What was actually achieved on '+fmtDateDisp(yestDate)+', out of that day\u2019s proposed sales.';
+  if(yestW){
+    const yestEntry = peekEntry(yestW, yestDate);
+    const p = yestEntry.proposed;
+    document.getElementById('yestProposedRef').innerHTML =
+      `Proposed on ${fmtDateDisp(yestDate)}: <b>${p.meetings||0}</b> meetings · <b>${p.newClients||0}</b> new clients · <b>${fmtINR(p.aum)}</b> AUM · <b>${fmtINR(p.sip)}</b> SIP · <b>${p.bp||0}</b> BP`;
+    document.getElementById('aMeet').value = yestEntry.achieved.meetings||'';
+    document.getElementById('aClients').value = yestEntry.achieved.newClients||'';
+    document.getElementById('aAum').value = yestEntry.achieved.aum||'';
+    document.getElementById('aSip').value = yestEntry.achieved.sip||'';
+    document.getElementById('aBp').value = yestEntry.achieved.bp||'';
+    updateCompletionSummary(p, yestEntry.achieved);
+  } else {
+    document.getElementById('yestProposedRef').textContent = 'No week found for yesterday\u2019s date (likely month boundary) — nothing was proposed to compare against.';
+    document.getElementById('completionSummary').textContent='';
+  }
+  renderDailyLog(mk, w.index);
+}
+function updateCompletionSummary(p, a){
+  const pct=(x,y)=> y? Math.round((x/y)*1000)/10 : (x>0? 100:0);
+  document.getElementById('completionSummary').innerHTML =
+    `Completion vs proposed — Meetings: <b>${pct(a.meetings,p.meetings)}%</b> · New Clients: <b>${pct(a.newClients,p.newClients)}%</b> · AUM: <b>${pct(a.aum,p.aum)}%</b> · SIP: <b>${pct(a.sip,p.sip)}%</b> · BP: <b>${pct(a.bp,p.bp)}%</b>`;
+}
+function renderDaily(){
+  if(!document.getElementById('dailyDate').value){ document.getElementById('dailyDate').value = fmtDate(new Date()); }
+  loadDailyForDate();
+}
+document.getElementById('btnSaveProposed').addEventListener('click',()=>{
+  const dateStr = document.getElementById('dailyDate').value;
+  if(!dateStr){ toast('Pick a date'); return; }
+  const w = findWeekForDate(currentMonthKeyForDate(dateStr), dateStr);
+  if(!w){ toast('Date falls outside any computed week'); return; }
+  const e = getEntry(w, dateStr);
+  e.proposed = {
+    meetings:Number(document.getElementById('pMeet').value)||0, newClients:Number(document.getElementById('pClients').value)||0,
+    aum:Number(document.getElementById('pAum').value)||0, sip:Number(document.getElementById('pSip').value)||0,
+    bp:Number(document.getElementById('pBp').value)||0,
+  };
+  save(); toast('Today\u2019s proposed sales saved'); renderDailyLog(currentMonthKeyForDate(dateStr), w.index); renderDashboard();
+});
+document.getElementById('btnSaveAchieved').addEventListener('click',()=>{
+  const dateStr = document.getElementById('dailyDate').value;
+  if(!dateStr){ toast('Pick a date'); return; }
+  const yestDate = addDaysStr(dateStr,-1);
+  const w = findWeekForDate(currentMonthKeyForDate(yestDate), yestDate);
+  if(!w){ toast('No week found for yesterday\u2019s date'); return; }
+  const e = getEntry(w, yestDate);
+  e.achieved = {
+    meetings:Number(document.getElementById('aMeet').value)||0, newClients:Number(document.getElementById('aClients').value)||0,
+    aum:Number(document.getElementById('aAum').value)||0, sip:Number(document.getElementById('aSip').value)||0,
+    bp:Number(document.getElementById('aBp').value)||0,
+  };
+  save(); updateCompletionSummary(e.proposed, e.achieved);
+  toast('Yesterday\u2019s completion saved'); renderDailyLog(currentMonthKeyForDate(yestDate), w.index); renderDashboard();
+});
+document.getElementById('btnSaveMeta').addEventListener('click',()=>{
+  const dateStr = document.getElementById('dailyDate').value;
+  if(!dateStr){ toast('Pick a date'); return; }
+  const w = findWeekForDate(currentMonthKeyForDate(dateStr), dateStr);
+  if(!w){ toast('Date falls outside any computed week'); return; }
+  const e = getEntry(w, dateStr);
+  e.attendance = Number(document.getElementById('dAtt').value)||0;
+  e.leaderNote = document.getElementById('dLeaderNote').value;
+  e.mentorNote = document.getElementById('dMentorNote').value;
+  save(); toast('Attendance & notes saved');
+});
+function renderDailyLog(mk,widx){
+  const mo = ensureMonth(mk); const w = mo.weeks[widx];
+  const tb = document.querySelector('#dailyLogTable tbody'); tb.innerHTML='';
+  Object.keys(w.daily).sort().forEach(d=>{
+    const e = w.daily[d];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${fmtDateDisp(d)}</td><td>${e.proposed.bp||0}</td><td>${e.achieved.bp||0}</td>
+      <td>${e.proposed.meetings||0} / ${e.achieved.meetings||0}</td><td>${e.proposed.newClients||0} / ${e.achieved.newClients||0}</td>
+      <td>${e.attendance||0}</td><td><button class="icon-btn">✕</button></td>`;
+    tr.querySelector('.icon-btn').addEventListener('click',()=>{ delete w.daily[d]; save(); renderDailyLog(mk,widx); });
+    tb.appendChild(tr);
+  });
+}
+function weekToDateAchieved(w, uptoDate){
+  return Object.entries(w.daily).reduce((acc,[d,v])=>{
+    if(d<=uptoDate){ acc.meetings+=v.achieved.meetings; acc.newClients+=v.achieved.newClients; acc.aum+=v.achieved.aum; acc.sip+=v.achieved.sip; acc.bp+=v.achieved.bp; }
+    return acc;
+  },{meetings:0,newClients:0,aum:0,sip:0,bp:0});
+}
+function buildDailyReportHTML(){
+  const dateStr = document.getElementById('dailyDate').value;
+  const mk = currentMonthKeyForDate(dateStr);
+  const mo = ensureMonth(mk);
+  const w = findWeekForDate(mk, dateStr);
+  if(!w) return null;
+  const today = peekEntry(w, dateStr);
+  const yestDate = addDaysStr(dateStr,-1);
+  const yestW = findWeekForDate(currentMonthKeyForDate(yestDate), yestDate);
+  const yestEntry = yestW ? peekEntry(yestW, yestDate) : null;
+  const wtd = weekToDateAchieved(w, dateStr);
+  const t = w.target;
+  const pct = (a,b)=> b? Math.round((a/b)*1000)/10 : 0;
+  const pctc = (a,b)=> b? Math.round((a/b)*1000)/10 : (a>0?100:0);
+
+  const yestRows = yestEntry ? `
+    <tr style="background:#f2f2f2;"><th style="text-align:left;padding:6px;">Metric</th><th style="text-align:left;padding:6px;">Proposed (${fmtDateDisp(yestDate)})</th><th style="text-align:left;padding:6px;">Actually Achieved</th><th style="text-align:left;padding:6px;">Completion %</th></tr>
+    <tr><td style="padding:6px;border-top:1px solid #eee;">Meetings</td><td style="padding:6px;border-top:1px solid #eee;">${yestEntry.proposed.meetings}</td><td style="padding:6px;border-top:1px solid #eee;">${yestEntry.achieved.meetings}</td><td style="padding:6px;border-top:1px solid #eee;">${pctc(yestEntry.achieved.meetings,yestEntry.proposed.meetings)}%</td></tr>
+    <tr><td style="padding:6px;border-top:1px solid #eee;">New Clients</td><td style="padding:6px;border-top:1px solid #eee;">${yestEntry.proposed.newClients}</td><td style="padding:6px;border-top:1px solid #eee;">${yestEntry.achieved.newClients}</td><td style="padding:6px;border-top:1px solid #eee;">${pctc(yestEntry.achieved.newClients,yestEntry.proposed.newClients)}%</td></tr>
+    <tr><td style="padding:6px;border-top:1px solid #eee;">AUM</td><td style="padding:6px;border-top:1px solid #eee;">${fmtINR(yestEntry.proposed.aum)}</td><td style="padding:6px;border-top:1px solid #eee;">${fmtINR(yestEntry.achieved.aum)}</td><td style="padding:6px;border-top:1px solid #eee;">${pctc(yestEntry.achieved.aum,yestEntry.proposed.aum)}%</td></tr>
+    <tr><td style="padding:6px;border-top:1px solid #eee;">SIP</td><td style="padding:6px;border-top:1px solid #eee;">${fmtINR(yestEntry.proposed.sip)}</td><td style="padding:6px;border-top:1px solid #eee;">${fmtINR(yestEntry.achieved.sip)}</td><td style="padding:6px;border-top:1px solid #eee;">${pctc(yestEntry.achieved.sip,yestEntry.proposed.sip)}%</td></tr>
+    <tr><td style="padding:6px;border-top:1px solid #eee;">Business Points</td><td style="padding:6px;border-top:1px solid #eee;">${yestEntry.proposed.bp}</td><td style="padding:6px;border-top:1px solid #eee;">${yestEntry.achieved.bp}</td><td style="padding:6px;border-top:1px solid #eee;">${pctc(yestEntry.achieved.bp,yestEntry.proposed.bp)}%</td></tr>`
+    : `<tr><td style="padding:6px;">No proposed-sales record exists for ${fmtDateDisp(yestDate)} (likely a month boundary or the huddle wasn't logged that day).</td></tr>`;
+
+  return `<div style="font-family:Segoe UI,Arial,sans-serif;max-width:800px;margin:auto;color:#0b1a2e;">
+    <div style="background:#0b1a2e;color:#f0d98c;padding:18px 22px;border-radius:8px 8px 0 0;">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#d4af37;">Omega Financial · Table Performance</div>
+      <h1 style="margin:4px 0 0;color:#fff;font-size:22px;">Daily Report — ${fmtDateDisp(dateStr)}</h1>
+      <div style="color:#a9bdd4;font-size:12.5px;margin-top:4px;">Week ${w.index+1} (${fmtDateDisp(w.start)}–${fmtDateDisp(w.end)}) · Leader: ${w.leaderId?memberName(w.leaderId):'—'} · Mentor: ${mo.mentorId?memberName(mo.mentorId):'—'}</div>
+    </div>
+    <div style="border:1px solid #ddd;border-top:none;padding:20px 22px;border-radius:0 0 8px 8px;">
+      <h3 style="color:#0b1a2e;">① Sales Proposed for Today — Morning Huddle (${fmtDateDisp(dateStr)})</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <tr style="background:#f2f2f2;"><th style="text-align:left;padding:6px;">Metric</th><th style="text-align:left;padding:6px;">Proposed Today</th></tr>
+        <tr><td style="padding:6px;border-top:1px solid #eee;">Meetings</td><td style="padding:6px;border-top:1px solid #eee;">${today.proposed.meetings}</td></tr>
+        <tr><td style="padding:6px;border-top:1px solid #eee;">New Clients</td><td style="padding:6px;border-top:1px solid #eee;">${today.proposed.newClients}</td></tr>
+        <tr><td style="padding:6px;border-top:1px solid #eee;">AUM</td><td style="padding:6px;border-top:1px solid #eee;">${fmtINR(today.proposed.aum)}</td></tr>
+        <tr><td style="padding:6px;border-top:1px solid #eee;">SIP</td><td style="padding:6px;border-top:1px solid #eee;">${fmtINR(today.proposed.sip)}</td></tr>
+        <tr><td style="padding:6px;border-top:1px solid #eee;">Business Points</td><td style="padding:6px;border-top:1px solid #eee;">${today.proposed.bp}</td></tr>
+      </table>
+
+      <h3 style="color:#0b1a2e;margin-top:18px;">② Sales Done Yesterday — Morning Report (${fmtDateDisp(yestDate)})</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">${yestRows}</table>
+
+      <h3 style="color:#0b1a2e;margin-top:18px;">Week-to-Date (Achieved) vs Week Target</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <tr style="background:#f2f2f2;"><th style="text-align:left;padding:6px;">Metric</th><th style="text-align:left;padding:6px;">Week-to-date</th><th style="text-align:left;padding:6px;">Week Target</th><th style="text-align:left;padding:6px;">WTD %</th></tr>
+        <tr><td style="padding:6px;border-top:1px solid #eee;">Meetings</td><td style="padding:6px;border-top:1px solid #eee;">${wtd.meetings}</td><td style="padding:6px;border-top:1px solid #eee;">${t.meetings}</td><td style="padding:6px;border-top:1px solid #eee;">${pct(wtd.meetings,t.meetings)}%</td></tr>
+        <tr><td style="padding:6px;border-top:1px solid #eee;">New Clients</td><td style="padding:6px;border-top:1px solid #eee;">${wtd.newClients}</td><td style="padding:6px;border-top:1px solid #eee;">${t.newClients}</td><td style="padding:6px;border-top:1px solid #eee;">${pct(wtd.newClients,t.newClients)}%</td></tr>
+        <tr><td style="padding:6px;border-top:1px solid #eee;">AUM</td><td style="padding:6px;border-top:1px solid #eee;">${fmtINR(wtd.aum)}</td><td style="padding:6px;border-top:1px solid #eee;">${fmtINR(t.aum)}</td><td style="padding:6px;border-top:1px solid #eee;">${pct(wtd.aum,t.aum)}%</td></tr>
+        <tr><td style="padding:6px;border-top:1px solid #eee;">SIP</td><td style="padding:6px;border-top:1px solid #eee;">${fmtINR(wtd.sip)}</td><td style="padding:6px;border-top:1px solid #eee;">${fmtINR(t.sip)}</td><td style="padding:6px;border-top:1px solid #eee;">${pct(wtd.sip,t.sip)}%</td></tr>
+        <tr><td style="padding:6px;border-top:1px solid #eee;">Business Points</td><td style="padding:6px;border-top:1px solid #eee;">${wtd.bp}</td><td style="padding:6px;border-top:1px solid #eee;">${t.bp}</td><td style="padding:6px;border-top:1px solid #eee;">${pct(wtd.bp,t.bp)}%</td></tr>
+      </table>
+      <p style="font-size:13px;"><b>Team attendance today:</b> ${today.attendance}</p>
+      <h3 style="color:#0b1a2e;">Table Leader's Notes</h3><p style="font-size:13px;">${today.leaderNote||'—'}</p>
+      <h3 style="color:#0b1a2e;">Mentor's Remark</h3><p style="font-size:13px;">${today.mentorNote||'—'}</p>
+      <p style="font-size:11px;color:#888;margin-top:18px;">Generated by the Table Performance Manager · ${new Date().toLocaleString('en-IN')}</p>
+    </div></div>`;
+}
+// Direct download/print removed by design — reports are only available
+// from Nexus's Reports section after "Save to Nexus", so every copy
+// stays traceable and watermarked.
+document.getElementById('btnSaveDailyNexus').addEventListener('click', async ()=>{
+  const html = buildDailyReportHTML();
+  if(!html){ toast("No week found for this date"); return; }
+  const dateStr = document.getElementById('dailyDate').value;
+  const btn = document.getElementById('btnSaveDailyNexus');
+  btn.disabled = true; const originalLabel = btn.textContent; btn.textContent = 'Saving…';
+  try{
+    const profile = await NexusBridge.currentProfile();
+    const refId = NexusBridge.newReportId();
+    const blob = await NexusBridge.exportBrandedPDF({
+      title: 'Table Performance — Daily Report',
+      subtitle: `Report date: ${dateStr}`,
+      bodyHtml: html,
+      filename: `Table-Daily-Report-${dateStr}.pdf`,
+      download: false,
+      preparedBy: profile.full_name || profile.email,
+      refId
+    });
+    await NexusBridge.saveReport({
+      id: refId,
+      toolKey: 'table_performance_manager',
+      sectionKey: 'sales',
+      clientName: `Daily Huddle — ${dateStr}`,
+      summary: `Table Performance daily report for ${dateStr}`,
+      data: NexusBridge.toSafeJSON({ dateStr, state }),
+      pdfBlob: blob
+    });
+    nexusToast('Saved to Nexus. This report is now locked — only an admin can change it.', 'ok');
+    btn.textContent = 'Saved ✓';
+  }catch(err){
+    console.error(err);
+    nexusToast('Could not save to Nexus: ' + err.message, 'err');
+    btn.disabled = false; btn.textContent = originalLabel;
+  }
+});
+
+/* ============================= DASHBOARD ============================= */
+function renderDashboard(){
+  const dashStats = document.getElementById('dashStats');
+  if(!state.activeMonth){
+    dashStats.innerHTML = '<div class="stat"><div class="k">Status</div><div class="v gold">No month loaded</div></div>';
+    document.getElementById('dashWeeks').innerHTML=''; document.getElementById('dashRoster').innerHTML='';
+    return;
+  }
+  const mo = ensureMonth(state.activeMonth);
+  const leadersSet = mo.weeks.filter(w=>w.leaderId).length;
+  dashStats.innerHTML = `
+    <div class="stat"><div class="k">Active Month</div><div class="v gold">${state.activeMonth}</div></div>
+    <div class="stat"><div class="k">Weeks Configured</div><div class="v">${mo.weeks.length} (${daysInMonth(state.activeMonth)} days)</div></div>
+    <div class="stat"><div class="k">Leaders Drawn</div><div class="v green">${leadersSet}/${mo.weeks.length}</div></div>
+    <div class="stat"><div class="k">Mentor</div><div class="v ${mo.mentorId?'green':'red'}">${mo.mentorId?memberName(mo.mentorId):'Not set'}</div></div>`;
+  const wrap = document.getElementById('dashWeeks'); wrap.innerHTML='';
+  mo.weeks.forEach(w=>{
+    const wtd = weekToDateAchieved(w, w.end);
+    const overall = avgAchievement(wtd,w.target);
+    const days = (new Date(w.end)-new Date(w.start))/86400000 + 1;
+    const div=document.createElement('div'); div.className='weekcard';
+    div.innerHTML = `<h3>Week ${w.index+1} <span class="badge">${days}d</span></h3><div class="dates">${fmtDateDisp(w.start)} – ${fmtDateDisp(w.end)}</div>
+      <div>Leader: <b>${w.leaderId?memberName(w.leaderId):'—'}</b></div>
+      <div>Achievement: <b style="color:${overall>=100?'var(--green)':overall>=60?'var(--amber)':'var(--red)'}">${overall}%</b></div>
+      <div>Entries logged: ${Object.keys(w.daily).length} day(s)</div>`;
+    wrap.appendChild(div);
+  });
+  const rd = document.getElementById('dashRoster');
+  const elig = state.roster.filter(m=>m.eligible && !mo.servedLeaders.includes(m.id));
+  const served = state.roster.filter(m=>mo.servedLeaders.includes(m.id));
+  rd.innerHTML = `<p class="small-note"><b>Eligible &amp; available this month (${elig.length}):</b> ${elig.map(m=>m.name).join(', ')||'—'}</p>
+    <p class="small-note"><b>Already served as Leader this month (${served.length}):</b> ${served.map(m=>m.name).join(', ')||'—'}</p>`;
+}
+function avgAchievement(ach,t){
+  const keys=['aum','sip','bp','meetings','newClients'];
+  const vals = keys.filter(k=>t[k]>0).map(k=> Math.min((ach[k]/t[k])*100,150));
+  if(!vals.length) return 0;
+  return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+}
+
+/* ============================= MONTHLY WINNERS (threshold-qualified) ============================= */
+function championThreshold(profile){
+  const p = (profile||'').toUpperCase();
+  if(p==='BDE') return state.thresholds.championBDE;
+  if(p==='RM') return state.thresholds.championRM;
+  if(p==='SRM') return state.thresholds.championSRM;
+  return state.thresholds.championDefault;
+}
+function avgBP(list){ if(!list||!list.length) return 0; return list.reduce((a,m)=>a+(m.bp||0),0)/list.length; }
+function computeMonthWinners(monthKey){
+  const mo = ensureMonth(monthKey);
+  const rosterForMonth = (mo.rosterSnapshot && mo.rosterSnapshot.length) ? mo.rosterSnapshot : state.roster;
+
+  const leaderRows = mo.weeks.map(w=>{
+    const wtd = weekToDateAchieved(w, w.end);
+    const pct=(a,b)=> b? Math.round((a/b)*1000)/10 : 0;
+    return {week:w.index+1, leaderId:w.leaderId, aum:pct(wtd.aum,w.target.aum), sip:pct(wtd.sip,w.target.sip),
+      bp:pct(wtd.bp,w.target.bp), meetings:pct(wtd.meetings,w.target.meetings), newClients:pct(wtd.newClients,w.target.newClients),
+      overall: avgAchievement(wtd,w.target)};
+  });
+  const validLeaders = leaderRows.filter(r=>r.leaderId);
+  const qualifyingLeaders = validLeaders.filter(r=>r.overall >= state.thresholds.leaderPct).sort((a,b)=>b.overall-a.overall);
+  const bestLeader = qualifyingLeaders[0] || null;
+  const topLeaderOverall = validLeaders.slice().sort((a,b)=>b.overall-a.overall)[0] || null;
+
+  const teamAvg = validLeaders.length? Math.round(validLeaders.reduce((a,r)=>a+r.overall,0)/validLeaders.length) : 0;
+  const prevKey = prevMonthKey(monthKey);
+  const prevMo = state.months[prevKey];
+  const prevAvgBP = (prevMo && prevMo.rosterSnapshot && prevMo.rosterSnapshot.length) ? avgBP(prevMo.rosterSnapshot) : null;
+  const currAvgBP = avgBP(rosterForMonth);
+  const momImprovement = prevAvgBP!=null ? (currAvgBP - prevAvgBP) : null;
+  const weeksMentored = mo.weeks.filter(w=>Object.keys(w.daily).length>0).length || mo.weeks.length;
+  const coachingLogged = mo.weeks.reduce((n,w)=> n + (Object.values(w.daily).some(d=>d.mentorNote) ?1:0),0);
+  const coachingPct = weeksMentored? Math.round((coachingLogged/weeksMentored)*100):0;
+  const mentorScore = momImprovement!=null
+    ? Math.round(teamAvg*0.5 + Math.max(0,Math.min(100,50+momImprovement))*0.3 + coachingPct*0.2)
+    : Math.round(teamAvg*0.8 + coachingPct*0.2); // no prior-month snapshot available: redistribute MoM weight to team avg
+  const mentorQualifies = mo.mentorId && mentorScore >= state.thresholds.mentorPct;
+
+  const ranked = [...rosterForMonth].map(m=>({...m, threshold: championThreshold(m.profile)}))
+    .sort((a,b)=> (b.bp||0)-(a.bp||0) || (b.newClients||0)-(a.newClients||0) || (b.aum||0)-(a.aum||0));
+  const qualifyingChamps = ranked.filter(m=> (m.bp||0) > m.threshold);
+  const champion = qualifyingChamps[0] || null;
+
+  return { leaderRows, bestLeader, topLeaderOverall, teamAvg, mentorScore, mentorQualifies, momImprovement, ranked, champion, rosterForMonth };
+}
+
+document.getElementById('btnCompute').addEventListener('click', renderWinners);
+function renderWinners(){
+  if(!state.activeMonth){ document.getElementById('winnerCards').innerHTML='<p class="small-note">Load a month first.</p>'; return; }
+  const R = computeMonthWinners(state.activeMonth);
+  const mo = ensureMonth(state.activeMonth);
+
+  const lt = document.querySelector('#leaderScoreTable tbody'); lt.innerHTML='';
+  R.leaderRows.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>Week ${r.week}</td><td>${r.leaderId?memberName(r.leaderId):'—'}</td>
+      <td>${r.aum}%</td><td>${r.sip}%</td><td>${r.bp}%</td><td>${r.meetings}%</td><td>${r.newClients}%</td><td><b>${r.overall}%</b></td>`;
+    lt.appendChild(tr);
+  });
+
+  document.getElementById('thresholdRecap').textContent =
+    `Qualifying thresholds — BDE > ${state.thresholds.championBDE} BP · RM > ${state.thresholds.championRM} BP · SRM > ${state.thresholds.championSRM} BP · Other > ${state.thresholds.championDefault} BP.`;
+  const ct = document.querySelector('#championTable tbody'); ct.innerHTML='';
+  R.ranked.slice(0,15).forEach((m,i)=>{
+    const qualified = (m.bp||0) > m.threshold;
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>#${i+1}</td><td>${m.name}</td><td>${m.profile}</td><td>${(m.bp||0).toFixed(2)}</td><td>${m.threshold}</td>
+      <td>${qualified? '<span class="tag ok">Qualified</span>' : '<span class="tag no">Below threshold</span>'}</td><td>${m.newClients||0}</td>`;
+    ct.appendChild(tr);
+  });
+
+  const cards = document.getElementById('winnerCards'); cards.innerHTML='';
+  cards.appendChild(winnerCard('🏆','Table Leader of the Month',
+    R.bestLeader?memberName(R.bestLeader.leaderId):'No qualifier this month',
+    R.bestLeader? 'Week '+R.bestLeader.week+' Leader' : 'Requires \u2265'+state.thresholds.leaderPct+'% overall achievement'+(R.topLeaderOverall?' — best this month was '+R.topLeaderOverall.overall+'%':''),
+    R.bestLeader?R.bestLeader.overall+'%':'—', !R.bestLeader));
+  cards.appendChild(winnerCard('🧭','Table Mentor of the Month',
+    R.mentorQualifies? memberName(mo.mentorId) : 'No qualifier this month',
+    R.mentorQualifies? 'Composite score · Team avg '+R.teamAvg+'%' : (mo.mentorId? memberName(mo.mentorId)+' scored '+R.mentorScore+'% — needs \u2265'+state.thresholds.mentorPct+'%' : 'No mentor set for this month'),
+    R.mentorScore+'%', !R.mentorQualifies));
+  cards.appendChild(winnerCard('⭐','Sales Champion of the Month',
+    R.champion? R.champion.name : 'No qualifier this month',
+    R.champion? R.champion.profile+' · Business Points' : 'Nobody crossed their designation\u2019s BP threshold this month',
+    R.champion?(R.champion.bp||0).toFixed(1)+' BP':'—', !R.champion));
+}
+function winnerCard(icon,title,name,role,score,unqualified){
+  const d=document.createElement('div'); d.className='winner-card'+(unqualified?' unqualified':'');
+  d.innerHTML = `<div class="crown">${icon}</div><div style="font-size:11px;letter-spacing:2px;color:var(--ink-dim);text-transform:uppercase;">${title}</div>
+    <div class="name">${name}</div><div class="role">${role}</div><div class="score">${score}</div>`;
+  return d;
+}
+
+/* ============================= HISTORY & BACKUP ============================= */
+document.getElementById('btnExportBackup').addEventListener('click',()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  const stamp = fmtDate(new Date());
+  a.href = URL.createObjectURL(blob); a.download = 'TPM-Backup-'+stamp+'.json'; a.click();
+  toast('Backup exported');
+});
+document.getElementById('btnImportBackup').addEventListener('click', async ()=>{
+  const f = document.getElementById('importBackupInput').files[0];
+  const statusEl = document.getElementById('backupStatus');
+  if(!f){ toast('Choose a backup .json file first'); return; }
+  try{
+    const text = await f.text();
+    const imported = JSON.parse(text);
+    if(!imported || typeof imported !== 'object' || !('roster' in imported)){
+      statusEl.textContent = 'This file doesn\u2019t look like a Table Performance Manager backup.'; return;
+    }
+    Object.assign(state, imported);
+    if(!state.thresholds) state.thresholds = {...DEFAULT_THRESHOLDS};
+    if(!state.policy) state.policy = {...DEFAULT_POLICY};
+    save();
+    renderRoster(); renderDashboard(); renderLottery(); renderHistory(); renderPolicy();
+    statusEl.textContent = 'Backup restored — '+Object.keys(state.months).length+' month(s), '+state.roster.length+' roster member(s).';
+    toast('Backup restored');
+  }catch(err){
+    statusEl.textContent = 'Could not read that file: '+err.message;
+  }
+});
+function renderHistory(){
+  const wrap = document.getElementById('historyList'); wrap.innerHTML='';
+  const keys = Object.keys(state.months).sort().filter(k=>{
+    const mo = state.months[k];
+    const hasSnapshot = mo.rosterSnapshot && mo.rosterSnapshot.length>0;
+    const hasLeader = mo.weeks.some(w=>w.leaderId);
+    const hasDaily = mo.weeks.some(w=>Object.keys(w.daily).length>0);
+    return hasSnapshot || hasLeader || hasDaily; // hide untouched stub months auto-created for boundary lookups
+  });
+  if(!keys.length){ wrap.innerHTML = '<p class="small-note">No months with data saved yet.</p>'; return; }
+  keys.forEach(k=>{
+    const R = computeMonthWinners(k);
+    const div = document.createElement('div'); div.className='histcard';
+    div.innerHTML = `<h4>${k}</h4>
+      <div class="small-note">🏆 Leader: ${R.bestLeader?memberName(R.bestLeader.leaderId)+' ('+R.bestLeader.overall+'%)':'no qualifier'}
+      &nbsp;·&nbsp; 🧭 Mentor: ${R.mentorQualifies?memberName(state.months[k].mentorId)+' ('+R.mentorScore+'%)':'no qualifier'}
+      &nbsp;·&nbsp; ⭐ Champion: ${R.champion? R.champion.name+' ('+(R.champion.bp||0).toFixed(1)+' BP)':'no qualifier'}
+      &nbsp;·&nbsp; Roster snapshot: ${state.months[k].rosterSnapshot? state.months[k].rosterSnapshot.length+' member(s)':'none saved'}</div>`;
+    wrap.appendChild(div);
+  });
+}
+
+/* ============================= POLICY & THRESHOLDS TAB ============================= */
+function renderPolicy(){
+  document.getElementById('thLeader').value = state.thresholds.leaderPct;
+  document.getElementById('thMentor').value = state.thresholds.mentorPct;
+  document.getElementById('thBDE').value = state.thresholds.championBDE;
+  document.getElementById('thRM').value = state.thresholds.championRM;
+  document.getElementById('thSRM').value = state.thresholds.championSRM;
+  document.getElementById('thDefault').value = state.thresholds.championDefault;
+
+  const body = document.getElementById('policyBody'); body.innerHTML='';
+  const sections = [
+    ['eligibility','New-Member Eligibility for the Lottery'],
+    ['tableRules','Table — General Rules & Regulations'],
+    ['leaderRules','Table Leader — Role & Rules'],
+    ['mentorRules','Table Mentor — Role & Performance Assessment'],
+    ['mentorQualification','Table Mentor — Qualification Norms (Next Month)'],
+    ['scoring','Monthly Recognitions — Scoring Basis'],
+  ];
+  sections.forEach(([key,label])=>{
+    const div = document.createElement('div'); div.className='policy-section';
+    div.innerHTML = `<h3>${label}</h3><textarea data-key="${key}" style="min-height:170px;">${state.policy[key]}</textarea>`;
+    body.appendChild(div);
+  });
+}
+document.getElementById('btnSaveThresholds').addEventListener('click',()=>{
+  state.thresholds = {
+    leaderPct: Number(document.getElementById('thLeader').value)||0,
+    mentorPct: Number(document.getElementById('thMentor').value)||0,
+    championBDE: Number(document.getElementById('thBDE').value)||0,
+    championRM: Number(document.getElementById('thRM').value)||0,
+    championSRM: Number(document.getElementById('thSRM').value)||0,
+    championDefault: Number(document.getElementById('thDefault').value)||0,
+  };
+  save(); toast('Thresholds saved');
+});
+document.getElementById('btnSavePolicy').addEventListener('click',()=>{
+  document.querySelectorAll('#policyBody textarea').forEach(t=>{ state.policy[t.dataset.key] = t.value; });
+  save(); toast('Policies saved');
+});
+
+/* ============================= INIT ============================= */
+load();
+renderRoster(); renderDashboard();
+if(state.activeMonth) document.getElementById('monthPicker').value = state.activeMonth;
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-client.js?v=20260824h"></script>
+<script src="auth-guard.js?v=20260824h"></script>
+<script src="nexus-bridge.js?v=20260824h"></script>
+<script>(async()=>{const ctx=await nexusRequireAuth(); if(!ctx) return; const el=document.getElementById("nexusWho"); if(el) el.textContent = ctx.profile.full_name || ctx.profile.email;})();</script>
+</body>
+</html>

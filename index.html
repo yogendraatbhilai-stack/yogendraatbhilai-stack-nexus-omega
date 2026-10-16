@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Nexus — Omega Financial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nexus.css?v=20260824h"/>
+<style>
+  body{ background: var(--navy-deep); }
+  .hero{
+    position:relative; overflow:hidden; color:#fff;
+    background:
+      radial-gradient(1100px 600px at 85% -10%, rgba(212,175,55,.16), transparent 60%),
+      linear-gradient(180deg, var(--navy) 0%, var(--navy-deep) 100%);
+    padding: 26px 0 90px;
+    min-height: 100vh;
+  }
+  .hero .topbar{ background:transparent; padding: 18px 0; }
+  .hero .container.nav-wrap{ display:flex; align-items:center; justify-content:space-between; }
+  .brand-lockup{ display:flex; align-items:center; gap:10px; font-family: var(--font-display); font-size:20px; }
+  .brand-lockup .dot{ width:8px;height:8px;border-radius:50%;background:var(--gold); }
+  .hero-inner{ max-width: 780px; margin: 90px auto 0; text-align:center; padding: 0 24px; }
+  .eyebrow{ font-size:12px; letter-spacing:.14em; text-transform:uppercase; color: var(--gold-soft); font-weight:700; margin-bottom:18px; }
+  .hero h1{ color:#fff; font-size: clamp(38px, 6vw, 64px); line-height:1.04; margin:0 0 22px; }
+  .hero h1 em{ font-style:normal; color: var(--gold-soft); }
+  .hero p.lede{ color:#cfd9e3; font-size:18px; line-height:1.6; max-width:560px; margin:0 auto 36px; }
+  .hero-cta{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+  .hero-cta .btn{ padding:14px 28px; font-size:15px; }
+
+  /* signature: three unlit lamps that gain a gold glow on hover — literal "conviction" made visible */
+  .lamp-row{
+    display:grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
+    max-width: 760px; margin: 70px auto 0; padding: 0 24px;
+  }
+  .lamp{
+    background: rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.1);
+    border-radius: 16px; padding: 26px 22px; text-align:left;
+    transition: border-color .2s ease, background .2s ease, transform .2s ease;
+  }
+  .lamp:hover{ border-color: rgba(212,175,55,.55); background: rgba(212,175,55,.05); transform: translateY(-3px); }
+  .lamp .num{ font-family:var(--font-display); color: var(--gold-soft); font-size:13px; margin-bottom:10px; display:block; }
+  .lamp h3{ color:#fff; font-size:17px; margin:0 0 8px; }
+  .lamp p{ color:#a9b6c2; font-size:13.5px; line-height:1.55; margin:0; }
+
+  .strip{
+    margin-top: 90px; border-top:1px solid rgba(255,255,255,.08); padding-top: 26px;
+    display:flex; justify-content:center; gap:36px; flex-wrap:wrap;
+  }
+  .strip .item{ color:#8fa0ae; font-size:12px; letter-spacing:.05em; text-transform:uppercase; }
+  .strip .item b{ color:#dbe4ec; font-weight:700; }
+
+  footer{ text-align:center; padding: 30px 20px; color:#5c6b78; font-size:12px; }
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="container nav-wrap">
+    <div class="brand-lockup"><span class="dot"></span> Nexus <span style="color:#8fa0ae;font-weight:400;font-size:14px;">by Omega Financial</span></div>
+    <div>
+      <a href="login.html" class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.4);">Sign in</a>
+    </div>
+  </div>
+
+  <div class="hero-inner">
+    <div class="eyebrow">One login. Every Omega &amp; Probus tool.</div>
+    <h1>The universe where <em>conviction</em> gets its paperwork done.</h1>
+    <p class="lede">Nexus brings your retirement, CBA, table-performance and investor-engagement tools into one secure home — with real accounts, role-based access, and reports nobody can quietly edit.</p>
+    <div class="hero-cta">
+      <a href="login.html" class="btn btn-gold">Sign in to Nexus</a>
+      <a href="#inside" class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.35);">See what's inside</a>
+    </div>
+  </div>
+
+  <div class="lamp-row" id="inside">
+    <div class="lamp">
+      <span class="num">Section 01</span>
+      <h3>Sales</h3>
+      <p>Retirement Planner, Client CBA Tool and the Table Performance Manager — the calculators and leaderboard your team runs daily, now saving straight into one reporting system.</p>
+    </div>
+    <div class="lamp">
+      <span class="num">Section 02</span>
+      <h3>Customer Awareness</h3>
+      <p>Event SOP Governance — plan, score and document every investor engagement activity against a single standard, with a full itemised checklist in every report.</p>
+    </div>
+  </div>
+
+  <div class="strip">
+    <div class="item"><b>Role-based</b> access, section by section</div>
+    <div class="item"><b>Immutable</b> reports once saved</div>
+    <div class="item"><b>Branded PDF</b> exports for clients</div>
+    <div class="item"><b>Admin-controlled</b> user management</div>
+  </div>
+</div>
+<footer>Omega Financial &middot; ARN-85700 &middot; Probus Finserv Pvt Ltd &middot; we empower with conviction</footer>
+</body>
+</html>
