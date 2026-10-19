@@ -120,7 +120,7 @@ table.det th{width:42mm;color:var(--navy);font-weight:700;background:#f6f8fb}
 .slot .ds b{display:block}
 .slot .ds span{font-size:9.4pt;color:#555}
 
-.hl{display:grid;grid-template-columns:1fr 1fr;gap:2mm 5mm;margin-top:2mm}
+.hl{display:grid;grid-template-columns:1fr 1fr;gap:1.6mm 5mm;margin-top:2mm}
 .hl .it{display:grid;grid-template-columns:7mm 1fr;gap:2mm;align-items:start;line-height:1.38}
 .hl .it .k{width:6mm;height:6mm;border-radius:50%;background:var(--navy);color:var(--gold);display:grid;place-items:center;font-size:8.4pt;font-weight:700;margin-top:.3mm}
 .hl .it b{display:block;color:#1a2433}
@@ -133,8 +133,8 @@ table.det th{width:42mm;color:var(--navy);font-weight:700;background:#f6f8fb}
 .cred .v{font-weight:700;color:var(--navy);margin-top:.5mm}
 .cred .d{font-size:9.2pt;color:#4d5562}
 
-ul.ok{list-style:none;margin:1.5mm 0 0;padding:0;display:flex;flex-direction:column;gap:1.1mm}
-ul.ok li{display:grid;grid-template-columns:5mm 1fr;gap:1.5mm;line-height:1.36;font-size:9.6pt}
+ul.ok{list-style:none;margin:1.5mm 0 0;padding:0;display:flex;flex-direction:column;gap:1.8mm}
+ul.ok li{display:grid;grid-template-columns:5mm 1fr;gap:1.5mm;line-height:1.4;font-size:10pt}
 ul.ok li::before{content:"✓";color:var(--green);font-weight:700}
 
 .sign{display:flex;justify-content:space-between;align-items:flex-end;margin-top:4mm;gap:8mm}
@@ -398,7 +398,7 @@ const BASE_TOPICS = [
   ["Power of compounding","How time and consistency help long-term wealth creation"],
   ["Planning for life goals","Retirement, children's education and marriage"],
   ["Risk awareness and common mistakes","Risk vs return, mis-selling and fraud awareness"],
-  ["Basic tax aspects of investments","Understanding the tax treatment of common options"],
+  ["Basic tax aspects of investments","General overview of common options; not tax advice"],
   ["Investor rights and grievance redressal","KYC, nomination, and SEBI SCORES / AMFI resources"]
 ];
 
@@ -515,13 +515,14 @@ function build(){
     <p>On behalf of Omega Financial, we seek your kind approval to conduct an <b>Investor Awareness Programme (IAP)</b> for the ${esc(ind.aud)} of ${P(v.company,"your organisation")}. The programme is aimed at promoting financial literacy and basic investment awareness, so that participants can make informed and well-considered financial decisions for themselves and their families.</p>
 
     <div class="sec"><h3>About Omega Financial</h3>
-      <p>Omega Financial has been providing financial distribution services since ${OF.since}. We are an <b>AMFI-registered Mutual Fund Distributor (${OF.arn})</b> and also distribute Portfolio Management Services (PMS) and Alternative Investment Funds (AIF). Through our sister concern, <b>Probus Finserv Pvt Ltd</b> (IRDAI compliant), we facilitate insurance, bonds, fixed deposits and related products. Headquartered in Bhilai, we operate through two physical branches and serve clients across almost every state in India.</p>
+      <p><b>Omega Financial is an AMFI-registered Mutual Fund Distributor (${OF.arn})</b> engaged in investor education and financial distribution services since ${OF.since}. We also distribute Portfolio Management Services (PMS) and Alternative Investment Funds (AIF). Through our sister concern, <b>Probus Finserv Pvt Ltd</b> (IRDAI compliant), we facilitate insurance, bonds, fixed deposits and related products. Headquartered in Bhilai, we operate through two physical branches and serve investors across almost every state in India. <i>The proposed session will not cover or promote any PMS, AIF, insurance or other proprietary products.</i></p>
       <div class="stats">
         <div class="stat"><div class="n">${years}+ yrs</div><div class="l">of service, since ${OF.since}</div></div>
-        <div class="stat"><div class="n">${OF.clients}</div><div class="l">clients served</div></div>
-        <div class="stat"><div class="n">${OF.assets}</div><div class="l">client assets serviced through our platform</div></div>
+        <div class="stat"><div class="n">${OF.clients}</div><div class="l">investors served across India</div></div>
+        <div class="stat"><div class="n">${OF.assets}</div><div class="l">client assets serviced through our platform*</div></div>
         <div class="stat"><div class="n">2</div><div class="l">branches, with clients across India</div></div>
       </div>
+      <div style="font-size:8pt;color:#666;margin-top:1.2mm">*Figures as per Omega Financial's internal records; supporting details can be provided on request.</div>
     </div>
 
     <div class="sec"><h3>The Idea Behind the Programme</h3>
@@ -550,7 +551,7 @@ function build(){
 
     <div class="sec"><h3>Key Highlights of the Session</h3>
       <div class="hl">${topics.map((t,i)=>`<div class="it${t[1]?" ind":""}"><div class="k">${i+1}</div><div><b>${esc(t[0][0])}</b><span>${esc(t[0][1])}</span></div></div>`).join("")}</div>
-      <p style="font-size:9.2pt;color:#555;margin-top:3mm">Topics marked in gold are tailored for the ${esc(ind.aud)} of ${P(v.company,"your organisation")}. All illustrations used during the session are hypothetical and for understanding only.</p>
+      <p style="font-size:8.8pt;color:#555;margin-top:2.2mm;line-height:1.38">Topics marked in gold are tailored for the ${esc(ind.aud)} of ${P(v.company,"your organisation")}. All illustrations used during the session are hypothetical and for understanding only. Any discussion on taxation will be general in nature and should not be construed as tax advice; participants should consult their tax advisors for individual situations.</p>
     </div>`;
 
   /* ---------- Page 3 ---------- */
@@ -560,22 +561,36 @@ function build(){
         <div class="cred"><div class="h">Registration</div><div class="v">AMFI-registered Mutual Fund Distributor</div><div class="d">${OF.arn} · verifiable on amfiindia.com</div></div>
         <div class="cred"><div class="h">Sister concern</div><div class="v">Probus Finserv Pvt Ltd</div><div class="d">IRDAI compliant · insurance, bonds and fixed deposits</div></div>
         <div class="cred"><div class="h">Investor education</div><div class="v">Investor Awareness Meets (IAMs)</div><div class="d">Regularly conducted across Bhilai and Central India</div></div>
-        <div class="cred"><div class="h">National appreciation</div><div class="v">Retirement School &amp; WIAP</div><div class="d">Our Retirement School and Women Investor Awareness Program initiatives have been appreciated at a national level</div></div>
+        <div class="cred"><div class="h">Investor initiatives</div><div class="v">Retirement School &amp; WIAP</div><div class="d">Retirement School and Women Investor Awareness initiatives conducted across multiple locations</div></div>
       </div>
     </div>
 
     <div class="sec"><h3>Our Commitments for This Programme</h3>
       <ul class="ok">
-        <li>The session is purely educational and generic. No specific scheme, fund house or product will be named, promoted or sold.</li>
+        <li><b>The programme is intended solely for investor education and awareness. No application forms, transaction requests, investment mandates, SIP registration forms or scheme-related documents will be distributed or collected during the session.</b></li>
+        <li>The session is purely educational and generic. No specific scheme, fund house or product, including PMS, AIF or insurance, will be named, promoted or sold.</li>
         <li>No investment advice or recommendation will be given. Omega Financial acts as a Mutual Fund Distributor and not as an Investment Adviser.</li>
         <li>No assured, guaranteed or indicative returns will be stated. Any numerical examples are hypothetical illustrations only.</li>
-        <li>Participation is voluntary. No personal or financial information will be collected, other than an optional attendance record with consent.</li>
+        <li>Participation is voluntary. Only attendance details required by the host organisation may be recorded. No investment forms, risk profiles, financial details or transaction requests will be collected during the session.</li>
         <li>The content follows the SEBI regulations and the AMFI Code of Conduct applicable to Mutual Fund Distributors.</li>
-        <li>Participants will be guided to verify any intermediary's registration and to use official grievance channels (SEBI SCORES, AMFI).</li>
+        <li>Participants will be encouraged to refer to official AMFI and SEBI investor education resources, to verify any intermediary's registration, and to use official grievance channels (SEBI SCORES, AMFI).</li>
       </ul>
     </div>
 
-    <div class="sec"><h3>A Note of Thanks</h3>
+    <div class="sec"><h3>Official Investor Education Resources</h3>
+      <p style="margin-top:1mm">Participants will be referred to the following official sources for independent information, verification and grievance redressal:</p>
+      <table class="det">
+        <tr><th>AMFI</th><td>www.amfiindia.com · investor education and verification of distributor ARN</td></tr>
+        <tr><th>SEBI</th><td>investor.sebi.gov.in · SEBI investor education website</td></tr>
+        <tr><th>SEBI SCORES</th><td>scores.sebi.gov.in · online grievance redressal</td></tr>
+        <tr><th>SMART ODR</th><td>smartodr.in · online dispute resolution for the securities market</td></tr>
+      </table>
+    </div>
+    `;
+
+  /* ---------- Page 4 ---------- */
+  const p4 = `
+    <div class="sec" style="margin-top:0"><h3>A Note of Thanks</h3>
       <p>We sincerely thank ${coord} and the management of ${P(v.company,"your organisation")} for considering this opportunity. Together, we can bring a meaningful change in the way people make financial decisions, moving from guesswork and hearsay to understanding and discipline, for the well-being of every family and the community as a whole.</p>
       <p>Kindly grant your approval to proceed with organising this programme. We will be glad to adjust the schedule to your convenience.</p>
     </div>
@@ -592,8 +607,8 @@ function build(){
       <b>Omega Financial</b> is an AMFI-registered Mutual Fund Distributor (${OF.arn}). This programme is meant only for investor education and awareness and does not constitute investment advice, an offer, or a recommendation to buy or sell any scheme or product. Past performance may or may not be sustained in future. Insurance products are facilitated through Probus Finserv Pvt Ltd (IRDAI compliant); insurance is the subject matter of solicitation.
     </div>`;
 
-  $("pages").innerHTML = page(p1)+page(p2)+page(p3);
-  $("pageCount").textContent = "3 pages · A4";
+  $("pages").innerHTML = page(p1)+page(p2)+page(p3)+page(p4);
+  $("pageCount").textContent = "4 pages · A4";
 
   // overflow check
   let over=[];
