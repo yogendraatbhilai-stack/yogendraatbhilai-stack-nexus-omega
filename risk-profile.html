@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex,nofollow"/>
+<title>Risk Profile Questionnaire · Omega Financial</title>
+<style>
+:root{--navy:#0E2A47;--gold:#D4AF37;--green:#1F6F4A;--ink:#1d2430;--muted:#5b6676;--line:#d9dee6;--bg:#eef1f5}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45}
+.top{background:var(--navy);color:#fff;padding:14px 18px}
+.top b{font-size:17px}.top span{display:block;font-size:12px;opacity:.75;margin-top:2px}
+.wrap{max-width:680px;margin:0 auto;padding:16px 14px 90px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px}
+.intro h1{font-size:19px;margin:0 0 6px;color:var(--navy)}
+.muted{color:var(--muted);font-size:13px}
+.q{font-weight:600;margin-bottom:10px}
+.q i{display:inline-block;width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;font-style:normal;font-size:12px;text-align:center;line-height:24px;margin-right:8px}
+.opt{display:block;border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:8px;cursor:pointer;font-size:14.5px}
+.opt input{margin-right:9px;accent-color:var(--navy)}
+.opt.sel{border-color:var(--navy);background:#eef3f9}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px;display:flex;gap:12px;align-items:center;justify-content:center}
+.bar .in{max-width:680px;width:100%;display:flex;gap:12px;align-items:center}
+.prog{flex:1;height:8px;background:#e3e8ee;border-radius:9px;overflow:hidden}.prog div{height:100%;width:0;background:var(--green);transition:width .2s}
+button{font:inherit;font-weight:700;background:var(--navy);color:#fff;border:0;border-radius:10px;padding:12px 20px;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed}
+.msg{padding:26px 18px;text-align:center}
+.msg h2{margin:8px 0;color:var(--navy)}
+.err{color:#a4342a;background:#fbe9e7;border-radius:8px;padding:10px 12px;font-size:13.5px;margin-top:10px}
+.hide{display:none}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+<div class="top"><b>Omega Financial</b><span>AMFI-registered Mutual Fund Distributor · ARN-85700</span></div>
+<div class="wrap">
+  <div id="loading" class="card msg"><div class="muted">Loading your questionnaire…</div></div>
+  <div id="invalid" class="card msg hide"><h2 id="invTitle">Link not available</h2><div class="muted" id="invText"></div></div>
+  <div id="done" class="card msg hide"><div style="font-size:40px">✅</div><h2>Thank you!</h2>
+    <div class="muted">Your answers have been sent to your advisor at Omega Financial. They will discuss your investor profile with you. You can close this page now.</div></div>
+  <div id="form" class="hide">
+    <div class="card intro"><h1 id="hello">Investor Risk Profile</h1>
+      <div class="muted">Please answer all 15 questions honestly — there are no right or wrong answers. This helps your advisor suggest investments that suit your comfort with risk. It takes about 3 minutes. Your answers are shared only with your Omega Financial advisor.</div></div>
+    <div id="qs"></div>
+    <div id="submitErr" class="err hide"></div>
+  </div>
+</div>
+<div class="bar hide" id="bar"><div class="in"><div class="prog"><div id="pf"></div></div><span class="muted" id="cnt">0/15</span><button id="go" disabled>Submit</button></div></div>
+<script src="supabase-client.js?v=20260824h"></script>
+<script>
+const RISK_QS=[
+  {q:"What is the MAIN purpose of this investment?",opts:["Protect capital (no loss acceptable)","Earn steady returns slightly above FD","Grow wealth with balanced risk","Maximize long-term wealth; okay with volatility"]},
+  {q:"When will you NEED at least 50% of this money?",opts:["Within 1–2 years","In 3–4 years","In 5–7 years","After 8+ years"]},
+  {q:"If your investment drops in value temporarily, you feel:",opts:["Very uncomfortable; I will likely exit","Uncomfortable; may reduce exposure","Okay; I can stay invested","Comfortable; I may add more"]},
+  {q:"How stable is your income for the next 2–3 years?",opts:["Unstable/uncertain","Somewhat stable but risks exist","Stable with some buffer","Very stable + multiple income sources"]},
+  {q:"How much of monthly income goes into EMIs?",opts:["More than 50%","30–50%","10–30%","Less than 10% / no loans"]},
+  {q:"Emergency fund (cash/liquid) covering how many months?",opts:["Less than 1 month","1–3 months","3–6 months","6+ months"]},
+  {q:"If a medical/emergency expense arises, you would:",opts:["Break investments immediately","Depend on loans/credit","Mix of emergency fund + some investments","Fully covered by emergency fund/insurance"]},
+  {q:"Your investing experience is best described as:",opts:["New; never invested beyond FD/PPF","Some experience (debt/RD)","Regular MF investor (hybrid/equity)","Strong experience (equity-heavy, understands cycles)"]},
+  {q:"What best describes your current investment mix?",opts:["Mostly FD/PPF/savings","Mostly debt + small equity","Balanced equity and debt","Mostly equity/market-linked"]},
+  {q:"Portfolio DOWN ~10% in 6 months. You will:",opts:["Exit to avoid further loss","Pause investing and wait","Continue SIP and stay invested","Increase SIP / add lump sum"]},
+  {q:"Portfolio DOWN ~20–25% in 1 year. You will:",opts:["Sell most; move to safe assets","Sell some to reduce risk","Hold; recovery takes time","Buy more — valuations attractive"]},
+  {q:"Which return pattern do you prefer for a long-term goal?",opts:["6–7% with low fluctuations","7–9% with small fluctuations","9–12% with moderate fluctuations","12%+ with high fluctuations"]},
+  {q:"You receive ₹2,00,000 bonus today. You would:",opts:["Keep in savings/FD","Mostly debt; small part equity","Split equity and debt","Majority in equity/market-linked"]},
+  {q:"How often do you check portfolio and act on news?",opts:["Frequently; panic decisions possible","Often; may change on headlines","Occasionally; mostly disciplined","Rarely; follow a plan, rebalance"]},
+  {q:"If goal needs higher returns, you accept:",opts:["Very low risk; goal may take longer","Low–moderate; prefer stability","Moderate; some volatility OK","High risk; volatility OK for growth"]}
+];
+const token = new URLSearchParams(location.search).get('t') || '';
+const answers = new Array(15).fill(null);
+const $ = id => document.getElementById(id);
+function show(id){ ['loading','invalid','done','form'].forEach(x=>$(x).classList.toggle('hide', x!==id)); $('bar').classList.toggle('hide', id!=='form'); }
+function bad(title,text){ $('invTitle').textContent=title; $('invText').textContent=text; show('invalid'); }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function render(){
+  $('qs').innerHTML = RISK_QS.map((q,qi)=>
+    '<div class="card"><div class="q"><i>'+(qi+1)+'</i>'+esc(q.q)+'</div>'+
+    q.opts.map((o,oi)=>'<label class="opt" id="o'+qi+'_'+oi+'"><input type="radio" name="q'+qi+'" onchange="pick('+qi+','+oi+')">'+esc(o)+'</label>').join('')+'</div>').join('');
+}
+function pick(qi,oi){
+  answers[qi]=oi+1;
+  RISK_QS[qi].opts.forEach((_,k)=>$('o'+qi+'_'+k).classList.toggle('sel',k===oi));
+  const n=answers.filter(a=>a!==null).length;
+  $('pf').style.width=Math.round(n/15*100)+'%'; $('cnt').textContent=n+'/15'; $('go').disabled=n<15;
+}
+$('go').onclick = async () => {
+  $('go').disabled=true; $('go').textContent='Sending…'; $('submitErr').classList.add('hide');
+  try{
+    const { data, error } = await nexus.rpc('submit_risk_invite', { p_token: token, p_answers: answers });
+    if(error) throw error;
+    if(!data || !data.ok){ $('submitErr').textContent=(data&&data.error)||'Could not submit. Please try again.'; $('submitErr').classList.remove('hide'); $('go').disabled=false; $('go').textContent='Submit'; return; }
+    show('done'); window.scrollTo(0,0);
+  }catch(e){
+    $('submitErr').textContent='Could not submit right now. Please check your internet and try again.'; $('submitErr').classList.remove('hide');
+    $('go').disabled=false; $('go').textContent='Submit';
+  }
+};
+(async()=>{
+  if(!token){ return bad('Link not valid','This link is incomplete. Please ask your advisor to send it again.'); }
+  try{
+    const { data, error } = await nexus.rpc('get_risk_invite', { p_token: token });
+    if(error) throw error;
+    if(!data || !data.found) return bad('Link not valid','This link is not valid. Please ask your advisor to send it again.');
+    if(data.status==='completed') return bad('Already submitted','This questionnaire has already been submitted. Thank you!');
+    if(data.expired) return bad('Link expired','This link has expired. Please ask your advisor to send a new one.');
+    if(data.client_name) $('hello').textContent='Hello, '+data.client_name+' — Investor Risk Profile';
+    render(); show('form');
+  }catch(e){ bad('Could not load','Please check your internet connection and try again.'); }
+})();
+</script>
+</body>
+</html>

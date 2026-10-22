@@ -411,7 +411,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#e6f0ea;color:var(--
 }</style>
 </head>
 <body>
-<div style="background:#0E2A47;color:#fff;padding:10px 20px;font-family:Inter,Arial,sans-serif;font-size:13px;display:flex;justify-content:space-between;align-items:center;"><span><a href="dashboard.html" style="color:#dfe7ee;text-decoration:none;">&larr; Nexus dashboard</a></span><span id="nexusWho" style="color:#dfe7ee;"></span></div>
+<div style="background:#0E2A47;color:#fff;padding:10px 20px;font-family:Inter,Arial,sans-serif;font-size:13px;display:flex;justify-content:space-between;align-items:center;"><span><a href="dashboard.html" style="color:#dfe7ee;text-decoration:none;">&larr; Nexus dashboard</a></span><span style="display:flex;gap:8px;align-items:center;"><button type="button" onclick="saveDraftNow(true)" style="background:#1d4468;color:#fff;border:1px solid #3b6a94;border-radius:6px;padding:5px 11px;font-size:12.5px;cursor:pointer;">💾 Save draft</button><button type="button" onclick="openDrafts()" style="background:#1d4468;color:#fff;border:1px solid #3b6a94;border-radius:6px;padding:5px 11px;font-size:12.5px;cursor:pointer;">📂 My drafts</button><span id="nexusWho" style="color:#dfe7ee;margin-left:8px;"></span></span></div>
 
 <!-- HEADER -->
 <header class="hdr">
@@ -507,9 +507,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#e6f0ea;color:var(--
     <div id="risk-status-box">
       <div class="empty"><span>🛡️</span>Risk profiling not completed yet.<br>Click below — this is mandatory for all financial recommendations.</div>
     </div>
-    <div class="btn-row no-print">
-      <button class="btn btn-gold" onclick="openRisk()">📋 Start Risk Profile Assessment (15 Questions)</button>
+    <div class="btn-row no-print" style="flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="openRisk()">📋 Client is here — start the 15 questions now</button>
+      <button class="btn btn-o" id="sendRiskLinkBtn" onclick="sendRiskLink()">📲 Client is away — send a link to fill it</button>
     </div>
+    <div id="risk-link-box" style="margin-top:.9rem"></div>
   </div>
   <div class="nav-row">
     <button class="btn btn-o" onclick="go(0)">← Back</button>
@@ -684,6 +686,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#e6f0ea;color:var(--
 
 </main>
 
+<!-- DRAFTS MODAL -->
+<div class="modal-ov" id="drafts-modal" onclick="if(event.target===this)closeDrafts()">
+  <div class="modal">
+    <div class="modal-hdr"><h3>📂 My saved CBA drafts</h3><p>Unfinished analyses you can resume. Drafts are removed automatically once you Save to Nexus.</p></div>
+    <div class="modal-body"><div id="drafts-list" style="font-size:13.5px">Loading…</div></div>
+    <div class="modal-ftr"><div></div><div style="display:flex;gap:9px"><button class="btn btn-o" onclick="closeDrafts()">Close</button></div></div>
+  </div>
+</div>
+
 <!-- RISK MODAL -->
 <div class="modal-ov" id="risk-modal">
   <div class="modal">
@@ -718,6 +729,7 @@ renderGoals(); renderLoans(); renderInv();
 
 // ── NAV ──
 function go(n){
+  if(n>=5 && !S.riskScore){ n=1; setTimeout(()=>alert('Risk profiling is still pending. Complete it with the client here, or wait for the client to submit the link you sent — then Asset Allocation and the Report will unlock.'),60); }
   document.querySelectorAll(".sec").forEach(s=>s.classList.remove("on"));
   document.getElementById("s"+n).classList.add("on");
   document.querySelectorAll(".stp-btn").forEach((b,i)=>{
@@ -726,6 +738,7 @@ function go(n){
     else if(i<n)b.classList.add("done");
   });
   S.step=n;
+  if(typeof nexusDraftOnStep==='function') nexusDraftOnStep();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 function updateHeader(){
@@ -887,13 +900,21 @@ const RISK_NOTES={
 function submitRisk(){
   const score=S.riskAnswers.reduce((a,b)=>a+(b||0),0);
   S.riskScore=score; S.riskProfile=getRiskProfile(score).profile;
+  // Completed in person: this takes priority over any link sent earlier.
+  S.riskInviteId=null; if(typeof stopRiskPolling==='function') stopRiskPolling();
+  const lb=document.getElementById('risk-link-box'); if(lb) lb.innerHTML='';
   closeRisk();
+  renderRiskResult(score,'Completed in person with the client');
+  if(typeof nexusDraftOnStep==='function') nexusDraftOnStep();
+}
+function renderRiskResult(score,sourceNote){
   const {profile,range,color}=getRiskProfile(score);
   document.getElementById('risk-status-box').innerHTML=
     '<div class="risk-res"><div><div class="rl">Risk Profile Assessment — Completed</div>'+
     '<div class="rv">'+profile+'</div>'+
     '<div class="rs">Score: '+score+'/60 &nbsp;·&nbsp; Recommended Equity: '+range+'</div></div>'+
     '<div class="risk-pill" style="background:'+color+'">'+score+'<br><small style="font-size:10px;font-weight:400">/60</small></div></div>'+
+    (sourceNote?'<div style="margin-top:.6rem;font-size:12.5px;color:var(--g);font-weight:700">✔ '+sourceNote+'. You can proceed to the next stages.</div>':'')+
     '<div class="adv-box" style="margin-top:.75rem"><strong>Profile Interpretation:</strong> '+(RISK_NOTES[profile]||'')+'</div>';
 }
 
@@ -1186,6 +1207,7 @@ function getStdAlloc(profile){
 const ACOL={Equity:'#0f7a45',Hybrid:'#1a6faa',Debt:'#7c3aed',Gold:'#d4880a',Liquid:'#e67e22',Others:'#4a6b5a'};
 
 function buildAlloc(){
+  if(!S.riskScore) return;
   const {pcts,total}=getAllocData();
   const profile=S.riskProfile||'Moderate / Balanced';
   const std=getStdAlloc(profile);
@@ -1242,6 +1264,7 @@ function buildAlloc(){
 
 // ── REPORT ──
 function buildReport(){
+  if(!S.riskScore) return;
   window.__nexusReportGenerated = true;
   const name=document.getElementById('c_name').value||'Client';
   const inc=parseFloat(document.getElementById('c_inc').value)||0;
@@ -1663,6 +1686,176 @@ function printReport(){
 }
 function updateAll(){ renderLoans(); renderEMIMeter(); }
 
+// ═══════════════ NEXUS: remote risk link + drafts (save & resume) ═══════════════
+function _esc(x){ return String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+const STEP_NAMES=['Reference Rates','Know Yourself','Financial Goals','Loans & Liabilities','Existing Investments','Asset Allocation','CBA Report'];
+
+/* ---------- Risk link ---------- */
+let _riskPoll=null;
+function stopRiskPolling(){ if(_riskPoll){ clearInterval(_riskPoll); _riskPoll=null; } }
+function startRiskPolling(){ stopRiskPolling(); _riskPoll=setInterval(()=>checkRiskInvite(false),15000); }
+function riskLinkUrl(token){ return new URL('risk-profile.html?t='+encodeURIComponent(token), location.href).href; }
+
+async function sendRiskLink(){
+  const name=(document.getElementById('c_name').value||'').trim();
+  if(!name){ alert('Please enter the client name first (Client Name field above).'); document.getElementById('c_name').focus(); return; }
+  const btn=document.getElementById('sendRiskLinkBtn'); btn.disabled=true;
+  try{
+    const mob=(document.getElementById('c_mob').value||'').trim();
+    const { data, error } = await nexus.from('risk_invites')
+      .insert({ client_name:name, client_mobile:mob||null }).select('id,token,expires_at,status').single();
+    if(error) throw error;
+    S.riskInviteId=data.id;
+    try{ NexusBridge.logEvent('risk_link_created',{ clientName:name, inviteId:data.id }); }catch(_){}
+    await saveDraftNow(false);
+    await checkRiskInvite(false);
+    startRiskPolling();
+    nexusToast('Link created. Send it to the client — this page will update when they submit.','ok');
+  }catch(e){
+    console.error(e);
+    alert('Could not create the link: '+(e.message||e)+'\n\nIf this says the table does not exist, the database update (add-risk-link-and-drafts.sql) has not been run yet.');
+  }finally{ btn.disabled=false; }
+}
+
+async function checkRiskInvite(manual){
+  if(!S.riskInviteId) return;
+  const box=document.getElementById('risk-link-box');
+  try{
+    const { data:r, error } = await nexus.from('risk_invites').select('*').eq('id',S.riskInviteId).maybeSingle();
+    if(error) throw error;
+    if(!r){ S.riskInviteId=null; stopRiskPolling(); if(box) box.innerHTML=''; return; }
+    if(r.status==='completed'){
+      stopRiskPolling();
+      S.riskAnswers=r.answers||[]; S.riskScore=r.score; S.riskProfile=r.profile;
+      const when=r.completed_at?new Date(r.completed_at).toLocaleString('en-IN'):'';
+      renderRiskResult(r.score,'Completed by the client on their own'+(when?' ('+when+')':''));
+      if(box) box.innerHTML='';
+      S.riskInviteId=null;
+      if(manual===false) nexusToast('✔ '+(r.client_name||'Client')+' completed the risk profile: '+r.profile,'ok');
+      nexusDraftOnStep();
+      return;
+    }
+    const expired = new Date(r.expires_at) < new Date();
+    const url=riskLinkUrl(r.token);
+    const mob=((r.client_mobile||'')+'').replace(/\D/g,'').slice(-10);
+    const msg='Dear '+(r.client_name||'Sir/Madam')+', please complete this short (3-minute) risk profile questionnaire for your investment planning with Omega Financial: '+url;
+    const wa=(mob.length===10?'https://wa.me/91'+mob:'https://wa.me/')+'?text='+encodeURIComponent(msg);
+    if(box) box.innerHTML = expired
+      ? '<div class="adv-box" style="border-color:#c0392b">This link has expired. Click “send a link” again to create a new one.</div>'
+      : '<div style="background:#fff8e1;border:1.5px solid #D4AF37;border-radius:10px;padding:12px 14px">'+
+        '<div style="font-weight:800;color:#8a6d10;margin-bottom:6px">⏳ Waiting for '+_esc(r.client_name||'client')+' to fill the questionnaire</div>'+
+        '<input type="text" readonly id="risk-link-input" value="'+_esc(url)+'" onclick="this.select()" style="width:100%;font-size:12.5px;margin-bottom:8px">'+
+        '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<button class="btn btn-p" type="button" onclick="copyRiskLink()">📋 Copy link</button>'+
+        '<a class="btn btn-a" target="_blank" rel="noopener" href="'+_esc(wa)+'" style="text-decoration:none">💬 Send on WhatsApp</a>'+
+        '<button class="btn btn-o" type="button" onclick="checkRiskInvite(true).then(()=>nexusToast(\'Still waiting for the client.\',\'ok\'))">🔄 Check status</button></div>'+
+        '<div style="font-size:12px;color:#6b6b6b;margin-top:8px">One-time link, valid till '+new Date(r.expires_at).toLocaleDateString('en-IN')+'. You can continue other stages meanwhile (Goals, Loans, Investments) — Asset Allocation &amp; Report unlock once the client submits. You can also close this page and resume from “My drafts”.</div></div>';
+  }catch(e){ console.warn('risk status check failed',e); }
+}
+function copyRiskLink(){
+  const i=document.getElementById('risk-link-input'); if(!i) return;
+  i.select();
+  (navigator.clipboard?navigator.clipboard.writeText(i.value):Promise.reject()).then(()=>nexusToast('Link copied','ok'),()=>{ document.execCommand('copy'); nexusToast('Link copied','ok'); });
+}
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && S.riskInviteId) checkRiskInvite(false); });
+
+/* ---------- Drafts ---------- */
+window.__draftId=null; let _lastDraftJson='', _draftBusy=false, _draftTimer=null;
+function collectDraftData(){
+  const fields={};
+  document.querySelectorAll('main input[id], main select[id], main textarea[id]').forEach(e=>{
+    if(e.type==='button') return;
+    fields[e.id]=(e.type==='checkbox'||e.type==='radio')?e.checked:e.value;
+  });
+  const st={...S}; delete st.charts;
+  return { v:1, fields, state: JSON.parse(JSON.stringify(st)) };
+}
+async function saveDraftNow(manual){
+  const name=(document.getElementById('c_name').value||'').trim();
+  if(!name){ if(manual) alert('Enter the client name first — drafts are saved under the client name.'); return; }
+  if(_draftBusy) return; _draftBusy=true;
+  try{
+    const data=collectDraftData(); const json=JSON.stringify(data);
+    if(!manual && json===_lastDraftJson) return;
+    const row={ client_name:name, step:S.step||0, risk_invite_id:S.riskInviteId||null, data, updated_at:new Date().toISOString() };
+    if(window.__draftId){
+      const { error } = await nexus.from('cba_drafts').update(row).eq('id',window.__draftId);
+      if(error) throw error;
+    }else{
+      const { data:ins, error } = await nexus.from('cba_drafts').insert(row).select('id').single();
+      if(error) throw error;
+      window.__draftId=ins.id;
+    }
+    _lastDraftJson=json;
+    if(manual) nexusToast('Draft saved. Resume anytime from “My drafts”.','ok');
+  }catch(e){
+    console.warn('draft save failed',e);
+    if(manual) nexusToast('Could not save draft: '+(e.message||e),'err');
+  }finally{ _draftBusy=false; }
+}
+function nexusDraftOnStep(){ clearTimeout(_draftTimer); _draftTimer=setTimeout(()=>saveDraftNow(false),1200); }
+async function deleteCurrentDraft(){
+  if(!window.__draftId) return;
+  await nexus.from('cba_drafts').delete().eq('id',window.__draftId);
+  window.__draftId=null; _lastDraftJson='';
+}
+function restoreDraft(row){
+  const d=row.data||{};
+  Object.entries(d.fields||{}).forEach(([id,v])=>{
+    const e=document.getElementById(id); if(!e) return;
+    if(e.type==='checkbox'||e.type==='radio') e.checked=!!v; else e.value=v;
+  });
+  const keepCharts=S.charts;
+  Object.assign(S, d.state||{}); S.charts=keepCharts||{};
+  window.__draftId=row.id;
+  const safe=f=>{ try{ if(typeof window[f]==='function') window[f](); }catch(e){ console.warn(f,e); } };
+  ['updateHeader','renderGoals','renderLoans','renderInv','togglePeriodType','toggleInvMode'].forEach(safe);
+  if(S.riskScore) renderRiskResult(S.riskScore,'Risk profile on file');
+  _lastDraftJson=JSON.stringify(collectDraftData());
+  go(Math.min(S.step||0,4));
+  if(S.riskInviteId){ checkRiskInvite(false).then(()=>{ if(S.riskInviteId) startRiskPolling(); }); }
+}
+async function openDrafts(){
+  document.getElementById('drafts-modal').classList.add('on');
+  const el=document.getElementById('drafts-list'); el.textContent='Loading…';
+  try{
+    const { data:u } = await nexus.auth.getUser();
+    const { data, error } = await nexus.from('cba_drafts').select('id,client_name,step,updated_at,risk_invite_id')
+      .eq('user_id',u.user.id).order('updated_at',{ascending:false});
+    if(error) throw error;
+    if(!data.length){ el.innerHTML='<div class="empty"><span>📂</span>No saved drafts yet. Click “Save draft” any time (it also saves automatically as you move between steps).</div>'; return; }
+    el.innerHTML=data.map(r=>
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #e6eaef">'+
+      '<div><div style="font-weight:700">'+_esc(r.client_name||'(no name)')+(r.risk_invite_id?' <span style="font-size:11px;background:#fff3cd;color:#8a6d10;border-radius:9px;padding:1px 7px">risk link pending</span>':'')+'</div>'+
+      '<div style="font-size:12px;color:#6b6b6b">Stopped at: '+_esc(STEP_NAMES[r.step]||'—')+' · '+new Date(r.updated_at).toLocaleString('en-IN')+'</div></div>'+
+      '<div style="display:flex;gap:6px"><button class="btn btn-p" type="button" onclick="resumeDraft(\''+r.id+'\')">Resume</button>'+
+      '<button class="btn btn-d" type="button" onclick="removeDraft(\''+r.id+'\')">Delete</button></div></div>').join('');
+  }catch(e){ el.innerHTML='<div class="adv-box" style="border-color:#c0392b">Could not load drafts: '+_esc(e.message||e)+'<br>If the table does not exist, run add-risk-link-and-drafts.sql in Supabase first.</div>'; }
+}
+function closeDrafts(){ document.getElementById('drafts-modal').classList.remove('on'); }
+async function resumeDraft(id){
+  const { data, error } = await nexus.from('cba_drafts').select('*').eq('id',id).single();
+  if(error){ alert('Could not open draft: '+error.message); return; }
+  closeDrafts(); restoreDraft(data);
+  nexusToast('Draft resumed for '+(data.client_name||'client'),'ok');
+}
+async function removeDraft(id){
+  if(!confirm('Delete this draft permanently?')) return;
+  await nexus.from('cba_drafts').delete().eq('id',id);
+  if(window.__draftId===id){ window.__draftId=null; _lastDraftJson=''; }
+  openDrafts();
+}
+async function nexusDraftInit(){
+  try{
+    const qid=new URLSearchParams(location.search).get('draft');
+    if(qid){ await resumeDraft(qid); return; }
+    const { count } = await nexus.from('cba_drafts').select('id',{count:'exact',head:true});
+    if(count) nexusToast('You have '+count+' saved CBA draft'+(count>1?'s':'')+' — open “My drafts” to resume.','ok');
+  }catch(_){}
+  setInterval(()=>saveDraftNow(false),30000);
+}
+// ═══════════════ end NEXUS additions ═══════════════
+
 // Every attempt to reactivate this tool's print styling via CSS (three
 // different ways, across several rounds) produced zero visible change —
 // strong evidence something about how the capture library clones content
@@ -1752,6 +1945,7 @@ async function saveCbaToNexus(){
       pdfBlob: blob
     });
     nexusToast('Saved to Nexus. This report is now locked — only an admin can change it.', 'ok');
+    try{ await deleteCurrentDraft(); }catch(_){}
     btn.textContent = 'Saved ✓';
   }catch(err){
     console.error(err);
@@ -1769,6 +1963,6 @@ async function saveCbaToNexus(){
 <script src="supabase-client.js?v=20260824h"></script>
 <script src="auth-guard.js?v=20260824h"></script>
 <script src="nexus-bridge.js?v=20260824h"></script>
-<script>(async()=>{const ctx=await nexusRequireAuth(); if(!ctx) return; const el=document.getElementById("nexusWho"); if(el) el.textContent = ctx.profile.full_name || ctx.profile.email;})();</script>
+<script>(async()=>{const ctx=await nexusRequireAuth(); if(!ctx) return; const el=document.getElementById("nexusWho"); if(el) el.textContent = ctx.profile.full_name || ctx.profile.email; if(typeof nexusDraftInit==='function') nexusDraftInit();})();</script>
 </body>
 </html>
