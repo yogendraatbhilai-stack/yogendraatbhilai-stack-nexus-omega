@@ -1,0 +1,957 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Digital Division Console – Nexus</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--navy:#0E2A47;--gold:#D4AF37;--green:#1F6F4A;--red:#B3261E;--amber:#C98A00;--bg:#F4F5F7;--card:#fff;--ink:#1B2430;--muted:#5D6B7A;--line:#E1E5EA;}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header{background:var(--navy);color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:3px solid var(--gold)}
+header h1{margin:0;font-size:19px;letter-spacing:.3px}
+header .sub{font-size:12px;color:#C9D3DE;margin-top:2px}
+header .hos{text-align:right;font-size:12px;color:#C9D3DE}
+header .hos b{color:var(--gold);font-size:13px}
+header select{background:#16375A;color:#fff;border-color:#36597E;margin-top:4px}
+nav{background:#fff;border-bottom:1px solid var(--line);display:flex;overflow-x:auto;position:sticky;top:0;z-index:5}
+nav button{background:none;border:0;padding:12px 14px;font-size:13.5px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+nav button.on{color:var(--navy);border-bottom-color:var(--gold);font-weight:600}
+main{padding:18px 20px 60px;max-width:1440px;margin:0 auto}
+h2{font-size:17px;margin:4px 0 14px;color:var(--navy)}
+h3{font-size:14.5px;margin:0 0 10px;color:var(--navy)}
+.grid{display:grid;gap:14px}
+.g5{grid-template-columns:repeat(auto-fit,minmax(165px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(420px,1fr))}
+@media(max-width:600px){.g2{grid-template-columns:1fr}main{padding:12px}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.stat .n{font-size:28px;font-weight:700;color:var(--navy);line-height:1.1}
+.stat .l{font-size:12px;color:var(--muted);margin-top:4px}
+.stat.warn .n{color:var(--red)}
+.score{display:flex;justify-content:space-between;align-items:flex-start}
+.score .big{font-size:34px;font-weight:700;color:var(--navy)}
+.band{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11.5px;font-weight:600;color:#fff}
+.b0{background:var(--green)}.b1{background:var(--navy)}.b2{background:var(--amber)}.b3{background:var(--red)}
+.muted{color:var(--muted)}.small{font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;border-bottom:1px solid var(--line);padding:7px 8px;background:#FAFBFC}
+td{border-bottom:1px solid var(--line);padding:7px 8px;vertical-align:top}
+tr.click{cursor:pointer}tr.click:hover td{background:#F7F9FB}
+.tw{overflow-x:auto}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;background:#EEF1F4;color:var(--ink);white-space:nowrap}
+.p-red{background:#FBE7E6;color:var(--red)}.p-amber{background:#FFF3D6;color:#8A5E00}.p-green{background:#E2F1E8;color:var(--green)}.p-navy{background:#E3E9F0;color:var(--navy)}.p-gold{background:#FBF1CF;color:#7A5E00}
+.bar{height:8px;background:#EEF1F4;border-radius:5px;overflow:hidden;min-width:70px}
+.bar i{display:block;height:100%;background:var(--navy)}
+.hb{display:grid;grid-template-columns:170px 1fr 60px;align-items:center;gap:8px;margin:6px 0;font-size:12.5px}
+.hb .t{height:14px;background:#EEF1F4;border-radius:4px;overflow:hidden;display:flex}
+.hb .t i{display:block;height:100%}
+button.btn,label.btn{background:var(--navy);color:#fff;border:0;border-radius:7px;padding:8px 14px;font-size:13px;cursor:pointer;display:inline-block}
+button.btn.sm{padding:4px 10px;font-size:12px}
+button.btn.sec,label.btn.sec{background:#fff;color:var(--navy);border:1px solid #C5CED8}
+button.btn.gold{background:var(--gold);color:var(--navy);font-weight:600}
+button.btn.ok{background:var(--green)}
+button.btn.danger{background:#fff;color:var(--red);border:1px solid #E8B4B0}
+button.x{background:none;border:0;color:var(--red);cursor:pointer;font-size:15px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sp{flex:1}
+input,select,textarea{font:inherit;font-size:13px;padding:6px 8px;border:1px solid #C5CED8;border-radius:6px;background:#fff;color:var(--ink);max-width:100%}
+textarea{width:100%;min-height:56px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 14px}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.form .full{grid-column:1/-1}
+.chk{flex-direction:row!important;align-items:center;gap:8px;margin-top:18px}
+.subtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.subtabs button{border:1px solid #C5CED8;background:#fff;border-radius:16px;padding:5px 12px;font-size:12.5px;cursor:pointer;color:var(--navy)}
+.subtabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+#modal{position:fixed;inset:0;background:rgba(14,42,71,.45);display:none;align-items:flex-start;justify-content:center;padding:30px 12px;overflow:auto;z-index:20}
+#modal .box{background:#fff;border-radius:12px;max-width:920px;width:100%;padding:18px 20px}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;display:none;z-index:30}
+.banner{background:#FFF8E1;border:1px solid #EBD58A;border-radius:10px;padding:12px 16px;margin-bottom:14px}
+.adm .card{margin-bottom:14px}
+.adm table input,.adm table select{width:100%}
+.hist{font-size:12px;color:var(--muted);max-height:140px;overflow:auto;border-left:3px solid var(--gold);padding-left:10px}
+.warnline{color:var(--red);font-size:12px}
+.grid31{border-collapse:separate;border-spacing:2px;font-size:11px}
+.grid31 td,.grid31 th{border:0;padding:3px 2px;text-align:center;background:none}
+.grid31 td.jn{text-align:left;font-size:12px;min-width:220px}
+.c{display:inline-block;width:20px;height:20px;line-height:20px;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700}
+.c-ontime{background:#2E8B57;color:#fff}.c-late{background:#E3A008;color:#fff}.c-missed{background:#C62828;color:#fff}.c-na{background:#B0B8C1;color:#fff}.c-today{background:#fff;border:2px solid var(--navy);color:var(--navy);line-height:16px}.c-due{background:#fff;border:2px dashed var(--amber);line-height:16px}.c-upcoming{background:#EEF1F4;color:#9AA5B1}
+.legend span{margin-right:12px;font-size:12px}
+.task{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}
+.task:last-child{border-bottom:0}
+.task .t{flex:1}
+.exp{border-left:4px solid var(--red);padding-left:8px}
+.guide p,.guide li{line-height:1.55;max-width:900px}
+.guide h3{margin-top:18px}
+.lvl{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}
+.lvl div{flex:1;min-width:200px;border:1px solid var(--line);border-radius:8px;padding:10px;background:#FAFBFC}
+footer{text-align:center;color:var(--muted);font-size:11.5px;padding:20px}
+@media print{nav,header select,button,.noprint,#toast{display:none!important}body{background:#fff}main{padding:0}.card{break-inside:avoid;border-color:#ccc}}
+.reqgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.reqcard{border:2px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;background:#fff;text-align:left;font:inherit;color:var(--ink)}
+.reqcard:hover{border-color:#9DB4CC}.reqcard.on{border-color:var(--navy);background:#F4F7FB}
+.route{background:#F4F7FB;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.65}
+.form label>div{padding:4px 0}
+@media print{body{display:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1 id="hTitle">Digital Division Console</h1><div class="sub">Digital Systems · Resource Building · Brand Division — every score measured from recorded work</div></div>
+  <div class="hos" id="hHos"></div>
+</header>
+<nav id="nav"></nav>
+<main id="view"></main>
+<div id="modal"><div class="box" id="mbox"></div></div>
+<div id="toast"></div>
+<footer id="foot"></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-client.js?v=20260824h"></script>
+<script src="auth-guard.js?v=20260824h"></script>
+<script src="nexus-bridge.js?v=20260824h"></script>
+<script>
+/* ===================== Helpers ===================== */
+const KEY='omega_digital_division_console_v1',VERSION=2;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const dtStr=d=>`${ymd(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const today=()=>ymd(new Date());
+const nowStr=()=>dtStr(new Date());
+const thisMonth=()=>today().slice(0,7);
+const uid=()=>Math.random().toString(36).slice(2,9);
+const r1=x=>x==null||isNaN(x)?null:Math.round(x*10)/10;
+function pDate(s){if(!s)return null;const[y,m,d]=s.slice(0,10).split('-').map(Number);return new Date(y,m-1,d);}
+function pDT(s){if(!s)return null;if(s.length<=10)return new Date(s+'T00:00');return new Date(s);}
+function fmtD(s){if(!s)return '—';return pDT(s).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});}
+function fmtDT(s){if(!s)return '—';const d=pDT(s);return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+' '+pad(d.getHours())+':'+pad(d.getMinutes());}
+function monthLabel(m){const[y,mm]=m.split('-');return new Date(+y,+mm-1,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'});}
+function prevMonth(m){const[y,mm]=m.split('-').map(Number);const d=new Date(y,mm-2,1);return ymd(d).slice(0,7);}
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.display='none',1500);}
+
+const LOGS={
+ STL:{name:'System Ticket Log',short:'System tickets',prefix:'ST',owner:'dscm',typeLabel:'Severity / type'},
+ DEV:{name:'Development Request Log',short:'Development',prefix:'DV',owner:'dscm',typeLabel:'Size'},
+ CMP:{name:'Campaign Brief Log',short:'Campaigns',prefix:'CP',owner:'dscm',typeLabel:'Campaign type'},
+ DRL:{name:'Digital Request Log',short:'Content & design',prefix:'DR',owner:'rbe',typeLabel:'Deliverable'},
+ BRA:{name:'Brand Activity Log',short:'Brand activities',prefix:'BA',owner:'brand',typeLabel:'Activity type'}
+};
+const ROLES={hos:'Head of Sales',dscm:'DSCM (Division Head)',rbe:'Resource Building Executive',brand:'Brand Manager',requester:'Requester'};
+const SENIOR={dscm:'hos',rbe:'dscm',brand:'dscm'};
+const FREQ={daily:'Daily',weekly:'Weekly',monthly:'Monthly',quarterly:'Quarterly'};
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+/* Measured sources. "k" = uses the KRA's own code. */
+const SRC={
+ sched:{l:'Scheduled jobs done on time — this KRA',u:'%',k:1},
+ items_tat:{l:'Requests & projects closed within TAT — this KRA',u:'%',k:1},
+ uptime:{l:'Uptime of Criticality A systems (from outage tickets)',u:'%'},
+ stl_repeat:{l:'Repeat system tickets',u:'%'},
+ vendor_sla:{l:'Vendor tickets closed within SLA',u:'%'},
+ release_defects:{l:'Tickets caused by a recent release',u:'count'},
+ cmp_goal:{l:'Campaign goal achievement, average',u:'%'},
+ drl_tat:{l:'All content & design requests within TAT',u:'%'},
+ drl_ftr:{l:'Content first-time-right (≤1 revision)',u:'%'},
+ drl_score:{l:'Average requester score (out of 5)',u:'score'},
+ drl_event_lead:{l:'Event collateral delivered ≥ lead days before event',u:'%'},
+ drl_errors:{l:'Content with errors found after release',u:'count'},
+ compliance_gate:{l:'Delivered content that passed compliance review',u:'%'},
+ compliance_obs:{l:'Compliance observations after approval',u:'count'},
+ posts_plan:{l:'Posts published vs scheduled (daily reports)',u:'%'},
+ eng_growth:{l:'Engagement rate growth vs last month (monthly figures)',u:'%'},
+ bra_ontime:{l:'All brand activities completed on time',u:'%'},
+ media_count:{l:'Press releases / media items completed',u:'count'},
+ brand_deviations:{l:'Brand guideline deviations found in audits',u:'count'},
+ outcome_reports:{l:'Sponsorships with outcome report submitted',u:'%'},
+ google_rating:{l:'Google rating (monthly figures)',u:'score'},
+ brand_reviews:{l:'Online reviews replied (daily reports)',u:'%'},
+ awareness_change:{l:'Awareness score change vs last survey (monthly figures)',u:'points'},
+ rep_dscm:{l:'DSCM daily reports submitted',u:'%'},
+ rep_rbe:{l:'RBE daily reports submitted',u:'%'},
+ rep_brand:{l:'Brand Manager daily reports submitted',u:'%'},
+ team_reviewed:{l:'Team daily reports reviewed by DSCM',u:'%'},
+ team_verified:{l:'Team jobs verified within 2 working days',u:'%'}
+};
+
+/* ===================== Defaults ===================== */
+const K=(src,target,dir)=>({id:uid(),src,target,dir:dir||'higher',name:''});
+const KR=(code,name,weight,kpis)=>({id:uid(),code,name,weight,kpis});
+const J=(role,kra,name,freq,o={})=>Object.assign({id:uid(),role,kra,name,freq,dow:1,day:'1',qm:1,evidence:'',active:true},o);
+function defaultKras(){return{
+ dscm:[KR('A1','System uptime and health',10,[K('sched',100),K('uptime',99)]),
+  KR('A2','Ticket resolution',12,[K('items_tat',90),K('stl_repeat',5,'lower')]),
+  KR('A3','Vendor management',7,[K('sched',100),K('vendor_sla',85)]),
+  KR('A4','In-house platforms and development',8,[K('sched',100),K('items_tat',85),K('release_defects',1,'lower')]),
+  KR('A5','Event campaigns',8,[K('items_tat',100),K('cmp_goal',90)]),
+  KR('A6','Access and data security',3,[K('items_tat',100),K('sched',100)]),
+  KR('A7','Division supervision',2,[K('sched',100),K('team_reviewed',100),K('team_verified',100),K('rep_dscm',100)])],
+ rbe:[KR('R1','Monthly content calendar',15,[K('sched',100),K('posts_plan',95)]),
+  KR('R2','Social media performance',20,[K('sched',100),K('items_tat',90),K('eng_growth',10)]),
+  KR('R3','Request fulfilment',25,[K('drl_tat',90),K('drl_ftr',80),K('drl_score',4)]),
+  KR('R4','Engagement programme collateral',15,[K('items_tat',100),K('drl_event_lead',100)]),
+  KR('R5','Research, video and publications',10,[K('sched',100),K('items_tat',100),K('drl_errors',0,'lower')]),
+  KR('R6','Content compliance',10,[K('compliance_gate',100),K('compliance_obs',0,'lower'),K('sched',100)]),
+  KR('R7','Website, SEO, assets and reporting',5,[K('sched',100),K('items_tat',100),K('rep_rbe',100)])],
+ brand:[KR('B1','Brand plan and execution',15,[K('sched',100),K('bra_ontime',90)]),
+  KR('B2','Brand identity and guidelines',15,[K('sched',100),K('items_tat',100),K('brand_deviations',0,'lower')]),
+  KR('B3','PR and media',20,[K('items_tat',100),K('media_count',2),K('sched',100)]),
+  KR('B4','Online reputation',20,[K('brand_reviews',100),K('google_rating',4.5),K('sched',100)]),
+  KR('B5','Sponsorships and partnerships',15,[K('items_tat',100),K('outcome_reports',100)]),
+  KR('B6','Brand awareness research',10,[K('sched',100),K('awareness_change',5)]),
+  KR('B7','Reporting',5,[K('rep_brand',100),K('sched',100)])]
+};}
+function defaultJobs(){return[
+ J('dscm','A1','Health check of all Criticality A systems before 10:00','daily',{evidence:'Result in daily report; ticket ID for any issue'}),
+ J('dscm','A3','Follow up all open vendor tickets','daily',{evidence:'Follow-up noted on each STL item'}),
+ J('dscm','A7','Lead 10:00 division stand-up','daily'),
+ J('dscm','A7','Review RBE and Brand daily reports; mark reviewed','daily',{evidence:'Reports marked reviewed'}),
+ J('dscm','A1','Weekly backup and failed-job check (A and B systems)','weekly',{dow:1}),
+ J('dscm','A4','Weekly in-house platform check: backups, errors, audit log','weekly',{dow:3}),
+ J('dscm','A3','Weekly vendor ticket review and escalations','weekly',{dow:1}),
+ J('dscm','A3','Contract and licence renewal check (60 days ahead)','monthly',{day:'1'}),
+ J('dscm','A3','Issue monthly vendor scorecards','monthly',{day:'W5'}),
+ J('dscm','A6','Monthly user access review — remove inactive and exited users','monthly',{day:'5'}),
+ J('dscm','A4','Security updates applied on in-house platforms','monthly',{day:'10'}),
+ J('dscm','A1','Website and app speed and broken-link check','monthly',{day:'15'}),
+ J('dscm','A7','Monthly Division MIS sent to Head of Sales','monthly',{day:'W3'}),
+ J('dscm','A1','Backup restore test','quarterly',{qm:1,day:'10'}),
+ J('dscm','A6','Admin password rotation','quarterly',{qm:1,day:'12'}),
+ J('dscm','A3','Quarterly review meeting with Criticality A vendors','quarterly',{qm:2,day:'10'}),
+ J('rbe','R2','Reply to all comments and DMs','daily',{evidence:'Nothing older than 24 hours left unanswered'}),
+ J('rbe','R7','File delivered assets in the library by request ID','daily'),
+ J('rbe','R2','Weekly social analytics check','weekly',{dow:1}),
+ J('rbe','R5','Publish weekly blog','weekly',{dow:3}),
+ J('rbe','R7','Website content and broken-link check','weekly',{dow:4}),
+ J('rbe','R2','Schedule next week\'s posts','weekly',{dow:5}),
+ J('rbe','R7','Monthly SEO checklist','monthly',{day:'5'}),
+ J('rbe','R1','Week 3–4 copy for this month completed','monthly',{day:'10'}),
+ J('rbe','R1','Collect calendar inputs from department heads','monthly',{day:'18'}),
+ J('rbe','R5','Newsletter content ready','monthly',{day:'20'}),
+ J('rbe','R1','Draft next month\'s content calendar','monthly',{day:'23'}),
+ J('rbe','R5','Newsletter design ready and released','monthly',{day:'25'}),
+ J('rbe','R6','Compliance pre-check of next month\'s topics and copy','monthly',{day:'27'}),
+ J('rbe','R1','Next month\'s calendar approved by DSCM and frozen','monthly',{day:'L'}),
+ J('rbe','R2','Monthly social media report','monthly',{day:'W3'}),
+ J('rbe','R6','Quarterly content and compliance audit','quarterly',{qm:1,day:'15'}),
+ J('brand','B4','Check new online reviews and reply','daily'),
+ J('brand','B3','Media and mentions monitoring','daily'),
+ J('brand','B1','Weekly brand activity plan','weekly',{dow:1}),
+ J('brand','B3','Weekly PR pipeline review','weekly',{dow:5}),
+ J('brand','B2','Monthly brand guideline audit of digital output','monthly',{day:'5',evidence:'Audit logged as a Brand Activity (type AU) with deviations found'}),
+ J('brand','B7','Monthly brand report to DSCM','monthly',{day:'W3'}),
+ J('brand','B4','Monthly Google rating and review count recorded','monthly',{day:'W2'}),
+ J('brand','B1','Next month\'s brand calendar','monthly',{day:'25'}),
+ J('brand','B1','Quarterly brand plan approved','quarterly',{qm:1,day:'10'}),
+ J('brand','B6','Brand perception survey','quarterly',{qm:2,day:'15'})
+];}
+function defaults(){
+ return{version:VERSION,
+  settings:{
+   org:'Omega Financial',approval:{STL:'none',DEV:'hos',CMP:'hos',DRL:'hos',BRA:'hos'},deptApproval:true,goLive:'',
+   people:{hos:{name:'Yogendra Singh',title:'Head of Sales — final reporting & supreme monitoring'},dscm:{name:'',title:'Digital Systems & Campaign Manager (Division Head)'},rbe:{name:'',title:'Resource Building Executive'},brand:{name:'',title:'Brand Manager'}},
+   weights:{A:50,B:30,C:20},kpiCap:120,lowerPenalty:25,lateCredit:50,eventLead:3,
+   grace:{daily:0,weekly:1,monthly:2,quarterly:5},
+   bands:[{min:90,label:'Outstanding'},{min:75,label:'Exceeds'},{min:60,label:'Meets'},{min:0,label:'Improvement plan'}],
+   weeklyOff:[0],dayStart:'09:30',dayEnd:'18:30',holidays:[],
+   departments:['Sales','Training & Development','Customer Service','Insurance (Probus Finserv)','Accounts','HR & Administration','Operations','Management','Dongargarh Branch','Brand Division','Digital Division'],
+   systems:[{name:'Nexus by Omega Financial',type:'In-house platform',crit:'A',vendor:'In-house',owner:'Sales'},{name:'MF back-office software',type:'Vendor system',crit:'A',vendor:'',owner:'Operations'},{name:'Client CRM',type:'Vendor system',crit:'A',vendor:'',owner:'Sales'},{name:'Insurance back-office system',type:'Vendor system',crit:'B',vendor:'',owner:'Insurance (Probus Finserv)'},{name:'Company website',type:'Website',crit:'B',vendor:'',owner:'Digital Division'},{name:'WhatsApp Business',type:'Communication tool',crit:'B',vendor:'',owner:'Digital Division'}],
+   vendors:[{name:'In-house',contact:'DSCM',email:'',escalation:'Head of Sales',renewal:''}],
+   tat:{
+    STL:[{code:'S1',label:'S1 Critical — system down / data at risk',hours:4,ack:15,kra:'A2'},{code:'S2',label:'S2 High — key function broken',hours:9,ack:30,kra:'A2'},{code:'S3',label:'S3 Medium — one user / workaround exists',hours:27,ack:120,kra:'A2'},{code:'S4',label:'S4 Low — cosmetic / query',hours:45,ack:240,kra:'A2'},{code:'ACN',label:'Access — new ID or role change',hours:9,ack:240,kra:'A6'},{code:'ACX',label:'Access — exit revocation',hours:4,ack:0,kra:'A6'}],
+    DEV:[{code:'XS',label:'XS — label, field or column change',days:2,kra:'A4'},{code:'S',label:'S — new report, filter, simple form',days:5,kra:'A4'},{code:'M',label:'M — new screen, workflow, one integration',days:15,kra:'A4'},{code:'L',label:'L — project (set committed date)',days:0,kra:'A4'}],
+    CMP:[{code:'SE',label:'Single-event campaign',days:10,kra:'A5'},{code:'MC',label:'Multi-city / multi-week campaign',days:20,kra:'A5'},{code:'OW',label:'Organisation-wide campaign',days:30,kra:'A5'}],
+    DRL:[{code:'SP',label:'Static social post',days:1,kra:'R2'},{code:'CR',label:'Carousel (up to 8 slides)',days:2,kra:'R2'},{code:'RL',label:'Reel / short video (≤60 sec)',days:3,kra:'R2'},{code:'LV',label:'Long video (2–10 min)',days:7,kra:'R5'},{code:'BL',label:'Blog / article',days:3,kra:'R5'},{code:'RN',label:'Research note',days:2,kra:'R5'},{code:'NL',label:'Monthly newsletter',days:5,kra:'R5'},{code:'P15',label:'Training PPT up to 15 slides',days:3,kra:'R5'},{code:'P40',label:'Training PPT 16–40 slides',days:5,kra:'R5'},{code:'MG',label:'Magazine issue',days:15,kra:'R5'},{code:'IN',label:'Event invitation (digital)',days:2,kra:'R4'},{code:'EK',label:'Full event kit',days:5,kra:'R4'},{code:'CT',label:'Certificates / thank-you cards (per 100)',days:1,kra:'R4'},{code:'TP',label:'Digital working template',days:3,kra:'R3'},{code:'WU',label:'Website / app content update',days:2,kra:'R7'},{code:'WP',label:'Website new page or section',days:5,kra:'R7'},{code:'WA',label:'WhatsApp / greeting creative',days:1,kra:'R7'},{code:'OT',label:'Other content request',days:3,kra:'R3'}],
+    BRA:[{code:'PR',label:'Press release',days:3,kra:'B3'},{code:'MC',label:'Media coordination',days:5,kra:'B3'},{code:'SPN',label:'Sponsorship / partnership execution',days:10,kra:'B5'},{code:'RV',label:'Online review escalation',days:2,kra:'B4'},{code:'AU',label:'Brand guideline audit',days:5,kra:'B2'},{code:'SV',label:'Brand perception survey',days:15,kra:'B6'},{code:'CI',label:'Corporate identity item',days:5,kra:'B2'},{code:'OT',label:'Other brand activity',days:5,kra:'B1'}]
+   },
+   stages:{
+    STL:[{n:'Logged',p:0},{n:'Acknowledged',p:10},{n:'Diagnosing',p:25},{n:'Fixing / raised to vendor',p:50},{n:'Vendor working',p:70},{n:'Fixed — awaiting confirmation',p:90},{n:'Closed',p:100}],
+    DEV:[{n:'Logged',p:0},{n:'Scoped & estimated',p:15},{n:'Approved',p:25},{n:'In development',p:50},{n:'Testing',p:70},{n:'User acceptance',p:85},{n:'Released',p:95},{n:'Closed',p:100}],
+    CMP:[{n:'Brief logged',p:0},{n:'Plan approved',p:15},{n:'Build',p:40},{n:'Creatives ready',p:55},{n:'Test run',p:70},{n:'Live',p:85},{n:'Closed & reported',p:100}],
+    DRL:[{n:'Logged',p:0},{n:'Brief accepted',p:10},{n:'In production',p:30},{n:'Internal QC',p:50},{n:'Compliance review',p:65},{n:'Requester review',p:80},{n:'Final approved',p:90},{n:'Delivered',p:100}],
+    BRA:[{n:'Planned',p:0},{n:'In progress',p:40},{n:'Under review',p:70},{n:'Approved',p:90},{n:'Completed',p:100}]
+   },
+   kras:defaultKras(),jobs:defaultJobs()
+  },
+  items:[],daily:[],jobs:{},meas:{},ovr:{},snapshots:{},welcomed:false,lastBackup:'',actor:'hos'
+ };
+}
+/* ===================== Identity & data layer (Nexus / Supabase) ===================== */
+let S,CTX=null,ME={role:'requester',dept:'',head:false,name:'',id:''},MEMBERS=[],READY=false,CFG_MISSING=false,PROFILES=null,cfgTimer=null;
+const JOBROWS={};
+/* settings that every signed-in person may read (needed to raise and track requests) */
+const PUBLIC_CFG=['org','approval','deptApproval','tat','stages','departments','weeklyOff','dayStart','dayEnd','holidays','systems'];
+function emptyState(){return{settings:defaults().settings,items:[],allItems:[],daily:[],jobs:{},meas:{},ovr:{},snapshots:{},welcomed:true,lastBackup:'',actor:'requester'};}
+S=emptyState();
+const isHos=()=>ME.role==='hos';
+const canSeeTeam=()=>ME.role==='hos'||ME.role==='dscm';
+const P=()=>S.settings.people;
+function pname(r){const m=MEMBERS.find(x=>x.dd_role===r);return (m&&m.full_name)||(r==='hos'&&P().hos&&P().hos.name)||ROLES[r]||r;}
+function dbErr(e){console.error(e);alert('Could not save: '+(e&&e.message?e.message:e)+'\n\nYour change was not saved. The latest data will now be reloaded.');reload();}
+async function reload(){try{await loadAll();render();}catch(e){console.error(e);toast('Could not refresh');}}
+async function fetchAll(mk){let out=[],from=0;const step=1000;for(;;){const{data,error}=await mk().range(from,from+step-1);if(error)throw error;out=out.concat(data||[]);if(!data||data.length<step)break;from+=step;}return out;}
+const rowToItem=r=>Object.assign(newItem(r.log),r.data,{id:r.id,approval:r.approval,requesterId:r.requester_id,requesterName:r.requester_name,dept:r.dept,version:r.version,_raw:r.data});
+/* only send what really changed: keys that were never stored and still hold their default are left out */
+function itemPayload(it){const raw=it._raw||{},def=newItem(it.log),d={};Object.keys(it).forEach(k=>{if(['id','approval','requesterId','requesterName','version','dept','_raw'].indexOf(k)>=0)return;if(!(k in raw)&&JSON.stringify(it[k])===JSON.stringify(def[k]))return;d[k]=it[k];});return d;}
+function replaceItem(ni){const i=S.allItems.findIndex(x=>x.id===ni.id);if(i>=0)S.allItems[i]=ni;else S.allItems.push(ni);S.items=S.allItems.filter(x=>x.approval==='approved');}
+async function loadMembers(){const{data,error}=await nexus.from('dd_members').select('*');if(error)throw error;MEMBERS=data||[];const me=MEMBERS.find(m=>m.user_id===CTX.profile.id);ME.dept=(me&&me.dept)||'';ME.head=!!(me&&me.is_dept_head);ME.role=CTX.profile.role==='admin'?'hos':((me&&me.dd_role)||'requester');S.actor=ME.role;}
+async function loadAll(){
+ await loadMembers();
+ const{data:kv,error:ke}=await nexus.from('dd_kv').select('*');if(ke)throw ke;
+ const get=k=>(kv.find(x=>x.key===k)||{}).data;
+ const pub=get('cfg_public'),priv=get('cfg_private');
+ CFG_MISSING=!pub;
+ if(isHos()&&(!pub||!priv)){S.settings=defaults().settings;S.settings.goLive=today();await saveCfgNow(true);CFG_MISSING=false;}
+ else S.settings=Object.assign(defaults().settings,pub||{},priv||{});
+ S.meas={};S.ovr={};S.snapshots={};
+ kv.forEach(x=>{if(x.key.indexOf('meas:')===0)S.meas[x.key.slice(5)]=x.data;else if(x.key.indexOf('ovr:')===0){const role=x.key.slice(4);Object.keys(x.data||{}).forEach(m=>{(S.ovr[m]=S.ovr[m]||{})[role]=x.data[m];});}else if(x.key.indexOf('snap:')===0)S.snapshots[x.key.slice(5)]=x.data;});
+ const rows=await fetchAll(()=>nexus.from('dd_items').select('*').order('id'));
+ S.allItems=rows.map(rowToItem);S.items=S.allItems.filter(i=>i.approval==='approved');
+ if(ME.role==='requester'){S.jobs={};S.daily=[];}
+ else{
+  const jr=await fetchAll(()=>nexus.from('dd_jobs').select('*').order('key'));S.jobs={};Object.keys(JOBROWS).forEach(k=>delete JOBROWS[k]);jr.forEach(r=>{S.jobs[r.key]=r.data;JOBROWS[r.key]=1;});
+  const dr=await fetchAll(()=>nexus.from('dd_daily').select('*').order('date'));S.daily=dr.map(r=>Object.assign({},r.data,{id:r.id,date:r.date,role:r.role,_row:true}));
+ }
+}
+/* settings are saved by Head of Sales only (database enforces this too) */
+function save(){if(!isHos())return;clearTimeout(cfgTimer);cfgTimer=setTimeout(()=>saveCfgNow(),600);}
+async function saveCfgNow(force){if(!isHos())return;cfgTimer=null;const st=S.settings,pub={},priv={};Object.keys(st).forEach(k=>{(PUBLIC_CFG.indexOf(k)>=0?pub:priv)[k]=st[k];});const{error}=await nexus.from('dd_kv').upsert([{key:'cfg_public',data:pub},{key:'cfg_private',data:priv}]);if(error){if(force)throw error;dbErr(error);}else if(!force){try{nexusLogEvent(CTX.profile,'dd_settings_changed',{});}catch(e){}}}
+
+/* ===================== Working calendar ===================== */
+const isWork=d=>!S.settings.weeklyOff.includes(d.getDay())&&!S.settings.holidays.includes(ymd(d));
+const hm=s=>(s||'09:30').split(':').map(Number);
+function sod(d){const x=new Date(d);const[a,b]=hm(S.settings.dayStart);x.setHours(a,b,0,0);return x;}
+function eod(d){const x=new Date(d);const[a,b]=hm(S.settings.dayEnd);x.setHours(a,b,0,0);return x;}
+function nextWorkStart(d){let x=new Date(d);x.setDate(x.getDate()+1);x=sod(x);let g=0;while(!isWork(x)&&g++<400)x.setDate(x.getDate()+1);return x;}
+function normWork(d){let x=new Date(d),g=0;while(g++<400){if(!isWork(x)||x>=eod(x)){x=nextWorkStart(x);continue;}if(x<sod(x))x=sod(x);return x;}return x;}
+function addWorkHours(start,h){let d=normWork(start),m=h*60,g=0;while(m>0&&g++<1000){const left=(eod(d)-d)/60000;if(m<=left){d=new Date(d.getTime()+m*60000);m=0;}else{m-=left;d=nextWorkStart(d);}}return d;}
+function addWorkDays(start,n){let d=new Date(start),g=0;while(n>0&&g++<2000){d.setDate(d.getDate()+1);if(isWork(d))n--;}return eod(d);}
+function wdBetween(a,b){const A=pDate(ymd(a)),B=pDate(ymd(b));if(B.getTime()===A.getTime())return 0;let s=B>A?1:-1,d=new Date(A),c=0,g=0;while(d.getTime()!==B.getTime()&&g++<3000){d.setDate(d.getDate()+s);if(isWork(d))c+=s;}return c;}
+function workDaysInMonth(m,upto=true){const[y,mm]=m.split('-').map(Number);let d=new Date(y,mm-1,1),c=0;{const g=S.settings.goLive?pDate(S.settings.goLive):null;if(g&&g>d)d=new Date(g);}const lim=upto?new Date():new Date(y,mm,0);while(d.getMonth()===mm-1&&d<=lim){if(isWork(d))c++;d.setDate(d.getDate()+1);}return c;}
+function workHoursBetween(a,b){a=new Date(a);b=new Date(b);if(b<=a)return 0;let h=0,d=new Date(a);d.setHours(0,0,0,0);let g=0;while(d<=b&&g++<500){if(isWork(d)){const s=Math.max(sod(d),a),e=Math.min(eod(d),b);if(e>s)h+=(e-s)/36e5;}d.setDate(d.getDate()+1);}return h;}
+function monthBounds(m){const[y,mm]=m.split('-').map(Number);const s=new Date(y,mm-1,1);const e=new Date(Math.min(new Date(y,mm,0,23,59).getTime(),Date.now()));return[s,e];}
+
+/* ===================== Scheduled jobs ===================== */
+function dueDates(j,m){const g=S.settings.goLive||'';const r=dueDatesRaw(j,m);return g?r.filter(d=>d>=g):r;}
+function dueDatesRaw(j,m){const[y,mm]=m.split('-').map(Number);const out=[];const last=new Date(y,mm,0).getDate();
+ const fwd=d=>{let g=0;while(!isWork(d)&&g++<20)d.setDate(d.getDate()+1);return d;};
+ if(j.freq==='daily'){for(let i=1;i<=last;i++){const d=new Date(y,mm-1,i);if(isWork(d))out.push(ymd(d));}return out;}
+ if(j.freq==='weekly'){for(let i=1;i<=last;i++){const d=new Date(y,mm-1,i);if(d.getDay()===+j.dow){const s=fwd(new Date(d));if(s.getMonth()===mm-1)out.push(ymd(s));}}return out;}
+ if(j.freq==='quarterly'&&((mm-1)%3)!==((+j.qm||1)-1))return out;
+ const spec=String(j.day||'1').toUpperCase();let d=null;
+ if(spec==='L'){d=new Date(y,mm-1,last);let g=0;while(!isWork(d)&&g++<20)d.setDate(d.getDate()-1);}
+ else if(/^W\d+$/.test(spec)){const n=+spec.slice(1);let c=0;for(let i=1;i<=last;i++){const x=new Date(y,mm-1,i);if(isWork(x)&&++c===n){d=x;break;}}}
+ else{d=fwd(new Date(y,mm-1,Math.min(last,+spec||1)));if(d.getMonth()!==mm-1)d=null;}
+ if(d)out.push(ymd(d));return out;}
+const jKey=(j,d)=>j.id+'|'+d;
+function graceEnd(j,d){const g=+S.settings.grace[j.freq]||0;return g?ymd(addWorkDays(pDate(d),g)):d;}
+function jStat(j,d){const r=S.jobs[jKey(j,d)];const lim=graceEnd(j,d);if(r&&r.na)return'na';if(r&&r.doneAt)return r.doneAt.slice(0,10)<=lim?'ontime':'late';const t=today();if(t>lim)return'missed';if(d>t)return'upcoming';return d===t?'today':'due';}
+const activeJobs=role=>S.settings.jobs.filter(j=>j.role===role&&j.active!==false);
+function schedStats(role,kra,m){const st={ontime:0,late:0,missed:0,na:0,open:0,total:0};activeJobs(role).filter(j=>!kra||j.kra===kra).forEach(j=>dueDates(j,m).forEach(d=>{const s=jStat(j,d);if(s==='upcoming')return;st.total++;if(s==='today'||s==='due')st.open++;else st[s]++;}));const n=st.ontime+st.late+st.missed;st.score=n?r1((st.ontime+st.late*S.settings.lateCredit/100)/n*100):null;st.judged=n;return st;}
+const jSym={ontime:'✓',late:'L',missed:'✗',na:'–',today:'•',due:'!',upcoming:''};
+
+/* ===================== Items ===================== */
+const stagesOf=log=>S.settings.stages[log]||[];
+const typeOf=it=>(S.settings.tat[it.log]||[]).find(t=>t.code===it.type);
+const kraOf=it=>typeOf(it)?.kra||'';
+function stageP(it){const st=stagesOf(it.log);const s=st[Math.min(it.stage||0,st.length-1)];return s?s.p:0;}
+function stageN(it){const st=stagesOf(it.log);const s=st[Math.min(it.stage||0,st.length-1)];return s?s.n:'—';}
+const isDone=it=>it.status!=='Cancelled'&&(stageP(it)>=100||it.status==='Closed – no response');
+const isOpen=it=>!isDone(it)&&it.status!=='Cancelled';
+function baseDue(it){if(it.dueOverride)return pDT(it.dueOverride);const t=typeOf(it);if(!t||!it.loggedAt)return null;const st=pDT(it.startedAt||it.loggedAt);if(it.log==='STL')return addWorkHours(st,+t.hours||0);if(!(+t.days))return null;return addWorkDays(st,+t.days);}
+function effDue(it){const b=baseDue(it);if(!b)return null;const p=+it.paused||0;return p>0?addWorkDays(b,p):b;}
+function isOverdue(it){if(!isOpen(it)||it.status==='On hold')return false;const d=effDue(it);return d&&new Date()>d;}
+function withinTat(it){if(!isDone(it)||!it.closedAt||it.status==='Closed – no response')return null;const d=effDue(it);if(!d)return null;return pDT(it.closedAt)<=d;}
+function daysOver(it){const d=effDue(it);return d?Math.max(0,wdBetween(d,new Date())):0;}
+function genId(log,at){const p=LOGS[log].prefix,d=pDT(at)||new Date();const tag=p+'-'+String(d.getFullYear()).slice(2)+pad(d.getMonth()+1)+'-';const n=S.items.filter(i=>i.id.startsWith(tag)).map(i=>+i.id.slice(tag.length)||0);return tag+String((n.length?Math.max(...n):0)+1).padStart(3,'0');}
+const ownerRole=it=>LOGS[it.log].owner;
+function rag(it){if(isDone(it))return'Done';if(it.status==='Cancelled')return'Cancelled';const end=it.revisedEnd?eod(pDate(it.revisedEnd)):effDue(it);if(!end)return it.blocker?'Amber':'Green';const now=new Date();if(now>end)return'Red';const left=wdBetween(now,end);if(it.blocker||it.status==='On hold'||(left<=2&&stageP(it)<85))return'Amber';return'Green';}
+const ragPill=r=>`<span class="pill ${r==='Red'?'p-red':r==='Amber'?'p-amber':r==='Green'?'p-green':'p-navy'}">${r}</span>`;
+function setStageOf(it,idx,note){const prev=isDone(it);it.stage=idx;it.history=it.history||[];it.history.push({at:nowStr(),stage:stageN(it),note:note||'',by:S.actor,byName:ME.name});if(isDone(it)){if(!prev||!it.closedAt)it.closedAt=nowStr();if(it.expedite)it.expedite.cleared=nowStr();}else it.closedAt='';}
+
+/* ===================== Metrics (all measured) ===================== */
+const closedIn=(log,m)=>S.items.filter(i=>i.log===log&&isDone(i)&&i.closedAt&&i.closedAt.startsWith(m));
+const loggedIn=(log,m)=>S.items.filter(i=>i.log===log&&i.loggedAt&&i.loggedAt.startsWith(m));
+const pct=(a,b)=>b?r1(a/b*100):null;
+function tatOf(list){const c=list.map(withinTat).filter(x=>x!==null);return pct(c.filter(Boolean).length,c.length);}
+const tatPct=(log,m)=>tatOf(closedIn(log,m));
+function avgTat(log,m){const c=closedIn(log,m).filter(i=>i.status!=='Closed – no response');if(!c.length)return null;return r1(c.reduce((a,i)=>a+Math.max(0,wdBetween(pDT(i.startedAt||i.loggedAt),pDT(i.closedAt))-(+i.paused||0)),0)/c.length);}
+const repOf=(role,m)=>S.daily.filter(d=>d.role===role&&d.date.startsWith(m));
+const roleLogs=role=>Object.keys(LOGS).filter(l=>LOGS[l].owner===role);
+function itemsClosedForKra(role,kra,m){return S.items.filter(i=>roleLogs(role).includes(i.log)&&kraOf(i)===kra&&isDone(i)&&i.closedAt&&i.closedAt.startsWith(m));}
+function metric(src,m,role,kra){
+ switch(src){
+  case'sched':return schedStats(role,kra,m).score;
+  case'items_tat':return tatOf(itemsClosedForKra(role,kra,m));
+  case'uptime':{const crit=S.settings.systems.filter(s=>s.crit==='A').map(s=>s.name);if(!crit.length)return null;const[a,b]=monthBounds(m);const poss=workHoursBetween(a,b)*crit.length;if(!poss)return null;let down=0;S.items.filter(i=>i.log==='STL'&&i.outage&&crit.includes(i.system)).forEach(i=>{const s=new Date(Math.max(pDT(i.loggedAt),a)),e=new Date(Math.min(i.closedAt?pDT(i.closedAt):Date.now(),b));down+=workHoursBetween(s,e);});return r1(Math.max(0,100-down/poss*100));}
+  case'stl_repeat':{const l=loggedIn('STL',m);return pct(l.filter(i=>i.repeat).length,l.length);}
+  case'vendor_sla':return tatOf(closedIn('STL',m).filter(i=>i.vendor&&i.vendor!=='In-house'));
+  case'release_defects':return S.items.filter(i=>i.log==='STL'&&i.releaseDefect&&(i.loggedAt||'').startsWith(m)).length;
+  case'cmp_goal':{const c=closedIn('CMP',m).filter(i=>+i.goalTarget>0);if(!c.length)return null;return r1(c.reduce((a,i)=>a+Math.min(150,(+i.goalActual||0)/(+i.goalTarget)*100),0)/c.length);}
+  case'drl_tat':return tatPct('DRL',m);
+  case'drl_ftr':{const c=closedIn('DRL',m).filter(i=>i.status!=='Closed – no response');return pct(c.filter(i=>(+i.revisions||0)<=1).length,c.length);}
+  case'drl_score':{const c=closedIn('DRL',m).filter(i=>+i.score>0);return c.length?r1(c.reduce((a,i)=>a+(+i.score),0)/c.length):null;}
+  case'drl_event_lead':{const c=closedIn('DRL',m).filter(i=>i.eventDate);return pct(c.filter(i=>wdBetween(pDT(i.closedAt),pDate(i.eventDate))>=S.settings.eventLead).length,c.length);}
+  case'drl_errors':return closedIn('DRL',m).filter(i=>i.errorAfter).length+S.items.filter(i=>i.log==='DRL'&&i.errorAfter&&i.errorAt&&i.errorAt.startsWith(m)&&!(i.closedAt||'').startsWith(m)).length;
+  case'compliance_gate':{const c=closedIn('DRL',m).filter(i=>i.conf!=='Restricted'||true);const ci=stagesOf('DRL').findIndex(s=>/compliance/i.test(s.n));if(ci<0)return null;return pct(c.filter(i=>(i.maxStage??i.stage)>=ci&&(i.history||[]).some(h=>/compliance/i.test(h.stage))).length,c.length);}
+  case'compliance_obs':return S.items.filter(i=>i.log==='DRL'&&(i.closedAt||i.loggedAt||'').startsWith(m)).reduce((a,i)=>a+(+i.complianceObs||0),0);
+  case'posts_plan':{const r=repOf('rbe',m);const s=r.reduce((a,d)=>a+(+d.postsScheduled||0),0);return pct(r.reduce((a,d)=>a+(+d.postsPublished||0),0),s);}
+  case'eng_growth':{const c=S.meas[m],p=S.meas[prevMonth(m)];if(!c||!p||!+c.reach||!+p.reach||!+p.engagements)return null;const rc=c.engagements/c.reach,rp=p.engagements/p.reach;return r1((rc/rp-1)*100);}
+  case'bra_ontime':return tatPct('BRA',m);
+  case'media_count':return closedIn('BRA',m).filter(i=>['PR','MC'].includes(i.type)).length;
+  case'brand_deviations':return closedIn('BRA',m).filter(i=>i.type==='AU').reduce((a,i)=>a+(+i.deviations||0),0);
+  case'outcome_reports':{const c=closedIn('BRA',m).filter(i=>i.type==='SPN');return pct(c.filter(i=>i.outcomeReport).length,c.length);}
+  case'google_rating':{const c=S.meas[m];return c&&c.rating!==''&&c.rating!=null?+c.rating:null;}
+  case'brand_reviews':{const r=repOf('brand',m);return pct(r.reduce((a,d)=>a+(+d.reviewsReplied||0),0),r.reduce((a,d)=>a+(+d.reviewsNew||0),0));}
+  case'awareness_change':{const c=S.meas[m];if(!c||c.awareness===''||c.awareness==null)return null;let p=m;for(let i=0;i<12;i++){p=prevMonth(p);const x=S.meas[p];if(x&&x.awareness!==''&&x.awareness!=null)return r1(+c.awareness-+x.awareness);}return null;}
+  case'rep_dscm':case'rep_rbe':case'rep_brand':{let w=workDaysInMonth(m);const tt=today();if(tt.startsWith(m)&&isWork(new Date())&&!S.daily.some(x=>x.date===tt&&x.role===src.slice(4)))w--;return w?Math.min(100,pct(repOf(src.slice(4),m).length,w)):null;}
+  case'team_reviewed':{const r=[...repOf('rbe',m),...repOf('brand',m)];return pct(r.filter(x=>x.reviewed).length,r.length);}
+  case'team_verified':{let n=0,ok=0;['rbe','brand'].forEach(role=>activeJobs(role).forEach(j=>dueDates(j,m).forEach(d=>{const r=S.jobs[jKey(j,d)];if(r&&r.doneAt){n++;if(r.verifiedAt&&wdBetween(pDT(r.doneAt),pDT(r.verifiedAt))<=2)ok++;}})));return pct(ok,n);}
+ }
+ return null;
+}
+function kpiLabel(k,kra){const s=SRC[k.src];return k.name||(s?s.l:k.src);}
+
+/* ===================== Scoring ===================== */
+function kpiScore(k,a){if(a==null||a===''||isNaN(a))return null;a=+a;const t=+k.target;if(k.dir==='lower')return a<=t?100:Math.max(0,100-S.settings.lowerPenalty*(a-t));if(!t)return a>=0?100:0;return Math.max(0,Math.min(S.settings.kpiCap,a/t*100));}
+function roleScore(role,m){
+ const kras=S.settings.kras[role]||[];let pts=0,mw=0,ws=0;
+ const rows=kras.map(kr=>{const w=+kr.weight||0;ws+=w;const ks=kr.kpis.map(k=>{const auto=metric(k.src,m,role,kr.code);const o=S.ovr?.[m]?.[role]?.[k.id];const actual=o?+o.v:auto;return{k,auto,o,actual,s:kpiScore(k,actual)};});const av=ks.filter(x=>x.s!=null);const avg=av.length?av.reduce((a,x)=>a+x.s,0)/av.length:null;if(avg!=null){pts+=avg*w/100;mw+=w;}return{kr,ks,avg,pts:avg==null?null:avg*w/100};});
+ const total=mw?pts/mw*ws:0;return{rows,total,ws,mw};
+}
+function scores(m){const W=S.settings.weights;const d=roleScore('dscm',m),r=roleScore('rbe',m),b=roleScore('brand',m);const rbe=r.ws?r.total/r.ws*100:0,brand=b.ws?b.total/b.ws*100:0;const A=d.ws?d.total/d.ws*W.A:0,B=Math.min(100,rbe)*W.B/100,C=Math.min(100,brand)*W.C/100;return{d,r,b,A,B,C,dscm:A+B+C,rbe,brand};}
+function band(s){const bs=[...S.settings.bands].sort((a,b)=>b.min-a.min);const i=bs.findIndex(x=>s>=x.min);return{label:bs[i]?.label||'—',cls:'b'+Math.min(3,Math.max(0,i))};}
+const bandPill=s=>{const b=band(s);return`<span class="band ${b.cls}">${esc(b.label)}</span>`;};
+
+/* ===================== Shell ===================== */
+/* ===================== Shell (role based) ===================== */
+const TABLBL={ov:'Overview',my:'My work',appr:'Approvals',chk:'Checklists',logs:'Requests & tickets',proj:'Projects',daily:'Daily reports',kra:'KRA scorecards',rep:'Reports',req:'Raise a request',myreq:'My requests',dept:'Department requests',guide:'How it works',adm:'Control panel'};
+function tabKeys(){const r=ME.role;let t;
+ if(r==='hos')t=['ov','my','appr','chk','logs','proj','daily','kra','rep','req','myreq','guide','adm'];
+ else if(r==='dscm')t=['my','chk','logs','proj','daily','kra','req','myreq','guide'];
+ else if(r==='rbe'||r==='brand')t=['my','chk','logs','daily','kra','req','myreq','guide'];
+ else t=['req','myreq','guide'];
+ if(ME.head&&r!=='hos')t.splice(t.indexOf('myreq')+1,0,'dept');
+ return t;}
+let tab='my',logTab='ALL',logFilter='open',logDept='',logQ='',dailyDate=today(),kraMonth=thisMonth(),kraRole='dscm',repMonth=thisMonth(),admSec='people',myRole=null,chkRole='dscm',chkMonth=thisMonth(),admJobRole='dscm',reqLog=null,reqDone=null;
+function pendingCount(kind){if(kind==='appr')return S.allItems.filter(i=>i.approval==='hos'||i.approval==='dept').length;if(kind==='dept')return S.allItems.filter(i=>i.approval==='dept'&&i.dept===ME.dept&&i.requesterId!==ME.id).length;return 0;}
+function header(){$('#hTitle').textContent=S.settings.org+' · Digital Division Console';
+ const nm=ME.name||'';
+ $('#hHos').innerHTML=`<a href="dashboard.html" style="color:#C9D3DE;text-decoration:none">&larr; Nexus dashboard</a><br>Signed in: <b>${esc(nm)}</b> · ${esc(ROLES[ME.role]||'Requester')}${ME.head?' · Department head':''}${ME.dept?' ('+esc(ME.dept)+')':''}<br><button class="btn sm sec" style="margin-top:4px" onclick="reload();toast('Refreshed')">Refresh</button>`;
+ $('#foot').textContent='Data is stored securely in Nexus. Every tick, approval and change carries the name of the person who made it and the server time.';}
+function nav(){$('#nav').innerHTML=tabKeys().map(k=>{const c=k==='appr'?pendingCount('appr'):k==='dept'?pendingCount('dept'):0;return`<button class="${tab===k?'on':''}" onclick="go('${k}')">${TABLBL[k]}${c?` <span class="pill p-red">${c}</span>`:''}</button>`;}).join('');}
+function go(t){tab=t;if(t!=='req')reqDone=null;render();window.scrollTo(0,0);}
+function render(){header();nav();const keys=tabKeys();if(!keys.includes(tab))tab=keys[0];
+ if(!READY){$('#view').innerHTML='<div class="card">Loading…</div>';return;}
+ if(CFG_MISSING&&!isHos()){$('#view').innerHTML='<div class="card"><h2>Not set up yet</h2><p>The Digital Division Console has not been configured yet. Please ask the Head of Sales to open it once and then try again.</p></div>';return;}
+ $('#view').innerHTML={ov:rOverview,my:rMy,appr:rApprovals,chk:rChk,logs:rLogs,proj:rProjects,daily:rDaily,kra:rKra,rep:rReports,req:rRaise,myreq:rMyReq,dept:rDept,guide:rGuide,adm:rAdmin}[tab]();}
+function hbars(rows,max,suffix=''){max=max||Math.max(1,...rows.map(r=>r.v||0));return rows.map(r=>`<div class="hb"><span>${esc(r.l)}</span><div class="t">${r.parts?r.parts.map(p=>`<i style="width:${(p.v||0)/max*100}%;background:${p.c}"></i>`).join(''):`<i style="width:${Math.min(100,Math.max(0,(r.v||0))/max*100)}%;background:${r.c||'var(--navy)'}"></i>`}</div><b style="text-align:right">${r.v==null?'—':r.v+suffix}</b></div>`).join('');}
+const visibleLogs=()=>ME.role==='rbe'?['DRL']:ME.role==='brand'?['BRA']:Object.keys(LOGS);
+const dailyRoles=()=>canSeeTeam()?['dscm','rbe','brand']:[ME.role];
+const canVerify=role=>S.actor==='hos'||SENIOR[role]===S.actor;
+const canExpedite=role=>S.actor==='hos'||(S.actor==='dscm'&&role!=='dscm');
+
+/* ===================== Overview ===================== */
+function awaitingVerify(role){const out=[];const m=thisMonth(),pm=prevMonth(m);activeJobs(role).forEach(j=>[pm,m].forEach(mm=>dueDates(j,mm).forEach(d=>{const r=S.jobs[jKey(j,d)];if(r&&r.doneAt&&!r.verifiedAt)out.push({j,d,r});})));return out;}
+function expeditedOpen(){const it=S.items.filter(i=>isOpen(i)&&i.expedite&&!i.expedite.cleared).map(i=>({kind:'item',i}));const js=[];Object.entries(S.jobs).forEach(([k,r])=>{if(r.expedite&&!r.doneAt&&!r.na){const[id,d]=k.split('|');const j=S.settings.jobs.find(x=>x.id===id);if(j)js.push({kind:'job',j,d,r});}});return[...it,...js];}
+function rOverview(){
+ const m=thisMonth(),sc=scores(m),open=S.items.filter(isOpen),od=open.filter(isOverdue),sev=open.filter(i=>i.log==='STL'&&['S1','S2'].includes(i.type));
+ const projs=S.items.filter(i=>i.isProject&&isOpen(i)),red=projs.filter(i=>rag(i)==='Red'),amb=projs.filter(i=>rag(i)==='Amber');
+ const missedToday=['dscm','rbe','brand'].reduce((a,r)=>a+activeJobs(r).reduce((b,j)=>b+dueDates(j,m).filter(d=>jStat(j,d)==='missed'&&d>=ymd(addWorkDays(new Date(),-0))).length,0),0);
+ const t=today(),reps=['dscm','rbe','brand'].filter(r=>S.daily.some(d=>d.date===t&&d.role===r)).length;
+ const exp=expeditedOpen(),pend=S.allItems.filter(i=>i.approval==='hos'||i.approval==='dept');
+ let h='';
+ h+=`<div class="row"><h2>Head of Sales overview — ${monthLabel(m)}</h2><span class="sp"></span><span class="muted small">${new Date().toLocaleString('en-IN',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'})}</span></div>`;
+ const sj=['dscm','rbe','brand'].map(r=>schedStats(r,null,m));
+ h+=`<div class="grid g5">
+  <div class="card stat ${od.length?'warn':''}"><div class="n">${od.length}<span style="font-size:15px;color:var(--muted)"> / ${open.length}</span></div><div class="l">Overdue / open requests & tickets</div></div>
+  <div class="card stat ${sev.length?'warn':''}"><div class="n">${sev.length}</div><div class="l">Open S1/S2 system tickets</div></div>
+  <div class="card stat ${sj.some(s=>s.open)?'':''}"><div class="n">${sj.reduce((a,s)=>a+s.missed,0)}</div><div class="l">Scheduled jobs missed this month</div></div>
+  <div class="card stat ${red.length?'warn':''}"><div class="n">${red.length}<span style="font-size:15px;color:var(--amber)"> / ${amb.length}</span></div><div class="l">Projects Red / Amber</div></div>
+  <div class="card stat ${reps<3?'warn':''}"><div class="n">${reps}/3</div><div class="l">Daily reports in today</div></div>
+  <div class="card stat ${exp.length?'warn':''}"><div class="n">${exp.length}</div><div class="l">Expedited, still open</div></div>
+  <div class="card stat ${pend.length?'warn':''}" style="cursor:pointer" onclick="go('appr')"><div class="n">${pend.length}</div><div class="l">Requests awaiting your approval</div></div>
+ </div>`;
+ h+=`<h3 style="margin-top:18px">Performance this month (live, measured)</h3><div class="grid g3">
+  <div class="card"><div class="score"><div><div class="muted small">${esc(pname('dscm'))} · Division Head</div><div class="big">${sc.dscm.toFixed(1)}</div></div>${bandPill(sc.dscm)}</div>
+   ${hbars([{l:`A · Own work (/${S.settings.weights.A})`,v:r1(sc.A),c:'var(--navy)'},{l:`B · Resource Bldg (/${S.settings.weights.B})`,v:r1(sc.B),c:'var(--gold)'},{l:`C · Brand (/${S.settings.weights.C})`,v:r1(sc.C),c:'var(--green)'}],Math.max(S.settings.weights.A,S.settings.weights.B,S.settings.weights.C))}
+   <div class="small muted">Scheduled jobs on time: <b>${sj[0].score??'—'}%</b> · awaiting your verification: <b>${awaitingVerify('dscm').length}</b></div></div>
+  <div class="card"><div class="score"><div><div class="muted small">${esc(pname('rbe'))}</div><div class="big">${sc.rbe.toFixed(1)}</div></div>${bandPill(sc.rbe)}</div>${hbars(sc.r.rows.map(x=>({l:x.kr.code+' '+x.kr.name,v:x.avg==null?null:Math.round(x.avg),c:'var(--gold)'})),120,'%')}<div class="small muted">Scheduled jobs on time: <b>${sj[1].score??'—'}%</b> · awaiting DSCM verification: <b>${awaitingVerify('rbe').length}</b></div></div>
+  <div class="card"><div class="score"><div><div class="muted small">${esc(pname('brand'))}</div><div class="big">${sc.brand.toFixed(1)}</div></div>${bandPill(sc.brand)}</div>${hbars(sc.b.rows.map(x=>({l:x.kr.code+' '+x.kr.name,v:x.avg==null?null:Math.round(x.avg),c:'var(--green)'})),120,'%')}<div class="small muted">Scheduled jobs on time: <b>${sj[2].score??'—'}%</b> · awaiting DSCM verification: <b>${awaitingVerify('brand').length}</b></div></div>
+ </div>`;
+ const logRows=Object.keys(LOGS).map(l=>{const o=open.filter(i=>i.log===l);const ov=o.filter(isOverdue).length;return{l:LOGS[l].short,v:o.length,parts:[{v:o.length-ov,c:'var(--navy)'},{v:ov,c:'var(--red)'}]};});
+ h+=`<div class="grid g2" style="margin-top:14px">
+  <div class="card"><h3>Scheduled jobs this month</h3>${['dscm','rbe','brand'].map((r,i)=>{const s=sj[i];const tot=Math.max(1,s.ontime+s.late+s.missed+s.open);return`<div class="hb"><span>${ROLES[r]}</span><div class="t"><i style="width:${s.ontime/tot*100}%;background:#2E8B57"></i><i style="width:${s.late/tot*100}%;background:#E3A008"></i><i style="width:${s.missed/tot*100}%;background:#C62828"></i><i style="width:${s.open/tot*100}%;background:#C5CED8"></i></div><b style="text-align:right">${s.score??'—'}%</b></div>`;}).join('')}<div class="legend small"><span style="color:#2E8B57">■ on time</span><span style="color:#E3A008">■ late</span><span style="color:#C62828">■ missed</span><span style="color:#8a97a5">■ due, not yet done</span></div></div>
+  <div class="card"><h3>Open requests & tickets <span class="small muted">(red = overdue)</span></h3>${hbars(logRows,Math.max(1,...logRows.map(r=>r.v)))}</div></div>`;
+ h+=`<div class="grid g2" style="margin-top:14px"><div class="card"><h3>Overdue requests & tickets</h3>${od.length?`<div class="tw"><table><tr><th>ID</th><th>Item</th><th>Owner</th><th>Days over</th><th></th></tr>${od.sort((a,b)=>daysOver(b)-daysOver(a)).slice(0,12).map(i=>`<tr><td class="click" onclick="openItem('${i.id}')"><b>${i.id}</b></td><td>${esc(i.title)}${i.expedite&&!i.expedite.cleared?' <span class="pill p-red">expedited</span>':''}</td><td>${esc(pname(ownerRole(i)))}</td><td><span class="pill p-red">${daysOver(i)}</span></td><td>${canExpedite(ownerRole(i))&&!(i.expedite&&!i.expedite.cleared)?`<button class="btn sm danger" onclick="expediteItem('${i.id}')">Expedite</button>`:''}</td></tr>`).join('')}</table></div>`:'<div class="muted">No overdue items.</div>'}</div>
+  <div class="card"><h3>Projects needing attention</h3>${(red.length+amb.length)?`<table><tr><th>ID</th><th>Project</th><th>Stage</th><th>RAG</th></tr>${[...red,...amb].map(i=>`<tr class="click" onclick="openItem('${i.id}')"><td>${i.id}</td><td>${esc(i.title)}${i.blocker?`<div class="small warnline">${esc(i.blocker)}</div>`:''}</td><td>${stageP(i)}%</td><td>${ragPill(rag(i))}</td></tr>`).join('')}</table>`:'<div class="muted">All projects on track.</div>'}</div></div>`;
+ const snaps=Object.keys(S.snapshots).sort();
+ h+=`<div class="card" style="margin-top:14px"><h3>Score trend (closed months)</h3>${snaps.length?trendSvg(snaps):'<div class="muted small">Close a month in KRA scorecards to build the trend.</div>'}</div>`;
+ return h;
+}
+function trendSvg(ms){const W=760,H=200,pl=36,pb=26,ser=[['dscm','#0E2A47','DSCM'],['rbe','#D4AF37','Resource Building'],['brand','#1F6F4A','Brand']];const x=i=>pl+(ms.length===1?(W-pl-10)/2:i*(W-pl-10)/(ms.length-1));const y=v=>10+(H-pb-10)*(1-Math.min(120,v)/120);let g='';[0,60,75,90,120].forEach(v=>g+=`<line x1="${pl}" x2="${W-10}" y1="${y(v)}" y2="${y(v)}" stroke="#E1E5EA"/><text x="${pl-6}" y="${y(v)+4}" font-size="10" text-anchor="end" fill="#5D6B7A">${v}</text>`);ms.forEach((m,i)=>g+=`<text x="${x(i)}" y="${H-8}" font-size="10" text-anchor="middle" fill="#5D6B7A">${m}</text>`);ser.forEach(([k,c])=>{g+=`<polyline points="${ms.map((m,i)=>`${x(i)},${y(S.snapshots[m][k]||0)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="2.5"/>`+ms.map((m,i)=>`<circle cx="${x(i)}" cy="${y(S.snapshots[m][k]||0)}" r="3.5" fill="${c}"/>`).join('');});return`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-height:220px">${g}</svg><div class="legend">${ser.map(s=>`<span><span style="display:inline-block;width:10px;height:10px;background:${s[1]};border-radius:2px"></span> ${s[2]}</span>`).join('')}</div>`;}
+
+/* ===================== My work ===================== */
+function jobLine(j,d,role,opts={}){const s=jStat(j,d),r=S.jobs[jKey(j,d)]||{};const k=jKey(j,d);
+ let act='';
+ if(s==='ontime'||s==='late'){act=`<span class="pill ${s==='ontime'?'p-green':'p-amber'}">${s==='ontime'?'done on time':'done late'} ${fmtDT(r.doneAt)} · ${esc(pname(r.by))}</span> ${r.verifiedAt?'<span class="pill p-navy">verified · '+esc(pname(r.verifiedBy))+' '+fmtDT(r.verifiedAt)+'</span>':canVerify(role)?`<button class="btn sm ok" onclick="verifyJob('${k}')">Verify</button> <button class="btn sm danger" onclick="rejectJob('${k}')">Send back</button>`:'<span class="pill">awaiting verification</span>'}`;}
+ else if(s==='na')act=`<span class="pill">N/A — ${esc(r.naReason||'')}</span>`;
+ else{if(S.actor===role||S.actor==='hos')act=`<button class="btn sm ok" onclick="doJob('${k}')">Mark done</button> <button class="btn sm sec" onclick="naJob('${k}')">N/A</button>`;if(canExpedite(role)&&!r.expedite)act+=` <button class="btn sm danger" onclick="expediteJob('${k}')">Expedite</button>`;}
+ const flag=s==='missed'?'<span class="pill p-red">missed — still do it</span>':s==='due'?'<span class="pill p-amber">due, grace running</span>':s==='today'?'<span class="pill p-navy">due today</span>':'';
+ return`<div class="task ${r.expedite&&!r.doneAt?'exp':''}"><div class="t"><b>${esc(j.name)}</b> ${flag}${r.expedite&&!r.doneAt?` <span class="pill p-red">expedited: ${esc(r.expedite.note||'')}</span>`:''}<div class="small muted">${FREQ[j.freq]} · ${esc(j.kra)} · due ${fmtD(d)}${j.evidence?' · Evidence: '+esc(j.evidence):''}${r.note?' · Note: '+esc(r.note):''}${r.returned?' · <span class="warnline">Sent back: '+esc(r.returned)+'</span>':''}</div></div><div>${act}</div></div>`;}
+function rMy(){
+ const role=canSeeTeam()?(myRole||(S.actor==='hos'?'dscm':S.actor)):ME.role;const m=thisMonth(),t=today();
+ let h=`<div class="row"><h2>My work</h2><span class="sp"></span><div class="subtabs" style="margin:0">${canSeeTeam()?['dscm','rbe','brand'].map(r=>`<button class="${role===r?'on':''}" onclick="myRole='${r}';render()">${ROLES[r]}</button>`).join(''):''}</div></div>
+ <p class="small muted">${esc(pname(role))}'s work list. Scheduled jobs come from the job register; requests, tickets and projects come from the logs. You are working as <b>${ROLES[S.actor]}</b>${canVerify(role)?' — you can verify and expedite this person\'s work.':''}</p>`;
+ const jobs=[];activeJobs(role).forEach(j=>[prevMonth(m),m].forEach(mm=>dueDates(j,mm).forEach(d=>{const s=jStat(j,d);if(['today','due','missed'].includes(s)&&(s!=='missed'||d>=ymd(new Date(Date.now()-20*864e5))))jobs.push({j,d,s});})));
+ jobs.sort((a,b)=>{const o={missed:0,due:1,today:2};return o[a.s]-o[b.s]||a.d.localeCompare(b.d);});
+ const done=[];activeJobs(role).forEach(j=>dueDates(j,m).forEach(d=>{const r=S.jobs[jKey(j,d)];if(r&&r.doneAt&&r.doneAt.slice(0,10)===t)done.push({j,d});}));
+ const items=S.items.filter(i=>roleLogs(role).includes(i.log)&&isOpen(i)).sort((a,b)=>(isOverdue(b)-isOverdue(a))||((b.expedite&&!b.expedite.cleared)-(a.expedite&&!a.expedite.cleared))||((effDue(a)||0)-(effDue(b)||0)));
+ const st=schedStats(role,null,m);
+ h+=`<div class="grid g5" style="margin-bottom:14px"><div class="card stat"><div class="n">${jobs.filter(x=>x.s==='today'||x.s==='due').length}</div><div class="l">Scheduled jobs due now</div></div><div class="card stat ${jobs.some(x=>x.s==='missed')?'warn':''}"><div class="n">${jobs.filter(x=>x.s==='missed').length}</div><div class="l">Missed (do them late)</div></div><div class="card stat"><div class="n">${done.length}</div><div class="l">Jobs done today</div></div><div class="card stat ${items.some(isOverdue)?'warn':''}"><div class="n">${items.filter(isOverdue).length}<span style="font-size:15px;color:var(--muted)"> / ${items.length}</span></div><div class="l">Overdue / open requests</div></div><div class="card stat"><div class="n">${st.score??'—'}%</div><div class="l">Jobs on time this month</div></div></div>`;
+ h+=`<div class="grid g2"><div class="card"><h3>1. Scheduled jobs to do</h3>${jobs.length?jobs.map(x=>jobLine(x.j,x.d,role)).join(''):'<div class="muted">Nothing due. </div>'}${done.length?`<h3 style="margin-top:14px">Done today</h3>${done.map(x=>jobLine(x.j,x.d,role)).join('')}`:''}</div>
+ <div class="card"><h3>2. Requests, tickets and projects</h3>${items.length?items.map(i=>{const d=effDue(i),st=stagesOf(i.log);return`<div class="task ${i.expedite&&!i.expedite.cleared?'exp':''}"><div class="t"><b class="click" style="cursor:pointer" onclick="openItem('${i.id}')">${i.id}</b> ${esc(i.title)} ${i.isProject?'<span class="pill p-navy">project</span>':''}${isOverdue(i)?` <span class="pill p-red">${daysOver(i)}d overdue</span>`:''}${i.expedite&&!i.expedite.cleared?` <span class="pill p-red">expedited: ${esc(i.expedite.note||'')}</span>`:''}<div class="small muted">${esc(stageN(i))} · ${stageP(i)}% · due ${d?fmtDT(dtStr(d)):'not set'} · ${esc(i.dept||'')}</div><div class="bar" style="margin-top:4px"><i style="width:${stageP(i)}%"></i></div></div><div>${(S.actor===role||S.actor==='hos')&&i.stage<st.length-1?`<button class="btn sm" onclick="advance('${i.id}')">→ ${esc(st[i.stage+1].n)}</button>`:''} ${canExpedite(role)&&!(i.expedite&&!i.expedite.cleared)?`<button class="btn sm danger" onclick="expediteItem('${i.id}')">Expedite</button>`:''}</div></div>`;}).join(''):'<div class="muted">No open items.</div>'}
+ <div class="row" style="margin-top:10px">${roleLogs(role).map(l=>`<button class="btn sm sec" onclick="openItem(null,'${l}')">${isHos()?'+ New':'Raise a'} ${LOGS[l].short.toLowerCase()}</button>`).join('')}</div></div></div>`;
+ if(role==='dscm'&&(S.actor==='dscm'||S.actor==='hos')){const av=[...awaitingVerify('rbe').map(x=>({...x,role:'rbe'})),...awaitingVerify('brand').map(x=>({...x,role:'brand'}))];h+=`<div class="card" style="margin-top:14px"><div class="row"><h3 style="margin:0">3. Team jobs waiting for DSCM verification (${av.length})</h3><span class="sp"></span>${av.length?`<button class="btn sm ok" onclick="verifyAll(['rbe','brand'])">Verify all ${av.length}</button>`:''}</div><p class="small muted">Verify within 2 working days — it is part of the DSCM's own score (A7).</p>${av.length?av.map(x=>`<div class="small muted">${ROLES[x.role]}</div>`+jobLine(x.j,x.d,x.role)).join(''):'<div class="muted">Nothing waiting.</div>'}</div>`;}
+ if(S.actor==='hos'&&role==='dscm'){const av=awaitingVerify('dscm');h+=`<div class="card" style="margin-top:14px"><h3>4. DSCM jobs waiting for your verification (${av.length})</h3>${av.length?av.slice(0,30).map(x=>jobLine(x.j,x.d,'dscm')).join(''):'<div class="muted">Nothing waiting.</div>'}</div>`;}
+ return h;
+}
+const jobRole=k=>{const j=S.settings.jobs.find(x=>x.id===k.split('|')[0]);return j?j.role:null;};
+async function putJob(k,data,msg){try{const role=jobRole(k);let res;
+  if(JOBROWS[k])res=await nexus.from('dd_jobs').update({data}).eq('key',k).select().single();
+  else res=await nexus.from('dd_jobs').insert({key:k,role,data}).select().single();
+  if(res.error)throw res.error;S.jobs[k]=res.data.data;JOBROWS[k]=1;render();if(msg)toast(msg);}catch(e){dbErr(e);}}
+async function doJob(k){const note=prompt('Mark done. Optional note / evidence (link, ticket ID, file name):','');if(note===null)return;const r=Object.assign({},S.jobs[k]||{},{doneAt:nowStr(),by:S.actor,note,returned:''});delete r.verifiedAt;await putJob(k,r,'Marked done');}
+async function naJob(k){const why=prompt('Why is this job not applicable this time? (e.g. holiday, system retired)');if(!why)return;await putJob(k,Object.assign({},S.jobs[k]||{},{na:true,naReason:why,by:S.actor,at:nowStr()}));}
+async function verifyJob(k){const r=S.jobs[k];if(!r)return;await putJob(k,Object.assign({},r,{verifiedAt:nowStr(),verifiedBy:S.actor}),'Verified');}
+async function verifyAll(roles){if(!confirm('Verify all listed jobs? Only do this after checking them.'))return;try{for(const role of roles){for(const x of awaitingVerify(role)){const k=jKey(x.j,x.d);const res=await nexus.from('dd_jobs').update({data:Object.assign({},x.r,{verifiedAt:nowStr(),verifiedBy:S.actor})}).eq('key',k).select().single();if(res.error)throw res.error;S.jobs[k]=res.data.data;}}render();toast('Verified');}catch(e){dbErr(e);}}
+async function rejectJob(k){const why=prompt('Send back: what is missing?');if(!why)return;const r=Object.assign({},S.jobs[k]);delete r.doneAt;delete r.verifiedAt;r.returned=why;await putJob(k,r,'Sent back — the job is open again');}
+async function undoJob(k){if(!confirm('Undo this entry?'))return;try{const{error}=await nexus.from('dd_jobs').delete().eq('key',k);if(error)throw error;delete S.jobs[k];delete JOBROWS[k];render();}catch(e){dbErr(e);}}
+async function expediteJob(k){const n=prompt('Expedite note (what you need and by when):');if(!n)return;await putJob(k,Object.assign({},S.jobs[k]||{},{expedite:{at:nowStr(),note:n,by:S.actor}}),'Expedited');}
+/* ----- items ----- */
+const clone=o=>JSON.parse(JSON.stringify(o));
+const hist=(stage,note)=>({at:nowStr(),stage,note:note||'',by:S.actor,byName:ME.name});
+async function putItem(it,msg,approval){
+ const row={data:itemPayload(it)};if(approval)row.approval=approval;if(isHos())row.dept=it.dept;
+ const{data,error}=await nexus.from('dd_items').update(row).eq('id',it.id).eq('version',it.version).select();
+ if(error)return dbErr(error);
+ if(!data||!data.length){alert('Someone else changed '+it.id+' while you were working on it. The latest version will be loaded — please repeat your change.');return reload();}
+ replaceItem(rowToItem(data[0]));render();if(msg)toast(msg);}
+async function expediteItem(id){const it0=S.allItems.find(i=>i.id===id);if(!it0)return;const n=prompt('Expedite note (what you need and by when):');if(!n)return;const it=clone(it0);it.expedite={at:nowStr(),note:n,by:S.actor};it.history=it.history||[];it.history.push(hist(stageN(it),'EXPEDITED by '+ROLES[S.actor]+': '+n));try{nexusLogEvent(CTX.profile,'dd_expedite',{id});}catch(e){}await putItem(it,'Expedited');}
+async function advance(id){const it0=S.allItems.find(i=>i.id===id);if(!it0)return;const it=clone(it0);const st=stagesOf(it.log);if(it.stage>=st.length-1)return;const note=prompt(`Move ${id} to "${st[it.stage+1].n}". Note (optional):`,'');if(note===null)return;setStageOf(it,it.stage+1,note);it.maxStage=Math.max(it.maxStage||0,it.stage);await putItem(it,'Moved to '+stageN(it));}
+
+/* ===================== Checklists grid ===================== */
+function rChk(){
+ const role=canSeeTeam()?chkRole:ME.role,m=chkMonth;const[y,mm]=m.split('-').map(Number);const last=new Date(y,mm,0).getDate();
+ let h=`<div class="row"><h2>Checklists — scheduled job register</h2><span class="sp"></span><input type="month" value="${m}" onchange="chkMonth=this.value;render()"><button class="btn sec noprint" onclick="saveViewToNexus()">Save to Nexus</button></div>
+ <div class="subtabs">${canSeeTeam()?['dscm','rbe','brand'].map(r=>`<button class="${role===r?'on':''}" onclick="chkRole='${r}';render()">${ROLES[r]}</button>`).join(''):''}</div>
+ <p class="small muted">Every recurring duty of ${esc(pname(role))}, day by day. Click a due box to mark it done (a past date counts as late). Grace: daily ${S.settings.grace.daily}, weekly ${S.settings.grace.weekly}, monthly ${S.settings.grace.monthly}, quarterly ${S.settings.grace.quarterly} working days. Late work earns ${S.settings.lateCredit}% credit; missed earns 0.</p>
+ <div class="legend" style="margin-bottom:8px">${[['ontime','On time'],['late','Late'],['missed','Missed'],['today','Due today'],['due','Due, in grace'],['na','Not applicable'],['upcoming','Upcoming']].map(([k,l])=>`<span><span class="c c-${k}" style="cursor:default">${jSym[k]}</span> ${l}</span>`).join('')}</div>`;
+ const kras=S.settings.kras[role]||[];
+ h+=`<div class="card tw"><table class="grid31"><tr><th style="text-align:left">Job</th>${Array.from({length:last},(_,i)=>`<th>${i+1}</th>`).join('')}<th>On time</th></tr>`;
+ kras.forEach(kr=>{const js=activeJobs(role).filter(j=>j.kra===kr.code);if(!js.length)return;const ks=schedStats(role,kr.code,m);h+=`<tr><td colspan="${last+2}" style="text-align:left;padding-top:10px"><b>${esc(kr.code)} ${esc(kr.name)}</b> <span class="small muted">— KRA job score ${ks.score??'—'}%</span></td></tr>`;
+  js.forEach(j=>{const dd=dueDates(j,m);const mine={ontime:0,late:0,missed:0};dd.forEach(d=>{const x=jStat(j,d);if(mine[x]!=null)mine[x]++;});const n=mine.ontime+mine.late+mine.missed;h+=`<tr><td class="jn">${esc(j.name)} <span class="small muted">${FREQ[j.freq]}</span></td>${Array.from({length:last},(_,i)=>{const d=`${m}-${pad(i+1)}`;if(!dd.includes(d))return'<td></td>';const x=jStat(j,d);const r=S.jobs[jKey(j,d)]||{};return`<td><span class="c c-${x}" title="${esc(d+' · '+x+(r.verifiedAt?' · verified':'')+(r.note?' · '+r.note:''))}" onclick="cell('${jKey(j,d)}','${x}','${role}')">${jSym[x]}${r.verifiedAt?'':''}</span></td>`;}).join('')}<td><b>${n?Math.round((mine.ontime+mine.late*S.settings.lateCredit/100)/n*100)+'%':'—'}</b></td></tr>`;});});
+ h+=`</table></div>`;
+ const s=schedStats(role,null,m);
+ h+=`<div class="card" style="margin-top:14px"><b>${monthLabel(m)} so far:</b> ${s.ontime} on time · ${s.late} late · ${s.missed} missed · ${s.na} not applicable · ${s.open} open → <b>${s.score??'—'}%</b> scheduled-job score.</div>`;
+ return h;
+}
+function cell(k,state,role){if(state==='upcoming'){toast('Not due yet');return;}if(state==='ontime'||state==='late'||state==='na'){if(S.actor==='hos'||S.actor==='dscm')undoJob(k);else toast('Only DSCM or Head of Sales can undo');return;}if(!(S.actor===role||S.actor==='hos')){toast('Only '+pname(role)+' can tick this job');return;}doJob(k);}
+
+/* ===================== Logs ===================== */
+function rLogs(){
+ let list=(logFilter==='pending'?S.allItems.filter(i=>i.approval==='hos'||i.approval==='dept'||i.approval==='rejected'):S.items).filter(i=>logTab==='ALL'||i.log===logTab);
+ if(logFilter==='open')list=list.filter(isOpen);else if(logFilter==='overdue')list=list.filter(isOverdue);else if(logFilter==='closed')list=list.filter(isDone);else if(logFilter==='hold')list=list.filter(i=>i.status==='On hold');else if(logFilter==='exp')list=list.filter(i=>i.expedite&&!i.expedite.cleared);
+ if(logDept)list=list.filter(i=>i.dept===logDept);
+ if(logQ){const q=logQ.toLowerCase();list=list.filter(i=>(i.id+' '+i.title+' '+(i.requester||'')+' '+(i.desc||'')).toLowerCase().includes(q));}
+ list.sort((a,b)=>(b.loggedAt||'').localeCompare(a.loggedAt||''));
+ const tabs=[['ALL','All logs'],...visibleLogs().map(k=>[k,LOGS[k].short])];
+ let h=`<div class="row"><h2>Requests & tickets (contingent work)</h2><span class="sp"></span>${visibleLogs().map(k=>`<button class="btn sec sm" onclick="openItem(null,'${k}')">${isHos()?'+':'Raise'} ${LOGS[k].prefix} ${LOGS[k].short}</button>`).join('')}</div>
+ <div class="subtabs">${tabs.map(([k,l])=>`<button class="${logTab===k?'on':''}" onclick="logTab='${k}';render()">${l} <span class="muted">${S.items.filter(i=>(k==='ALL'||i.log===k)&&isOpen(i)).length}</span></button>`).join('')}</div>
+ <div class="row noprint" style="margin-bottom:10px"><select onchange="logFilter=this.value;render()">${[['open','Open'],['overdue','Overdue'],['exp','Expedited'],['hold','On hold'],['closed','Closed'],['all','All'],...(isHos()?[['pending','Awaiting approval / not approved']]:[])].map(([v,l])=>`<option value="${v}" ${logFilter===v?'selected':''}>${l}</option>`).join('')}</select>
+ <select onchange="logDept=this.value;render()"><option value="">All departments</option>${S.settings.departments.map(d=>`<option ${logDept===d?'selected':''}>${esc(d)}</option>`).join('')}</select>
+ <input placeholder="Search ID, title, requester" value="${esc(logQ)}" onchange="logQ=this.value;render()"> <span class="muted small">${list.length} items</span></div>`;
+ h+=`<div class="card tw"><table><tr><th>ID</th><th>Item</th><th>Department</th><th>Type</th><th>KRA</th><th>Logged</th><th>Due</th><th>Stage</th><th>Status</th><th>TAT</th></tr>${list.map(i=>{const d=effDue(i),w=withinTat(i);return`<tr class="click" onclick="openItem('${i.id}')"><td><b>${i.id}</b></td><td>${esc(i.title)}${i.isProject?' <span class="pill p-navy">project</span>':''}${i.expedite&&!i.expedite.cleared?' <span class="pill p-red">expedited</span>':''}<div class="small muted">${esc(i.requester||'')}</div></td><td>${esc(i.dept||'')}</td><td class="small">${esc(typeOf(i)?.label||i.type||'')}</td><td>${esc(kraOf(i))}</td><td class="small">${fmtDT(i.loggedAt)}</td><td class="small">${d?fmtDT(dtStr(d)):'—'}</td><td style="min-width:120px"><div class="small">${esc(stageN(i))}</div><div class="bar"><i style="width:${stageP(i)}%"></i></div></td><td>${i.approval!=='approved'?apprPill(i):esc(i.status)}</td><td>${isOverdue(i)?`<span class="pill p-red">${daysOver(i)}d over</span>`:w===true?'<span class="pill p-green">met</span>':w===false?'<span class="pill p-red">missed</span>':isOpen(i)?'<span class="pill">running</span>':'—'}</td></tr>`;}).join('')||'<tr><td colspan="10" class="muted">No items.</td></tr>'}</table></div>`;
+ return h;
+}
+let editing=null,editNew=false;
+function newItem(log){return{id:'',log,title:'',desc:'',dept:S.settings.departments[0]||'',requester:'',type:(S.settings.tat[log][0]||{}).code||'',priority:'P3',conf:'Internal',loggedAt:nowStr(),dueOverride:'',paused:0,stage:0,maxStage:0,status:'Active',closedAt:'',revisions:0,score:'',system:'',vendor:'',vendorTicket:'',repeat:false,outage:false,releaseDefect:false,goalTarget:'',goalActual:'',eventDate:'',errorAfter:false,complianceObs:0,deviations:0,outcomeReport:false,isProject:log==='CMP',linked:'',nextMilestone:'',revisedEnd:'',blocker:'',history:[]};}
+function openItem(id,log){
+ if(!id&&!isHos()){reqLog=log;go('req');return;}
+ const it=id?S.allItems.find(x=>x.id===id):newItem(log);if(!it)return;
+ if(id&&!isHos()&&(ME.role!==LOGS[it.log].owner||it.approval!=='approved')){openReq(id);return;}
+ editing=JSON.parse(JSON.stringify(Object.assign(newItem(it.log),it)));editNew=!id;showItem();}
+function opt(arr,v){return arr.map(a=>{const[val,lab]=Array.isArray(a)?a:[a,a];return`<option value="${esc(val)}" ${String(v)===String(val)?'selected':''}>${esc(lab)}</option>`;}).join('');}
+function showItem(){
+ const it=editing,L=LOGS[it.log],st=stagesOf(it.log),d=effDue(it);const chk=(id,v,l)=>`<label class="chk"><input type="checkbox" id="${id}" ${v?'checked':''}> ${l}</label>`;
+ let h=`<div class="row"><h2 style="margin:0">${editNew?'New '+L.name+' item':it.id+' · '+L.name}</h2><span class="sp"></span><button class="btn sec" onclick="closeModal()">Close</button></div>
+ ${!editNew&&it.approval!=='approved'?`<div class="banner">${apprPill(it)} Raised by <b>${esc(it.requesterName||'')}</b> (${esc(it.dept||'')}). It is not in ${esc(pname(L.owner))}'s job sheet until approved.${it.approvalNote?' Note: '+esc(it.approvalNote):''}</div>`:''}<div class="small muted" style="margin:4px 0 12px">Owner: ${esc(pname(L.owner))} · Counts towards KRA ${esc(kraOf(it)||'—')} · Due ${d?fmtDT(dtStr(d)):'not set'}${it.paused?` (includes ${it.paused} paused day(s))`:''}</div>
+ <div class="form">
+ <label class="full">Title<input id="f_title" value="${esc(it.title)}"></label>
+ <label class="full">Description / brief<textarea id="f_desc">${esc(it.desc)}</textarea></label>
+ <label>Requesting department<select id="f_dept" ${isHos()?'':'disabled'}>${opt(S.settings.departments,it.dept)}</select></label>
+ <label>Requester name<input id="f_req" value="${esc(it.requester)}"></label>
+ <label>${L.typeLabel}<select id="f_type" ${isHos()?'':'disabled'}>${opt(S.settings.tat[it.log].map(t=>[t.code,t.label+(it.log==='STL'?` (${t.hours} h)`:t.days?` (${t.days} d)`:'')+' → '+t.kra]),it.type)}</select></label>
+ ${it.log!=='STL'?`<label>Priority<select id="f_pri">${opt(['P1','P2','P3','P4'],it.priority)}</select></label>`:''}
+ <label>Confidentiality<select id="f_conf">${opt(['Public','Internal','Restricted'],it.conf)}</select></label>
+ <label>Logged on<input type="datetime-local" id="f_at" value="${esc(it.loggedAt)}" ${editNew||isHos()?'':'disabled title="Only the Head of Sales can change the logged time"'}></label>
+ <label>${it.log==='CMP'?'Launch / committed date':it.log==='DEV'?'Committed date (sizes L or override)':'Due date override (admin only)'}<input type="datetime-local" id="f_due" value="${esc(it.dueOverride)}" ${isHos()?'':'disabled'}></label>
+ <label>Paused working days (waiting on requester)<input type="number" min="0" id="f_paused" value="${esc(it.paused)}"></label>
+ <label>Stage<select id="f_stage">${opt(st.map((s,i)=>[i,`${s.n} (${s.p}%)`]),it.stage)}</select></label>
+ <label>Status<select id="f_status">${opt(['Active','On hold','Cancelled','Closed – no response'],it.status)}</select></label>`;
+ if(it.log==='STL')h+=`<label>System<select id="f_sys"><option value="">—</option>${opt(S.settings.systems.map(s=>[s.name,s.name+' ('+s.crit+')']),it.system)}</select></label><label>Vendor<select id="f_ven"><option value="">—</option>${opt(S.settings.vendors.map(v=>v.name),it.vendor)}</select></label><label>Vendor ticket number<input id="f_vt" value="${esc(it.vendorTicket)}"></label>${chk('f_out',it.outage,'System was down (counts as downtime from logged to closed)')}${chk('f_rep',it.repeat,'Repeat issue (same system & cause within 30 days)')}${chk('f_rd',it.releaseDefect,'Caused by a recent in-house release')}`;
+ if(it.log==='DRL')h+=`<label>Revision rounds used<input type="number" min="0" id="f_rev" value="${esc(it.revisions)}"></label><label>Requester score (1–5)<select id="f_score" ${isHos()?'':'disabled'}><option value="">—</option>${opt([1,2,3,4,5],it.score)}</select></label><label>Event date (for event collateral)<input type="date" id="f_ev" value="${esc(it.eventDate)}"></label><label>Compliance observations after approval<input type="number" min="0" id="f_cob" value="${esc(it.complianceObs)}"></label>${chk('f_err',it.errorAfter,'Factual / data error found after release')}`;
+ if(it.log==='CMP')h+=`<label>Campaign goal (target, e.g. registrations)<input type="number" id="f_gt" value="${esc(it.goalTarget)}"></label><label>Campaign result (actual)<input type="number" id="f_ga" value="${esc(it.goalActual)}"></label>`;
+ if(it.log==='BRA')h+=`<label>Deviations found (for audits)<input type="number" min="0" id="f_dev" value="${esc(it.deviations)}"></label>${chk('f_or',it.outcomeReport,'Outcome report submitted (sponsorships)')}`;
+ h+=`${chk('f_proj',it.isProject,'Track on Project Completion Tracker')}
+ <label>Revised end date (project, needs approval)<input type="date" id="f_rend" value="${esc(it.revisedEnd)}"></label>
+ <label>Linked IDs<input id="f_link" value="${esc(it.linked)}" placeholder="e.g. DR-2612-004"></label>
+ <label>Next milestone<input id="f_ms" value="${esc(it.nextMilestone)}"></label>
+ <label class="full">Open blocker (leave blank if none)<input id="f_blk" value="${esc(it.blocker)}"></label>
+ <label class="full">Update note (added to history)<textarea id="f_note" placeholder="What changed, approvals, vendor follow-up…"></textarea></label>
+ </div>
+ <div class="row" style="margin-top:14px"><button class="btn gold" onclick="saveItem()">Save</button><button class="btn sec" onclick="closeModal()">Cancel</button><span class="sp"></span>${!editNew&&isHos()&&it.approval!=='approved'?`<button class="btn ok" onclick="approveItem('${it.id}')">Approve</button> <button class="btn danger" onclick="rejectItem('${it.id}')">Not approve</button>`:''}${!editNew&&canExpedite(L.owner)?`<button class="btn danger" onclick="closeModal();expediteItem('${it.id}')">Expedite</button>`:''}${!editNew&&isHos()?`<button class="btn danger" onclick="delItem('${it.id}')">Delete</button>`:''}</div>
+ ${!editNew?`<h3 style="margin-top:16px">Files</h3>${filesHtml(it)}<div class="row" style="margin-top:6px"><input type="file" id="rq_more" multiple><button class="btn sm sec" onclick="addFilesTo('${it.id}','rq_more')">Add files</button></div>`:''}
+ ${it.history&&it.history.length?`<h3 style="margin-top:16px">History</h3><div class="hist">${it.history.slice().reverse().map(x=>`<div><b>${fmtDT(x.at)}</b> · ${esc(x.stage)}${x.byName||x.by?' · '+esc(x.byName||ROLES[x.by]||x.by):''}${x.note?' — '+esc(x.note):''}</div>`).join('')}</div>`:''}`;
+ $('#mbox').innerHTML=h;$('#modal').style.display='flex';
+}
+function closeModal(){$('#modal').style.display='none';editing=null;}
+function v(id){const e=document.getElementById(id);return e?(e.type==='checkbox'?e.checked:e.value):undefined;}
+async function saveItem(){
+ const it=editing;const title=(v('f_title')||'').trim();if(!title){alert('Please enter a title.');return;}
+ const prevStage=editNew?-1:+it.stage,prevStatus=it.status;
+ Object.assign(it,{title,desc:v('f_desc'),requester:v('f_req'),conf:v('f_conf'),paused:+v('f_paused')||0,status:v('f_status'),isProject:v('f_proj'),revisedEnd:v('f_rend')||'',linked:v('f_link'),nextMilestone:v('f_ms'),blocker:v('f_blk')});
+ if(isHos()){it.dept=v('f_dept');it.type=v('f_type');if(!editNew)it.loggedAt=v('f_at')||it.loggedAt;const due=document.getElementById('f_due');if(due&&!due.disabled)it.dueOverride=due.value||'';}
+ if(it.log!=='STL')it.priority=v('f_pri');
+ if(it.log==='STL'){it.system=v('f_sys');it.vendor=v('f_ven');it.vendorTicket=v('f_vt');it.repeat=v('f_rep');it.outage=v('f_out');it.releaseDefect=v('f_rd');}
+ if(it.log==='DRL'){it.revisions=+v('f_rev')||0;if(isHos())it.score=v('f_score');it.eventDate=v('f_ev');it.complianceObs=+v('f_cob')||0;const e=v('f_err');if(e&&!it.errorAfter)it.errorAt=nowStr();it.errorAfter=e;}
+ if(it.log==='CMP'){it.goalTarget=v('f_gt');it.goalActual=v('f_ga');}
+ if(it.log==='BRA'){it.deviations=+v('f_dev')||0;it.outcomeReport=v('f_or');}
+ const note=(v('f_note')||'').trim();const ns=+v('f_stage');
+ if(!editNew){
+  if(ns!==prevStage)setStageOf(it,ns,note);else if(it.status!==prevStatus||note)it.history.push({at:nowStr(),stage:stageN(it)+(it.status!=='Active'?' · '+it.status:''),note,by:S.actor,byName:ME.name});
+  it.maxStage=Math.max(it.maxStage||0,it.stage);
+  if(isDone(it)){if(!it.closedAt)it.closedAt=nowStr();if(it.expedite&&!it.expedite.cleared)it.expedite.cleared=nowStr();}else it.closedAt='';
+  closeModal();await putItem(it,'Saved');return;}
+ try{const{data,error}=await nexus.from('dd_items').insert({log:it.log,dept:it.dept,data:itemPayload(it)}).select().single();if(error)throw error;replaceItem(rowToItem(data));closeModal();render();toast('Logged as '+data.id);}catch(e){dbErr(e);}
+}
+async function delItem(id){if(!confirm('Delete '+id+' permanently? This cannot be undone.'))return;try{const{error}=await nexus.from('dd_items').delete().eq('id',id);if(error)throw error;S.allItems=S.allItems.filter(i=>i.id!==id);S.items=S.allItems.filter(i=>i.approval==='approved');closeModal();render();toast('Deleted');}catch(e){dbErr(e);}}
+
+/* ===================== Projects ===================== */
+function rProjects(){
+ const list=S.items.filter(i=>i.isProject&&i.status!=='Cancelled').sort((a,b)=>{const o={Red:0,Amber:1,Green:2,Done:3};return o[rag(a)]-o[rag(b)];});
+ const c=r=>list.filter(i=>rag(i)===r).length;
+ return`<div class="row"><h2>Project Completion Tracker</h2><span class="sp"></span><button class="btn sec noprint" onclick="saveViewToNexus()">Save to Nexus</button></div>
+ <div class="grid g5" style="margin-bottom:14px">${['Red','Amber','Green','Done'].map(r=>`<div class="card stat ${r==='Red'&&c(r)?'warn':''}"><div class="n">${c(r)}</div><div class="l">${r}</div></div>`).join('')}</div>
+ <p class="small muted">A project is any request, campaign or development item ticked "Track on Project Completion Tracker". Its % comes from its stage, so nobody estimates progress. Red: past end date · Amber: open blocker, on hold, or ≤2 working days left below 85% · Green: on plan.</p>
+ <div class="card tw"><table><tr><th>ID</th><th>Project</th><th>Owner</th><th>Linked</th><th>Start</th><th>Planned end</th><th>Revised end</th><th>Stage</th><th>Next milestone</th><th>RAG</th><th></th></tr>${list.map(i=>{const d=effDue(i);return`<tr><td class="click" onclick="openItem('${i.id}')"><b>${i.id}</b></td><td>${esc(i.title)}${i.blocker?`<div class="small warnline">Blocker: ${esc(i.blocker)}</div>`:''}${i.expedite&&!i.expedite.cleared?' <span class="pill p-red">expedited</span>':''}</td><td class="small">${esc(pname(ownerRole(i)))}</td><td class="small">${esc(i.linked||'')}</td><td class="small">${fmtD(i.loggedAt)}</td><td class="small">${d?fmtD(ymd(d)):'—'}</td><td class="small">${fmtD(i.revisedEnd)}</td><td style="min-width:110px"><div class="small">${esc(stageN(i))} · ${stageP(i)}%</div><div class="bar"><i style="width:${stageP(i)}%"></i></div></td><td class="small">${esc(i.nextMilestone||'')}</td><td>${ragPill(rag(i))}</td><td>${isOpen(i)&&canExpedite(ownerRole(i))?`<button class="btn sm danger" onclick="expediteItem('${i.id}')">Expedite</button>`:''}</td></tr>`;}).join('')||'<tr><td colspan="11" class="muted">No projects yet.</td></tr>'}</table></div>`;
+}
+
+/* ===================== Daily reports ===================== */
+function autoDay(role,d){const jobs=[];activeJobs(role).forEach(j=>{if(dueDates(j,d.slice(0,7)).includes(d))jobs.push(jStat(j,d));});const moves=S.items.filter(i=>roleLogs(role).includes(i.log)).reduce((a,i)=>a+(i.history||[]).filter(h=>h.at.slice(0,10)===d&&h.stage!=='Logged').length,0);const closed=S.items.filter(i=>roleLogs(role).includes(i.log)&&(i.closedAt||'').slice(0,10)===d).length;const logged=S.items.filter(i=>roleLogs(role).includes(i.log)&&(i.loggedAt||'').slice(0,10)===d).length;return{due:jobs.length,done:jobs.filter(s=>s==='ontime'||s==='late').length,missed:jobs.filter(s=>s==='missed').length,moves,closed,logged};}
+function rDaily(){
+ const d=dailyDate;let h=`<div class="row"><h2>Daily reports</h2><span class="sp"></span><input type="date" value="${d}" onchange="dailyDate=this.value;render()"><button class="btn sec noprint" onclick="saveViewToNexus()">Save to Nexus</button></div>
+ <p class="small muted">The numbers at the top of each card are filled in automatically from the checklists and logs. People only add posts/reviews counts, blockers and decisions. Submit by 18:15; DSCM reviews by 18:45.${isWork(pDate(d))?'':' <b>Selected date is a non-working day.</b>'}</p><div class="grid g3">`;
+ dailyRoles().forEach(role=>{
+  const r=S.daily.find(x=>x.date===d&&x.role===role)||{};const a=autoDay(role,d);const od=S.items.filter(i=>roleLogs(role).includes(i.log)&&isOverdue(i));
+  const p=`dr_${role}_`;const dis=(role===S.actor||isHos())?'':'disabled';const canRev=(S.actor==='dscm'||S.actor==='hos');const f=(k,l,ph='',d=dis)=>`<label>${l}<textarea id="${p+k}" placeholder="${ph}" ${d}>${esc(r[k]||'')}</textarea></label>`;const n=(k,l)=>`<label>${l}<input type="number" min="0" id="${p+k}" value="${esc(r[k]??'')}" style="width:110px" ${dis}></label>`;
+  h+=`<div class="card"><div class="row"><h3 style="margin:0">${ROLES[role]}</h3><span class="sp"></span>${r.id?'<span class="pill p-green">submitted</span>':'<span class="pill p-red">not submitted</span>'}${role!=='dscm'&&r.reviewed?' <span class="pill p-navy">reviewed</span>':''}</div>
+  <div class="small muted" style="margin:2px 0 8px">${esc(pname(role))}</div>
+  <table class="small" style="margin-bottom:10px"><tr><td>Scheduled jobs due</td><td><b>${a.due}</b></td><td>Done</td><td><b>${a.done}</b></td><td>Missed</td><td><b style="color:${a.missed?'var(--red)':'inherit'}">${a.missed}</b></td></tr><tr><td>New requests</td><td><b>${a.logged}</b></td><td>Stage moves</td><td><b>${a.moves}</b></td><td>Closed</td><td><b>${a.closed}</b></td></tr><tr><td colspan="6">Overdue now: <b style="color:${od.length?'var(--red)':'inherit'}">${od.length}</b>${od.length?' — '+od.slice(0,8).map(i=>i.id).join(', '):''}</td></tr></table>
+  <div class="form" style="grid-template-columns:1fr">`;
+  if(role==='dscm')h+=f('healthNote','Health check result (issues + ticket IDs)','All OK');
+  if(role==='rbe')h+=`<div class="row">${n('postsScheduled','Posts scheduled today')}${n('postsPublished','Posts published')}</div>`;
+  if(role==='brand')h+=`<div class="row">${n('reviewsNew','New online reviews')}${n('reviewsReplied','Reviews replied')}</div>`;
+  h+=f('blockers','Blockers')+f('decisions','Decisions needed from senior')+f('top3','Tomorrow\'s top 3','IDs');
+  if(role!=='dscm')h+=`<label class="chk"><input type="checkbox" id="${p}reviewed" ${r.reviewed?'checked':''} ${S.actor==='dscm'||S.actor==='hos'?'':'disabled'}> Reviewed by DSCM</label>${f('remark','DSCM remark','On track, or action taken',canRev?'':'disabled')}`;
+  h+=`</div><div class="row" style="margin-top:10px"><button class="btn" onclick="saveDaily('${role}')">${r.id?'Update':'Submit'} report</button></div></div>`;
+ });
+ h+=`</div>`;
+ const days=[];let x=pDate(d);for(let i=0;i<20&&days.length<14;i++){if(isWork(x))days.push(ymd(x));x.setDate(x.getDate()-1);}
+ h+=`<div class="card" style="margin-top:14px"><h3>Last 14 working days</h3><div class="tw"><table><tr><th>Date</th>${dailyRoles().map(r=>`<th>${ROLES[r]}: report</th><th>jobs done/due</th>`).join('')}</tr>${days.map(dd=>{const y=o=>o?'<span class="pill p-green">✓</span>':'<span class="pill p-red">✗</span>';return`<tr class="click" onclick="dailyDate='${dd}';render()"><td>${fmtD(dd)}</td>${dailyRoles().map(r=>{const o=S.daily.find(q=>q.date===dd&&q.role===r);const a=autoDay(r,dd);return`<td>${y(o)}${r!=='dscm'&&o?(o.reviewed?' <span class="pill p-navy">rev</span>':''):''}</td><td>${a.done}/${a.due}</td>`;}).join('')}</tr>`;}).join('')}</table></div></div>`;
+ return h;
+}
+async function saveDaily(role){const p=`dr_${role}_`;const old=S.daily.find(x=>x.date===dailyDate&&x.role===role);const r=Object.assign({},old||{});
+ ['healthNote','blockers','decisions','top3','remark'].forEach(k=>{const e=document.getElementById(p+k);if(e&&!e.disabled)r[k]=e.value;});
+ ['postsScheduled','postsPublished','reviewsNew','reviewsReplied'].forEach(k=>{const e=document.getElementById(p+k);if(e&&!e.disabled)r[k]=e.value===''?'':+e.value;});
+ const e=document.getElementById(p+'reviewed');if(e&&!e.disabled){r.reviewed=e.checked;}
+ const data=Object.assign({},r);['id','date','role','_row'].forEach(k=>delete data[k]);
+ try{let res;if(old&&old._row)res=await nexus.from('dd_daily').update({data}).eq('id',old.id).select().single();else res=await nexus.from('dd_daily').insert({date:dailyDate,role,data}).select().single();
+  if(res.error)throw res.error;const rec=Object.assign({},res.data.data,{id:res.data.id,date:res.data.date,role:res.data.role,_row:true});const i=S.daily.findIndex(x=>x.date===rec.date&&x.role===rec.role);if(i>=0)S.daily[i]=rec;else S.daily.push(rec);render();toast('Report saved');}catch(er){dbErr(er);}}
+
+/* ===================== KRA scorecards ===================== */
+function rKra(){
+ const m=kraMonth,sc=scores(m),W=S.settings.weights;const meas=S.meas[m]||{};
+ let h=`<div class="row"><h2>KRA scorecards — ${monthLabel(m)}</h2><span class="sp"></span><input type="month" value="${m}" onchange="kraMonth=this.value;render()">${isHos()?`<button class="btn sec noprint" onclick="saveViewToNexus()">Save to Nexus</button><button class="btn gold noprint" onclick="snapMonth()">${S.snapshots[m]?'Re-close':'Close'} month & save to trend</button>`:''}</div>
+ <div class="grid g3" style="margin-bottom:14px">
+  ${canSeeTeam()?`<div class="card"><div class="score"><div><div class="muted small">${esc(pname('dscm'))} · Division Head</div><div class="big">${sc.dscm.toFixed(1)}</div></div>${bandPill(sc.dscm)}</div><div class="small">A ${sc.A.toFixed(1)}/${W.A} + B ${sc.B.toFixed(1)}/${W.B} + C ${sc.C.toFixed(1)}/${W.C}</div></div>`:''}
+  ${canSeeTeam()||ME.role==='rbe'?`<div class="card"><div class="score"><div><div class="muted small">${esc(pname('rbe'))}</div><div class="big">${sc.rbe.toFixed(1)}</div></div>${bandPill(sc.rbe)}</div><div class="small">× ${W.B}% = ${sc.B.toFixed(1)} points to DSCM Part B</div></div>`:''}
+  ${canSeeTeam()||ME.role==='brand'?`<div class="card"><div class="score"><div><div class="muted small">${esc(pname('brand'))}</div><div class="big">${sc.brand.toFixed(1)}</div></div>${bandPill(sc.brand)}</div><div class="small">× ${W.C}% = ${sc.C.toFixed(1)} points to DSCM Part C</div></div>`:''}
+ </div>
+ <div class="card" style="margin-bottom:14px"><h3>Monthly figures from platforms <span class="small muted">(copy from Meta/Google dashboards once a month — these feed R2, B4, B6)</span></h3><div class="row">${[['reach','Total social reach'],['engagements','Total engagements'],['followers','Total followers'],['rating','Google rating (e.g. 4.6)'],['reviews','Total Google reviews'],['awareness','Awareness survey score']].map(([k,l])=>`<label class="small muted" style="display:flex;flex-direction:column;gap:3px">${l}<input type="number" step="any" value="${esc(meas[k]??'')}" style="width:150px" onchange="setMeas('${k}',this.value)"></label>`).join('')}</div></div>
+ <div class="subtabs">${[['dscm','DSCM (Division Head)'],['rbe','Resource Building Executive'],['brand','Brand Manager']].filter(([k])=>canSeeTeam()||k===ME.role).map(([k,l])=>`<button class="${kraRole===k?'on':''}" onclick="kraRole='${k}';render()">${l}</button>`).join('')}</div>
+ <p class="small muted">Every value is measured from the checklists, logs, daily reports or monthly figures. KPI score = measured ÷ target (max ${S.settings.kpiCap}%); for "lower is better", meeting target = 100% and each unit over deducts ${S.settings.lowerPenalty}%. A KRA with nothing to measure this month is marked "not measured" and its weight is shared across the measured KRAs.${isHos()?' You are unlocked as admin: you can override a value with a written reason.':''}</p>`;
+ const rs={dscm:sc.d,rbe:sc.r,brand:sc.b}[kraRole];
+ h+=`<div class="card tw"><table><tr><th>KRA</th><th>Weight</th><th>KPI (measured from)</th><th>Target</th><th>Measured</th><th>KPI score</th><th>KRA points</th></tr>`;
+ rs.rows.forEach(x=>{x.ks.forEach((q,j)=>{const u=SRC[q.k.src]?.u||'';h+=`<tr>${j===0?`<td rowspan="${x.ks.length}"><b>${esc(x.kr.code)}</b> ${esc(x.kr.name)}</td><td rowspan="${x.ks.length}">${x.kr.weight}%</td>`:''}<td>${esc(kpiLabel(q.k))}${q.k.dir==='lower'?' <span class="small muted">(lower is better)</span>':''}</td><td>${q.k.dir==='lower'?'≤ ':'≥ '}${q.k.target}${u==='%'?'%':''}</td><td>${q.o?`<b>${q.o.v}</b> <span class="pill p-gold" title="${esc(q.o.reason)}">override</span><div class="small muted">${esc(q.o.reason)} · measured ${q.auto??'no data'}</div>`:q.actual==null?'<span class="muted">no data</span>':q.actual+(u==='%'?'%':'')}${isHos()?` <button class="btn sm sec noprint" onclick="overrideKpi('${kraRole}','${q.k.id}')">${q.o?'Edit':'Override'}</button>`:''}</td><td>${q.s==null?'<span class="muted">—</span>':Math.round(q.s)+'%'}</td>${j===0?`<td rowspan="${x.ks.length}">${x.pts==null?'<span class="muted">not measured</span>':`<b>${x.pts.toFixed(2)}</b> / ${x.kr.weight}`}</td>`:''}</tr>`;});});
+ if(kraRole==='dscm')h+=`<tr style="font-weight:700;background:#FAFBFC"><td colspan="6">Part A — own work (scaled to ${W.A})</td><td>${sc.A.toFixed(2)} / ${W.A}</td></tr><tr><td colspan="6">Part B — Resource Building total ${sc.rbe.toFixed(1)} × ${W.B}%</td><td>${sc.B.toFixed(2)} / ${W.B}</td></tr><tr><td colspan="6">Part C — Brand Division total ${sc.brand.toFixed(1)} × ${W.C}%</td><td>${sc.C.toFixed(2)} / ${W.C}</td></tr><tr style="font-weight:700;background:#FAFBFC"><td colspan="6">DSCM total</td><td>${sc.dscm.toFixed(2)} ${bandPill(sc.dscm)}</td></tr>`;
+ else{const t=kraRole==='rbe'?sc.rbe:sc.brand;h+=`<tr style="font-weight:700;background:#FAFBFC"><td colspan="6">Total (out of 100)</td><td>${t.toFixed(2)} ${bandPill(t)}</td></tr>`;}
+ h+=`</table></div>`;
+ const need=kraRole==='dscm'?W.A:100;if(rs.ws!==need)h+=`<div class="warnline">KRA weights add up to ${rs.ws}, not ${need}. Fix them in the Control panel.</div>`;
+ return h;
+}
+async function setMeas(k,val){const m=kraMonth,key='meas:'+m;try{const{data:cur,error:e0}=await nexus.from('dd_kv').select('data').eq('key',key).maybeSingle();if(e0)throw e0;const d=Object.assign({},(cur&&cur.data)||{});d[k]=val===''?'':+val;const{error}=await nexus.from('dd_kv').upsert({key,data:d});if(error)throw error;S.meas[m]=d;render();toast('Saved');}catch(e){dbErr(e);}}
+async function saveOvr(role){const o={};Object.keys(S.ovr).forEach(mm=>{if(S.ovr[mm][role]&&Object.keys(S.ovr[mm][role]).length)o[mm]=S.ovr[mm][role];});const{error}=await nexus.from('dd_kv').upsert({key:'ovr:'+role,data:o});if(error)throw error;}
+async function overrideKpi(role,id){const cur=S.ovr?.[kraMonth]?.[role]?.[id];const val=prompt('Override value (leave empty to remove the override):',cur?cur.v:'');if(val===null)return;S.ovr[kraMonth]=S.ovr[kraMonth]||{};S.ovr[kraMonth][role]=S.ovr[kraMonth][role]||{};if(val===''){delete S.ovr[kraMonth][role][id];}else{if(isNaN(+val)){alert('Please enter a number.');return;}const reason=prompt('Reason for override (shown on the scorecard and in reports):',cur?cur.reason:'');if(!reason){alert('A reason is required.');return;}S.ovr[kraMonth][role][id]={v:+val,reason,at:nowStr(),by:ME.name};}try{await saveOvr(role);try{nexusLogEvent(CTX.profile,'dd_score_override',{role,month:kraMonth});}catch(e){}render();}catch(e){dbErr(e);}}
+async function snapMonth(){const s=scores(kraMonth);const d={dscm:r1(s.dscm),rbe:r1(s.rbe),brand:r1(s.brand),A:r1(s.A),B:r1(s.B),C:r1(s.C),savedAt:nowStr(),by:ME.name};try{const{error}=await nexus.from('dd_kv').upsert({key:'snap:'+kraMonth,data:d});if(error)throw error;S.snapshots[kraMonth]=d;render();toast(monthLabel(kraMonth)+' saved to trend');}catch(e){dbErr(e);}}
+
+/* ===================== Reports ===================== */
+function rReports(){
+ if(!isHos())return'<div class="card">Reports are for the Head of Sales.</div>';
+ const m=repMonth,now=new Date();
+ let h=`<div class="row"><h2>Monthly Division MIS — ${monthLabel(m)}</h2><span class="sp"></span><input type="month" value="${m}" onchange="repMonth=this.value;render()"><button class="btn sec noprint" onclick="exportCsv()">Export logs CSV</button><button class="btn gold noprint" onclick="saveViewToNexus()">Save to Nexus</button></div>
+ <p class="small muted">Prepared for ${esc(P().hos.name)}, ${esc(P().hos.title)} · Generated ${fmtDT(nowStr())}</p>`;
+ const sc=scores(m),W=S.settings.weights;
+ h+=`<div class="card"><h3>1. Scorecard summary</h3><table><tr><th>Role</th><th>Score</th><th>Rating</th><th>Scheduled jobs on time</th><th>Overrides used</th></tr>${[['dscm',sc.dscm,`A ${sc.A.toFixed(1)}/${W.A} + B ${sc.B.toFixed(1)}/${W.B} + C ${sc.C.toFixed(1)}/${W.C}`],['rbe',sc.rbe,''],['brand',sc.brand,'']].map(([r,s,x])=>`<tr><td>${ROLES[r]} — ${esc(pname(r))}<div class="small muted">${x}</div></td><td><b>${s.toFixed(1)}</b></td><td>${bandPill(s)}</td><td>${schedStats(r,null,m).score??'—'}%</td><td>${Object.keys(S.ovr?.[m]?.[r]||{}).length}</td></tr>`).join('')}</table></div>`;
+ h+=`<div class="card" style="margin-top:14px"><h3>2. Scheduled jobs by KRA</h3><div class="tw"><table><tr><th>Role</th><th>KRA</th><th>Due</th><th>On time</th><th>Late</th><th>Missed</th><th>N/A</th><th>Score</th><th>Verified</th></tr>${['dscm','rbe','brand'].map(r=>(S.settings.kras[r]||[]).map(kr=>{const s=schedStats(r,kr.code,m);if(!s.total&&!s.na)return'';let done=0,ver=0;activeJobs(r).filter(j=>j.kra===kr.code).forEach(j=>dueDates(j,m).forEach(d=>{const x=S.jobs[jKey(j,d)];if(x&&x.doneAt){done++;if(x.verifiedAt)ver++;}}));return`<tr><td>${ROLES[r]}</td><td>${esc(kr.code+' '+kr.name)}</td><td>${s.total}</td><td>${s.ontime}</td><td>${s.late}</td><td><b style="color:${s.missed?'var(--red)':'inherit'}">${s.missed}</b></td><td>${s.na}</td><td>${s.score??'—'}%</td><td>${done?ver+'/'+done:'—'}</td></tr>`;}).join('')).join('')}</table></div></div>`;
+ h+=`<div class="card" style="margin-top:14px"><h3>3. Requests & tickets by log</h3><div class="tw"><table><tr><th>Log</th><th>Owner</th><th>Received</th><th>Closed</th><th>Within TAT</th><th>Avg TAT (working days)</th><th>Open now</th><th>Overdue now</th><th>Expedited this month</th></tr>${Object.keys(LOGS).map(l=>{const o=S.items.filter(i=>i.log===l&&isOpen(i));const tp=tatPct(l,m);return`<tr><td><b>${LOGS[l].prefix}</b> ${LOGS[l].name}</td><td>${esc(pname(LOGS[l].owner))}</td><td>${loggedIn(l,m).length}</td><td>${closedIn(l,m).length}</td><td>${tp==null?'—':tp+'%'}</td><td>${avgTat(l,m)??'—'}</td><td>${o.length}</td><td>${o.filter(isOverdue).length}</td><td>${S.items.filter(i=>i.log===l&&i.expedite&&i.expedite.at.startsWith(m)).length}</td></tr>`;}).join('')}</table></div></div>`;
+ const open=S.items.filter(isOpen);const age=i=>wdBetween(pDT(i.loggedAt),now);
+ h+=`<div class="grid g2" style="margin-top:14px"><div class="card"><h3>4. Requests received by department</h3><div class="tw"><table><tr><th>Department</th>${Object.keys(LOGS).map(l=>`<th>${LOGS[l].prefix}</th>`).join('')}<th>Total</th></tr>${S.settings.departments.map(d=>{const c=Object.keys(LOGS).map(l=>loggedIn(l,m).filter(i=>i.dept===d).length);const t=c.reduce((a,b)=>a+b,0);return t?`<tr><td>${esc(d)}</td>${c.map(x=>`<td>${x||''}</td>`).join('')}<td><b>${t}</b></td></tr>`:'';}).join('')}</table></div></div>
+ <div class="card"><h3>5. Ageing of open items (working days)</h3><table><tr><th>Log</th><th>0–3</th><th>4–7</th><th>8+</th></tr>${Object.keys(LOGS).map(l=>{const o=open.filter(i=>i.log===l);const a8=o.filter(i=>age(i)>=8).length;return`<tr><td>${LOGS[l].short}</td><td>${o.filter(i=>age(i)<=3).length}</td><td>${o.filter(i=>age(i)>=4&&age(i)<=7).length}</td><td><b style="color:${a8?'var(--red)':'inherit'}">${a8}</b></td></tr>`;}).join('')}</table></div></div>`;
+ const stl=loggedIn('STL',m);
+ h+=`<div class="grid g2" style="margin-top:14px"><div class="card"><h3>6. Systems — uptime ${metric('uptime',m)??'—'}% (Criticality A)</h3><table><tr><th>System</th><th>Crit.</th><th>Tickets</th><th>Outages</th><th>Downtime hrs</th><th>Repeat</th></tr>${S.settings.systems.map(s=>{const t=stl.filter(i=>i.system===s.name);const[a,b]=monthBounds(m);const dh=S.items.filter(i=>i.log==='STL'&&i.outage&&i.system===s.name).reduce((x,i)=>x+workHoursBetween(new Date(Math.max(pDT(i.loggedAt),a)),new Date(Math.min(i.closedAt?pDT(i.closedAt):Date.now(),b))),0);return`<tr><td>${esc(s.name)}</td><td>${esc(s.crit)}</td><td>${t.length}</td><td>${t.filter(i=>i.outage).length}</td><td>${r1(dh)}</td><td>${t.filter(i=>i.repeat).length}</td></tr>`;}).join('')}</table></div>
+ <div class="card"><h3>7. Vendor scorecard</h3><table><tr><th>Vendor</th><th>Tickets</th><th>Within SLA</th><th>Open now</th></tr>${S.settings.vendors.map(vn=>{const t=stl.filter(i=>i.vendor===vn.name);const c=t.filter(isDone).map(withinTat).filter(x=>x!==null);return`<tr><td>${esc(vn.name)}</td><td>${t.length}</td><td>${c.length?pct(c.filter(Boolean).length,c.length)+'%':'—'}</td><td>${S.items.filter(i=>i.log==='STL'&&i.vendor===vn.name&&isOpen(i)).length}</td></tr>`;}).join('')}</table></div></div>`;
+ const w=workDaysInMonth(m);
+ h+=`<div class="grid g2" style="margin-top:14px"><div class="card"><h3>8. Reporting & supervision discipline</h3><table><tr><th>Role</th><th>Reports</th><th>Working days</th><th>Reviewed by DSCM</th></tr>${['dscm','rbe','brand'].map(r=>{const x=repOf(r,m);return`<tr><td>${ROLES[r]}</td><td>${x.length}</td><td>${w}</td><td>${r==='dscm'?'—':x.filter(q=>q.reviewed).length}</td></tr>`;}).join('')}</table><div class="small muted" style="margin-top:6px">Team jobs verified within 2 days: ${metric('team_verified',m)??'—'}% · Posts published vs scheduled: ${metric('posts_plan',m)??'—'}% · Reviews replied: ${metric('brand_reviews',m)??'—'}%</div></div>`;
+ const cmp=closedIn('CMP',m);const ov=[];['dscm','rbe','brand'].forEach(r=>Object.entries(S.ovr?.[m]?.[r]||{}).forEach(([id,o])=>{const k=(S.settings.kras[r]||[]).flatMap(x=>x.kpis.map(kp=>({kp,kr:x}))).find(z=>z.kp.id===id);ov.push({r,o,k});}));
+ h+=`<div class="card"><h3>9. Overrides (audit trail)</h3>${ov.length?`<table><tr><th>Role</th><th>KPI</th><th>Value</th><th>Reason</th></tr>${ov.map(x=>`<tr><td>${ROLES[x.r]}</td><td>${esc(x.k?x.k.kr.code+' '+kpiLabel(x.k.kp):'(removed KPI)')}</td><td>${x.o.v}</td><td>${esc(x.o.reason)}</td></tr>`).join('')}</table>`:'<div class="muted small">No overrides this month — every score is purely measured.</div>'}</div></div>`;
+ h+=`<div class="card" style="margin-top:14px"><h3>10. Campaigns closed this month</h3>${cmp.length?`<table><tr><th>ID</th><th>Campaign</th><th>Goal</th><th>Result</th><th>Achievement</th><th>On time</th></tr>${cmp.map(i=>`<tr><td>${i.id}</td><td>${esc(i.title)}</td><td>${esc(i.goalTarget||'—')}</td><td>${esc(i.goalActual||'—')}</td><td>${+i.goalTarget?Math.round((+i.goalActual||0)/(+i.goalTarget)*100)+'%':'—'}</td><td>${withinTat(i)===true?'Yes':withinTat(i)===false?'No':'—'}</td></tr>`).join('')}</table>`:'<div class="muted small">None.</div>'}</div>`;
+ return h;
+}
+function exportCsv(){const cols=['id','log','title','dept','requester','type','kra','priority','conf','loggedAt','due','stage','pct','status','closedAt','withinTat','paused','revisions','score','system','vendor','vendorTicket','outage','repeat','isProject','expedited','blocker'];const rows=S.items.map(i=>{const d=effDue(i);const o={...i,kra:kraOf(i),due:d?dtStr(d):'',stage:stageN(i),pct:stageP(i),withinTat:withinTat(i),expedited:i.expedite?i.expedite.at:''};return cols.map(c=>`"${String(o[c]??'').replace(/"/g,'""')}"`).join(',');});dl('digital_division_logs_'+today()+'.csv',[cols.join(','),...rows].join('\n'),'text/csv');}
+function dl(name,txt,type){const b=new Blob([txt],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);}
+
+/* ===================== Guide ===================== */
+function rGuide(){const W=S.settings.weights;return`<div class="guide"><h2>How the Digital Division console works — in plain words</h2>
+<div class="card"><h3 style="margin-top:0">1. Three levels</h3><div class="lvl"><div><b>Level 1 — the doers</b><br>Resource Building Executive and Brand Manager. They tick off their jobs and move their requests through stages.</div><div><b>Level 2 — Division Head (DSCM)</b><br>Does his own systems work, and <b>verifies</b> the team's ticks and <b>expedites</b> anything slipping.</div><div><b>Level 3 — you, Head of Sales</b><br>Sees everything, verifies the DSCM's ticks, expedites anyone, and approves the month's scores.</div></div><p class="small muted">You sign in with your own Nexus ID, and the screen shows only what your role allows. Every tick, verification, approval and expedite carries your name and the server time — nobody can act as someone else.</p></div>
+<div class="card" style="margin-top:12px"><h3 style="margin-top:0">2. Three kinds of work — all measured</h3><ol>
+<li><b>Scheduled jobs (Checklists)</b> — work that repeats: daily health checks, weekly backups, monthly calendar, quarterly audits. The tool knows when each is due. When the person ticks it, the tool records the time. On time = full credit, late = ${S.settings.lateCredit}% credit, missed = zero.</li>
+<li><b>Requests & tickets (contingent work)</b> — anything raised by someone: a CRM breakdown, an invitation design, a press release. Each gets an ID and a deadline from the TAT table, and moves through stages (Logged → … → Closed). Closed before the deadline = "met".</li>
+<li><b>Projects</b> — bigger requests ticked "Track as project". Progress % comes from the stage, so nobody guesses. Red / Amber / Green is automatic.</li></ol></div>
+<div class="card" style="margin-top:12px"><h3 style="margin-top:0">3. How a score is made</h3><p>Every KRA has 2–4 KPIs, and every KPI reads a number the tool already measured. Example for the RBE's <b>R2 Social media (20%)</b>:</p><ul><li>Scheduled social jobs on time this month: 92% vs target 100% → KPI score 92%</li><li>Social post requests closed within TAT: 90% vs target 90% → 100%</li><li>Engagement-rate growth from the monthly figures: 6% vs target 10% → 60%</li></ul><p>Average = 84% → R2 earns 84% × 20 = <b>16.8 points</b>. All KRAs added together = the RBE's score out of 100.</p><p>The DSCM's score = own KRAs (out of ${W.A}) + RBE score × ${W.B}% + Brand score × ${W.C}%. So if the team does well, the DSCM gains; if the team slips, he loses — that is why he verifies and expedites.</p><p>Rating: 90+ Outstanding · 75–89 Exceeds · 60–74 Meets · below 60 Improvement plan. No typing of scores — only the admin can override, with a written reason that shows in the MIS.</p></div>
+<div class="card" style="margin-top:12px"><h3 style="margin-top:0">4. Your 5-minute daily routine (around 18:45)</h3><ol><li>Open <b>Overview</b>. Look at the six numbers at the top. Anything red needs a question.</li><li>Look at <b>Overdue requests</b> and <b>Projects needing attention</b>. Press <b>Expedite</b> on anything that worries you and write what you need by when. It jumps to the top of that person's list with a red mark.</li><li>Open <b>Daily reports</b> for today. Read "Blockers" and "Decisions needed". Act on decisions.</li><li>Once or twice a week, open <b>My work → DSCM</b> and verify the DSCM's ticked jobs (or "Send back" if not convincing).</li></ol></div>
+<div class="card" style="margin-top:12px"><h3 style="margin-top:0">5. Weekly and monthly</h3><ul><li><b>Monday (30 min):</b> open <b>Checklists</b> for each person — the grid shows every red ✗ (missed) at a glance. Open <b>Reports</b> sections 2 and 3. Ask about anything red.</li><li><b>Friday (15 min):</b> <b>Projects</b> — approve or reject revised end dates.</li><li><b>Month end:</b> RBE/Brand enter the platform figures (reach, engagements, Google rating, survey score) on the KRA page. On the 3rd working day open <b>KRA scorecards</b>, check, and press <b>Close month</b>. Print the <b>Reports</b> page as the MIS.</li></ul></div>
+<div class="card" style="margin-top:12px"><h3 style="margin-top:0">6. What the colours and marks mean</h3><p><span class="c c-ontime">✓</span> on time · <span class="c c-late">L</span> done late · <span class="c c-missed">✗</span> missed · <span class="c c-today">•</span> due today · <span class="c c-due">!</span> due, grace running · <span class="c c-na">–</span> not applicable · ${ragPill('Red')} past end date · ${ragPill('Amber')} at risk · ${ragPill('Green')} on plan · <span class="pill p-red">expedited</span> senior has pushed it · <span class="pill p-gold">override</span> admin changed a value.</p></div>
+<div class="card" style="margin-top:12px"><h3 style="margin-top:0">7. What you control (Control panel)</h3><ul><li>Names at each level, the ${W.A}/${W.B}/${W.C} split, rating bands.</li><li><b>Job register</b> — add or remove any daily/weekly/monthly/quarterly job, link it to a KRA. New duty? Add a job — it is measured from tomorrow.</li><li><b>KRAs & KPIs</b> — weights, targets, and which measured number each KPI uses.</li><li><b>TAT standards</b> — deadlines for each request type, and which KRA each type counts towards.</li><li>Stages, working days, holidays, departments, systems, vendors.</li><li><b>People & roles, Approval rules</b> — who holds each role, department heads, and which requests need your approval.</li><li><b>Data</b> — stored securely in Nexus; you can export a copy any time.</li></ul></div>
+<div class="card" style="margin-top:12px"><h3 style="margin-top:0">8. Rules that keep the numbers honest</h3><ul><li>A job ticked after its grace period counts as late automatically — nobody can tick "on time" later.</li><li>The logged time of a request can only be changed by admin, so deadlines can't be shifted quietly.</li><li>Pausing a request (waiting on the requester) must be entered as paused days — visible on the item.</li><li>"N/A" on a job needs a reason and is shown in the checklist.</li><li>Seniors can "Send back" a ticked job — it becomes open again.</li><li>Times (logged, done, verified, closed, approved) are stamped by the server. Nobody can back-date them.</li></ul></div>
+<div class="card" style="margin-top:12px"><h3 style="margin-top:0">9. How other departments raise work</h3><ol><li>Anyone opens <b>Raise a request</b> and picks what they need (system problem, app change, campaign, content/design, brand/PR).</li><li>The system sends it to the right person, sets the deadline from the TAT table and gives an ID. The requester follows it in <b>My requests</b> and rates a delivery 1–5 (this feeds the RBE's Request fulfilment score).</li><li><b>System tickets go straight to the DSCM.</b> Everything else — campaigns, development, content, brand work — first goes to the requester's department head (where one is set) and then to the Head of Sales. <b>Nothing is added to anyone's job sheet until the Head of Sales approves it.</b> The deadline clock starts at approval.</li></ol></div></div>`;}
+
+/* ===================== Control panel ===================== */
+function gp(path){return path.split('.').reduce((o,k)=>o?.[k],S);}
+function sp(path,val){const ks=path.split('.');let o=S;for(let i=0;i<ks.length-1;i++)o=o[ks[i]];o[ks[ks.length-1]]=val;save();}
+function onInp(el){let val=el.type==='checkbox'?el.checked:el.value;if(el.dataset.t==='n')val=val===''?0:+val;sp(el.dataset.p,val);toast('Saved');if(el.dataset.r)render();}
+const I=(p,t='text',w='',r=false)=>`<input data-p="${p}" ${t==='n'?'type="number" step="any" data-t="n"':'type="'+t+'"'} value="${esc(gp(p))}" ${w?`style="width:${w}"`:''} ${r?'data-r="1"':''} onchange="onInp(this)">`;
+const SEL=(p,opts,r=false)=>`<select data-p="${p}" ${r?'data-r="1"':''} onchange="onInp(this)">${opt(opts,gp(p))}</select>`;
+const CB=(p,r=true)=>`<input type="checkbox" data-p="${p}" ${gp(p)?'checked':''} ${r?'data-r="1"':''} onchange="onInp(this)">`;
+function addRow(path,obj){gp(path).push(obj);save();render();}
+function delRow(path,i){if(!confirm('Remove this row?'))return;gp(path).splice(i,1);save();render();}
+function setList(path,txt){sp(path,txt.split('\n').map(s=>s.trim()).filter(Boolean));toast('Saved');render();}
+function toggleOff(d){const w=S.settings.weeklyOff;const i=w.indexOf(d);if(i>=0)w.splice(i,1);else w.push(d);save();render();}
+const kraCodes=role=>(S.settings.kras[role]||[]).map(k=>[k.code,k.code+' '+k.name]);
+function rAdmin(){
+ if(!isHos())return'<div class="card">The Control panel is for the Head of Sales only.</div>';
+ const secs=[['people','People & roles'],['jobs','Job register'],['kra','KRAs & KPIs'],['scoring','Weights & scoring'],['tat','TAT standards'],['stages','Pipeline stages'],['calendar','Working calendar'],['masters','Departments, systems, vendors'],['approval','Approval rules'],['data','Data']];
+ let h=`<div class="row"><h2>Control panel</h2><span class="sp"></span></div><div class="subtabs">${secs.map(([k,l])=>`<button class="${admSec===k?'on':''}" onclick="admSec='${k}';render()">${l}</button>`).join('')}</div><div class="adm">`;
+ const st=S.settings;
+ if(admSec==='people')h+=adminPeople();
+ if(admSec==='jobs'){h+=`<div class="subtabs">${['dscm','rbe','brand'].map(r=>`<button class="${admJobRole===r?'on':''}" onclick="admJobRole='${r}';render()">${ROLES[r]} (${st.jobs.filter(j=>j.role===r).length})</button>`).join('')}</div><div class="card"><div class="row"><h3 style="margin:0">Scheduled jobs — ${ROLES[admJobRole]}</h3><span class="sp"></span><button class="btn sec" onclick="addRow('settings.jobs',J('${admJobRole}','${(st.kras[admJobRole][0]||{}).code||''}','New job','weekly'))">+ Job</button></div><p class="small muted">Weekly: pick the weekday. Monthly/quarterly "Day": a date (e.g. 18), L = last working day, W3 = 3rd working day. Quarterly "Month": 1st, 2nd or 3rd month of each quarter (Jan/Apr/Jul/Oct = 1st). Untick Active to pause a job without losing its history.</p><div class="tw"><table><tr><th>Job</th><th style="width:170px">KRA</th><th style="width:110px">Frequency</th><th style="width:80px">Weekday</th><th style="width:70px">Day</th><th style="width:70px">Q-month</th><th>Evidence expected</th><th style="width:50px">Active</th><th></th></tr>${st.jobs.map((j,i)=>j.role!==admJobRole?'':`<tr><td>${I(`settings.jobs.${i}.name`)}</td><td>${SEL(`settings.jobs.${i}.kra`,kraCodes(j.role))}</td><td>${SEL(`settings.jobs.${i}.freq`,Object.entries(FREQ),true)}</td><td>${j.freq==='weekly'?SEL(`settings.jobs.${i}.dow`,DOW.map((d,k)=>[k,d])):''}</td><td>${['monthly','quarterly'].includes(j.freq)?I(`settings.jobs.${i}.day`):''}</td><td>${j.freq==='quarterly'?SEL(`settings.jobs.${i}.qm`,[[1,'1st'],[2,'2nd'],[3,'3rd']]):''}</td><td>${I(`settings.jobs.${i}.evidence`)}</td><td>${CB(`settings.jobs.${i}.active`)}</td><td><button class="x" onclick="delRow('settings.jobs',${i})">✕</button></td></tr>`).join('')}</table></div></div>`;}
+ if(admSec==='kra')['dscm','rbe','brand'].forEach(role=>{const ks=st.kras[role];const ws=ks.reduce((a,k)=>a+(+k.weight||0),0);const need=role==='dscm'?st.weights.A:100;h+=`<div class="card"><div class="row"><h3 style="margin:0">${role==='dscm'?'DSCM — Part A KRAs':ROLES[role]+' KRAs'}</h3><span class="sp"></span><span class="${ws===need?'small muted':'warnline'}">Weights total ${ws} / ${need}</span><button class="btn sec" onclick="addRow('settings.kras.${role}',KR('NEW','New KRA',0,[K('sched',100)]))">+ KRA</button></div>`;
+  ks.forEach((kr,i)=>{const b=`settings.kras.${role}.${i}`;const nj=st.jobs.filter(j=>j.role===role&&j.kra===kr.code&&j.active!==false).length;const nt=Object.values(st.tat).flat().filter(t=>t.kra===kr.code).length;h+=`<div style="border-top:1px solid var(--line);margin-top:10px;padding-top:10px"><div class="row"><label class="small">Code${I(b+'.code','text','70px',true)}</label><label class="small" style="flex:1">KRA name${I(b+'.name','text','100%')}</label><label class="small">Weight${I(b+'.weight','n','80px',true)}</label><button class="x" onclick="delRow('settings.kras.${role}',${i})">✕</button></div><div class="small muted">Feeds from ${nj} scheduled job(s) and ${nt} request type(s).</div>
+  <table style="margin-top:6px"><tr><th>Measured from</th><th style="width:220px">Custom label (optional)</th><th style="width:90px">Target</th><th style="width:140px">Direction</th><th style="width:30px"></th></tr>${kr.kpis.map((k,j)=>{const kb=`${b}.kpis.${j}`;return`<tr><td>${SEL(kb+'.src',Object.entries(SRC).map(([key,s])=>[key,s.l+(s.u?' ('+s.u+')':'')]),true)}${(SRC[k.src]?.k&&k.src==='sched'&&!nj)||(k.src==='items_tat'&&!nt)?'<div class="warnline">Nothing is linked to this KRA yet, so this KPI has no data.</div>':''}</td><td>${I(kb+'.name')}</td><td>${I(kb+'.target','n')}</td><td>${SEL(kb+'.dir',[['higher','Higher is better'],['lower','Lower is better']])}</td><td><button class="x" onclick="delRow('${b}.kpis',${j})">✕</button></td></tr>`;}).join('')}</table><button class="btn sm sec" style="margin-top:6px" onclick="addRow('${b}.kpis',K('sched',100))">+ KPI</button></div>`;});h+=`</div>`;});
+ if(admSec==='scoring'){const W=st.weights;h+=`<div class="card"><h3>DSCM scorecard split</h3><div class="row"><label>Part A — own work${I('settings.weights.A','n','90px',true)}</label><label>Part B — Resource Building${I('settings.weights.B','n','90px',true)}</label><label>Part C — Brand Division${I('settings.weights.C','n','90px',true)}</label></div>${W.A+W.B+W.C!==100?`<div class="warnline">A + B + C = ${W.A+W.B+W.C}. It should be 100.</div>`:'<div class="small muted">Totals 100 ✓</div>'}</div>
+ <div class="card"><h3>Scoring rules</h3><div class="row"><label>KPI score cap %${I('settings.kpiCap','n','90px',true)}</label><label>Penalty per unit over target (lower-is-better) %${I('settings.lowerPenalty','n','90px',true)}</label><label>Credit for a job done late %${I('settings.lateCredit','n','90px',true)}</label><label>Event collateral lead (working days before event)${I('settings.eventLead','n','90px',true)}</label></div></div>
+ <div class="card"><h3>Grace days for scheduled jobs (working days after due date that still count as on time)</h3><div class="row">${Object.keys(FREQ).map(f=>`<label>${FREQ[f]}${I('settings.grace.'+f,'n','90px',true)}</label>`).join('')}</div></div>
+ <div class="card"><h3>Rating bands</h3><table><tr><th>Minimum score</th><th>Label</th></tr>${st.bands.map((b,i)=>`<tr><td>${I(`settings.bands.${i}.min`,'n','',true)}</td><td>${I(`settings.bands.${i}.label`,'text','',true)}</td></tr>`).join('')}</table></div>`;}
+ if(admSec==='tat')Object.keys(LOGS).forEach(l=>{const u=l==='STL';const role=LOGS[l].owner;h+=`<div class="card"><div class="row"><h3 style="margin:0">${LOGS[l].name} — ${LOGS[l].typeLabel}</h3><span class="sp"></span><button class="btn sec sm" onclick="addRow('settings.tat.${l}',${u?`{code:'NEW',label:'New type',hours:8,ack:60,kra:'${(st.kras[role][0]||{}).code}'}`:`{code:'NEW',label:'New type',days:3,kra:'${(st.kras[role][0]||{}).code}'}`})">+ Row</button></div><p class="small muted">${u?'Resolution target in working hours (within the working day in Working calendar).':l==='CMP'?'Default lead time in working days; the launch date on each campaign overrides it.':'Working days from logging to delivery. 0 = set the date on each item.'} "Counts towards" decides which KRA this work is scored under.</p><table><tr><th style="width:80px">Code</th><th>Label</th><th style="width:110px">${u?'Resolve (hrs)':'Working days'}</th>${u?'<th style="width:110px">Acknowledge (min)</th>':''}<th style="width:200px">Counts towards KRA</th><th style="width:30px"></th></tr>${st.tat[l].map((t,i)=>`<tr><td>${I(`settings.tat.${l}.${i}.code`)}</td><td>${I(`settings.tat.${l}.${i}.label`)}</td><td>${I(`settings.tat.${l}.${i}.${u?'hours':'days'}`,'n')}</td>${u?`<td>${I(`settings.tat.${l}.${i}.ack`,'n')}</td>`:''}<td>${SEL(`settings.tat.${l}.${i}.kra`,kraCodes(role))}</td><td><button class="x" onclick="delRow('settings.tat.${l}',${i})">✕</button></td></tr>`).join('')}</table></div>`;});
+ if(admSec==='stages'){h+=`<p class="small muted">The last stage must be 100% — reaching 100% closes the item and stops its TAT clock.</p>`;Object.keys(LOGS).forEach(l=>{h+=`<div class="card"><div class="row"><h3 style="margin:0">${LOGS[l].name}</h3><span class="sp"></span><button class="btn sec sm" onclick="addRow('settings.stages.${l}',{n:'New stage',p:50})">+ Stage</button></div><table><tr><th>#</th><th>Stage name</th><th style="width:120px">% complete</th><th style="width:30px"></th></tr>${st.stages[l].map((s,i)=>`<tr><td>${i+1}</td><td>${I(`settings.stages.${l}.${i}.n`)}</td><td>${I(`settings.stages.${l}.${i}.p`,'n')}</td><td><button class="x" onclick="delRow('settings.stages.${l}',${i})">✕</button></td></tr>`).join('')}</table></div>`;});}
+ if(admSec==='calendar')h+=`<div class="card"><h3>Go-live date</h3><p class="small muted">Scheduled jobs and daily reports before this date are never counted as missed. Set it to the first day the team uses this console.</p><div class="row"><label>First day of monitoring ${I('settings.goLive','date','',true)}</label></div></div><div class="card"><h3>Weekly off days</h3><div class="row">${DOW.map((d,i)=>`<label class="row" style="gap:4px"><input type="checkbox" ${st.weeklyOff.includes(i)?'checked':''} onchange="toggleOff(${i})">${d}</label>`).join('')}</div></div><div class="card"><h3>Working hours (for system ticket SLAs and uptime)</h3><div class="row"><label>Day starts${I('settings.dayStart','time')}</label><label>Day ends${I('settings.dayEnd','time')}</label></div></div><div class="card"><h3>Holidays</h3><p class="small muted">One date per line, YYYY-MM-DD. No jobs fall due on holidays.</p><textarea style="min-height:140px" onchange="setList('settings.holidays',this.value)">${esc(st.holidays.join('\n'))}</textarea></div>`;
+ if(admSec==='masters')h+=`<div class="card"><h3>Requesting departments</h3><p class="small muted">One per line.</p><textarea style="min-height:160px" onchange="setList('settings.departments',this.value)">${esc(st.departments.join('\n'))}</textarea></div>
+ <div class="card"><div class="row"><h3 style="margin:0">Systems register</h3><span class="sp"></span><button class="btn sec sm" onclick="addRow('settings.systems',{name:'New system',type:'Vendor system',crit:'B',vendor:'',owner:''})">+ System</button></div><p class="small muted">Criticality A systems are used for the uptime KPI.</p><table><tr><th>System</th><th>Type</th><th style="width:80px">Criticality</th><th>Vendor</th><th>Business owner</th><th></th></tr>${st.systems.map((s,i)=>`<tr><td>${I(`settings.systems.${i}.name`)}</td><td>${SEL(`settings.systems.${i}.type`,['Vendor system','In-house platform','Website','Mobile app','Communication tool','Other'])}</td><td>${SEL(`settings.systems.${i}.crit`,['A','B','C'])}</td><td>${SEL(`settings.systems.${i}.vendor`,['',...st.vendors.map(v=>v.name)])}</td><td>${SEL(`settings.systems.${i}.owner`,['',...st.departments])}</td><td><button class="x" onclick="delRow('settings.systems',${i})">✕</button></td></tr>`).join('')}</table></div>
+ <div class="card"><div class="row"><h3 style="margin:0">Vendor register</h3><span class="sp"></span><button class="btn sec sm" onclick="addRow('settings.vendors',{name:'New vendor',contact:'',email:'',escalation:'',renewal:''})">+ Vendor</button></div><table><tr><th>Vendor</th><th>Support contact</th><th>Support email / portal</th><th>Escalation contact</th><th style="width:150px">Contract renewal</th><th></th></tr>${st.vendors.map((vn,i)=>{const rn=vn.renewal?pDate(vn.renewal):null;const soon=rn&&(rn-new Date())/864e5<=60;return`<tr><td>${I(`settings.vendors.${i}.name`,'text','',true)}</td><td>${I(`settings.vendors.${i}.contact`)}</td><td>${I(`settings.vendors.${i}.email`)}</td><td>${I(`settings.vendors.${i}.escalation`)}</td><td>${I(`settings.vendors.${i}.renewal`,'date','',true)}${soon?'<div class="warnline">Renewal within 60 days</div>':''}</td><td><button class="x" onclick="delRow('settings.vendors',${i})">✕</button></td></tr>`;}).join('')}</table></div>`;
+if(admSec==='data')h+=adminData();
+ if(admSec==='approval')h+=adminApproval();
+ return h+'</div>';
+}
+/* ===================== Backup (export only — data lives in Nexus) ===================== */
+function exportJson(){const d={exportedAt:nowStr(),by:ME.name,settings:S.settings,items:S.allItems.map(i=>Object.assign({},i,{_raw:undefined})),jobs:S.jobs,daily:S.daily,meas:S.meas,ovr:S.ovr,snapshots:S.snapshots};dl('digital_division_export_'+today()+'.json',JSON.stringify(d,null,1),'application/json');}
+/* ===================== Saving a view to Nexus (replaces browser print) ===================== */
+async function saveViewToNexus(){
+ if(!(window.html2canvas&&window.jspdf)){nexusToast('PDF library could not load (no internet). Please retry when online.','err');return;}
+ const el=document.getElementById('view');
+ const nm={chk:'Checklist',proj:'Projects',daily:'Daily reports',kra:'KRA scorecard',rep:'Monthly MIS'}[tab]||'Digital Division';
+ const when=tab==='kra'?monthLabel(kraMonth):tab==='rep'?monthLabel(repMonth):tab==='chk'?monthLabel(chkMonth)+' · '+(ROLES[canSeeTeam()?chkRole:ME.role]):tab==='daily'?fmtD(dailyDate):fmtD(today());
+ const label='Digital Division — '+nm+' — '+when;
+ try{toast('Saving…');const refId=NexusBridge.newReportId();
+  const blob=await NexusBridge.captureElementAsPdf(el,'Digital_Division_'+nm.replace(/\s+/g,'_')+'.pdf',false,{name:ME.name,refId},'.noprint,button,select,input[type=month],input[type=date]{display:none!important}');
+  await NexusBridge.saveReport({id:refId,toolKey:'digital_console',sectionKey:'digital',clientName:label,clientContact:null,summary:label,data:{tab,role:ME.role,savedAt:nowStr()},pdfBlob:blob});
+  nexusToast('Saved to Nexus. This report is now locked — only an admin can change it.','ok');
+ }catch(e){console.error(e);nexusToast('Could not save to Nexus: '+(e.message||e),'err');}}
+
+/* ===================== Attachments ===================== */
+async function uploadFiles(itemId,files){const out=[];for(const f of files){if(f.size>5*1024*1024){toast(f.name+' is over 5 MB — skipped');continue;}const safe=f.name.replace(/[^A-Za-z0-9._-]+/g,'_').slice(-80);const path=itemId+'/'+Date.now()+'_'+safe;const{error}=await nexus.storage.from('dd-files').upload(path,f,{upsert:false});if(error){console.error(error);toast('Upload failed: '+f.name);continue;}out.push({path,name:f.name,size:f.size,at:nowStr(),by:ME.name});}return out;}
+async function dlFile(path,name){const{data,error}=await nexus.storage.from('dd-files').download(path);if(error){toast('Could not open the file');return;}const a=document.createElement('a');a.href=URL.createObjectURL(data);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);}
+const filesHtml=it=>(it.files&&it.files.length)?it.files.map(f=>`<div class="small"><a href="#" data-p="${esc(f.path)}" data-n="${esc(f.name)}" onclick="dlFile(this.dataset.p,this.dataset.n);return false">📎 ${esc(f.name)}</a> <span class="muted">· ${Math.round((f.size||0)/1024)} KB · ${esc(f.by||'')} ${fmtDT(f.at)}</span></div>`).join(''):'<div class="small muted">No files attached.</div>';
+async function addFilesTo(id,inputId){const el=document.getElementById(inputId);if(!el||!el.files.length)return;const it0=S.allItems.find(i=>i.id===id);if(!it0)return;toast('Uploading…');const up=await uploadFiles(id,[...el.files]);if(!up.length)return;const it=clone(it0);it.files=(it.files||[]).concat(up);await putItem(it,'Files added');closeModal();openItem(id);}
+
+/* ===================== Raise a request (everyone) ===================== */
+const REQ_MENU=[
+ {log:'STL',t:'A system is not working',h:'CRM, back-office software, website, WhatsApp, a login or access problem'},
+ {log:'DEV',t:'Change or new feature in an app',h:'Nexus, reports, forms, filters, new screens'},
+ {log:'CMP',t:'Campaign for an event',h:'Retirement School, Investor Awareness Programme, a drive'},
+ {log:'DRL',t:'Content or design',h:'Post, invitation, PPT, certificates, video, blog, newsletter'},
+ {log:'BRA',t:'Brand, PR or media',h:'Press release, sponsorship, online reviews, brand audit'}
+];
+function tatText(t,log){if(!t)return'';if(log==='STL')return t.hours+' working hours to resolve';return t.days?t.days+' working day'+(t.days>1?'s':'')+' after approval':'date fixed at approval';}
+function routeHtml(log,type){const L=LOGS[log],t=(S.settings.tat[log]||[]).find(x=>x.code===type);const own=L.owner;
+ const appr=log==='STL'?'No approval needed — system tickets go straight to the Digital Division.':(ME.head?'Needs approval by the Head of Sales.':'Needs approval: your department head (if your department has one), then the Head of Sales.');
+ return`<div class="route"><b>Goes to:</b> ${esc(pname(own))} <span class="muted">(${esc(ROLES[own])})</span><br><b>Approval:</b> ${appr}${log!=='STL'?'<br><span class="muted">Nothing is added to the Digital Division job sheet until it is approved.</span>':''}<br><b>Deadline:</b> ${esc(tatText(t,log))||'—'}</div>`;}
+function rRaise(){
+ if(reqDone){const d=reqDone;return`<h2>Request submitted</h2><div class="card" style="max-width:640px"><p style="font-size:15px"><b>${esc(d.id)}</b> — ${esc(d.title)}</p><p>${d.approval==='approved'?`It has gone straight to <b>${esc(pname(LOGS[d.log].owner))}</b>.`:`It is now <b>${d.approval==='dept'?'waiting for your department head':'waiting for the Head of Sales'}</b>. It reaches the Digital Division only after approval.`}</p><div class="row"><button class="btn" onclick="go('myreq')">See My requests</button><button class="btn sec" onclick="reqDone=null;reqLog=null;render()">Raise another</button></div></div>`;}
+ let h=`<h2>Raise a request to the Digital Division</h2><p class="small muted">Pick what you need. The system sends it to the right person, sets the deadline and gives you an ID so you can follow it.</p>
+ <div class="reqgrid">${REQ_MENU.map(m=>`<button class="reqcard ${reqLog===m.log?'on':''}" onclick="reqLog='${m.log}';render()"><b>${esc(m.t)}</b><div class="small muted" style="margin-top:4px">${esc(m.h)}</div></button>`).join('')}</div>`;
+ if(!reqLog)return h;
+ const log=reqLog,L=LOGS[log],types=S.settings.tat[log]||[];
+ const typeOpts=types.map(t=>[t.code,t.label.replace(/^(XS|S|M|L) — /,'').replace(/^S[1-4] /,'')+' ('+tatText(t,log)+')']);
+ h+=`<div class="card" style="margin-top:14px;max-width:820px"><h3>${esc(REQ_MENU.find(m=>m.log===log).t)}</h3><div class="form">
+ <label class="full">What exactly do you need?<select id="rq_type" onchange="document.getElementById('rq_route').innerHTML=routeHtml('${log}',this.value)">${opt(typeOpts,'')}</select></label>
+ <label class="full">Title (short)<input id="rq_title" maxlength="120" placeholder="e.g. Invitation for Retirement School, 14 Dec"></label>
+ <label class="full">Details<textarea id="rq_desc" placeholder="What is needed, who it is for, any content/links, anything the team should know"></textarea></label>
+ ${ME.dept?`<label>Your department<input value="${esc(ME.dept)}" disabled></label>`:`<label>Your department<select id="rq_dept"><option value="">Select…</option>${opt(S.settings.departments,'')}</select></label>`}
+ <label>Requested by<input id="rq_req" value="${esc(ME.name)}"></label>
+ ${log!=='STL'?`<label>Priority<select id="rq_pri">${opt(['P1','P2','P3','P4'],'P3')}</select></label>`:''}
+ <label>Confidentiality<select id="rq_conf">${opt(['Public','Internal','Restricted'],'Internal')}</select></label>
+ ${log==='STL'?`<label>Which system?<select id="rq_sys"><option value="">Not sure / other</option>${opt(S.settings.systems.map(s=>[s.name,s.name]),'')}</select></label>`:''}
+ ${log==='DRL'?`<label>Event date (if for an event)<input type="date" id="rq_ev"></label>`:''}
+ ${log==='CMP'||log==='DEV'?`<label>Needed by (date)<input type="date" id="rq_need"></label>`:''}
+ ${log==='CMP'?`<label>Goal (e.g. registrations targeted)<input type="number" id="rq_goal" min="0"></label>`:''}
+ <label class="full">Attach files (optional, up to 5 files, 5 MB each)<input type="file" id="rq_files" multiple></label>
+ </div><div id="rq_route" style="margin-top:12px">${routeHtml(log,(types[0]||{}).code)}</div>
+ <div class="row" style="margin-top:14px"><button class="btn gold" id="rq_btn" onclick="submitRequest()">Submit request</button><button class="btn sec" onclick="reqLog=null;render()">Cancel</button></div></div>`;
+ return h;}
+async function submitRequest(){
+ const log=reqLog,title=(v('rq_title')||'').trim();if(!title){alert('Please enter a short title.');return;}
+ if(!(v('rq_desc')||'').trim()){alert('Please add a few details so the team understands the request.');return;}
+ const dept=ME.dept||v('rq_dept');if(!dept){alert('Please choose your department.');return;}
+ const it=newItem(log);Object.assign(it,{title,desc:v('rq_desc'),dept,requester:(v('rq_req')||ME.name),type:v('rq_type'),conf:v('rq_conf'),priority:log==='STL'?'P3':v('rq_pri')});
+ if(log==='STL')it.system=v('rq_sys')||'';if(log==='DRL')it.eventDate=v('rq_ev')||'';if(log==='CMP'||log==='DEV')it.neededBy=v('rq_need')||'';if(log==='CMP')it.goalTarget=v('rq_goal')||'';
+ const files=[...(document.getElementById('rq_files')?.files||[])].slice(0,5);
+ const btn=document.getElementById('rq_btn');btn.disabled=true;btn.textContent='Submitting…';
+ try{const{data,error}=await nexus.from('dd_items').insert({log,dept,data:itemPayload(it)}).select().single();if(error)throw error;
+  let row=data;
+  if(files.length){const up=await uploadFiles(row.id,files);if(up.length){const it2=rowToItem(row);it2.files=up;const r2=await nexus.from('dd_items').update({data:itemPayload(it2)}).eq('id',row.id).eq('version',row.version).select().single();if(!r2.error)row=r2.data;}}
+  replaceItem(rowToItem(row));reqDone={id:row.id,title,log,approval:row.approval};reqLog=null;try{nexusLogEvent(CTX.profile,'dd_request_raised',{id:row.id,log});}catch(e){}render();
+ }catch(e){btn.disabled=false;btn.textContent='Submit request';alert('Could not submit: '+(e.message||e));}}
+
+/* ===================== Status helpers, My requests, department requests ===================== */
+function statusOf(i){if(i.approval==='dept')return['Awaiting department head approval','p-amber'];if(i.approval==='hos')return['Awaiting Head of Sales approval','p-amber'];if(i.approval==='rejected')return['Not approved','p-red'];if(i.status==='Cancelled')return['Cancelled',''];if(isDone(i))return['Delivered','p-green'];return[stageN(i)+' · '+stageP(i)+'%','p-navy'];}
+const apprPill=i=>{const s=statusOf(i);return`<span class="pill ${s[1]}">${esc(s[0])}</span>`;};
+function reqTable(list,withActions){
+ return`<div class="card tw"><table><tr><th>ID</th><th>Request</th><th>Type</th>${withActions?'<th>Raised by</th>':''}<th>Status</th><th>Due</th><th>Rating</th>${withActions?'<th></th>':''}</tr>${list.map(i=>{const d=i.approval==='approved'?effDue(i):null;return`<tr class="click" onclick="openReq('${i.id}')"><td><b>${i.id}</b></td><td>${esc(i.title)}<div class="small muted">${esc(LOGS[i.log].short)} · to ${esc(pname(LOGS[i.log].owner))}</div></td><td class="small">${esc(typeOf(i)?(typeOf(i).label):i.type)}</td>${withActions?`<td class="small">${esc(i.requesterName||'')}<div class="muted">${esc(i.dept||'')}</div></td>`:''}<td>${apprPill(i)}</td><td class="small">${d?fmtDT(dtStr(d)):'—'}</td><td>${+i.score>0?'★'.repeat(+i.score):(i.approval==='approved'&&isDone(i)&&i.requesterId===ME.id?'<span class="pill p-gold">rate it</span>':'')}</td>${withActions?`<td onclick="event.stopPropagation()">${i.approval==='dept'&&ME.head&&i.requesterId!==ME.id?`<button class="btn sm ok" onclick="deptDecide('${i.id}',true)">Approve</button> <button class="btn sm danger" onclick="deptDecide('${i.id}',false)">Not approve</button>`:''}</td>`:''}</tr>`;}).join('')||`<tr><td colspan="9" class="muted">Nothing here yet.</td></tr>`}</table></div>`;}
+function rMyReq(){const list=S.allItems.filter(i=>i.requesterId===ME.id).sort((a,b)=>(b.id).localeCompare(a.id));
+ return`<div class="row"><h2>My requests</h2><span class="sp"></span><button class="btn gold" onclick="go('req')">+ Raise a request</button></div><p class="small muted">Click a request to see its history, add files, or rate it once delivered. Your rating of delivered content feeds the Resource Building Executive's service score.</p>${reqTable(list,false)}`;}
+function rDept(){const list=S.allItems.filter(i=>i.dept===ME.dept).sort((a,b)=>(b.id).localeCompare(a.id));const wait=list.filter(i=>i.approval==='dept'&&i.requesterId!==ME.id);
+ return`<h2>Requests from ${esc(ME.dept)}</h2>${wait.length?`<div class="banner"><b>${wait.length} request${wait.length>1?'s are':' is'} waiting for your approval.</b> Approved requests go to the Head of Sales next.</div>`:''}<p class="small muted">As department head you can see everything your department has asked for. Requests from your staff reach the Digital Division only after you and the Head of Sales approve them (system tickets go straight through).</p>${reqTable(list,true)}`;}
+async function deptDecide(id,ok){const it0=S.allItems.find(x=>x.id===id);if(!it0)return;const note=prompt(ok?`Approve "${it0.title}" and send it to the Head of Sales? Optional note:`:'Reason for not approving (required):','');if(note===null)return;if(!ok&&!note.trim()){alert('A reason is required.');return;}const it=clone(it0);it.history=it.history||[];it.history.push(hist(ok?'Department head approved':'Department head did not approve',note));if(note)it.approvalNote=note;try{nexusLogEvent(CTX.profile,'dd_dept_decision',{id,ok});}catch(e){}await putItem(it,ok?'Approved — sent to Head of Sales':'Request not approved',ok?'hos':'rejected');closeModal();}
+async function approveItem(id){const it0=S.allItems.find(x=>x.id===id);if(!it0)return;
+ if((it0.log==='CMP'||(it0.log==='DEV'&&typeOf(it0)&&!(+typeOf(it0).days)))&&!it0.dueOverride&&!confirm('This item has no committed date yet. Approve anyway? (You can open it and set the date after approving.)'))return;
+ const note=prompt(`Approve "${it0.title}" and add it to ${pname(LOGS[it0.log].owner)}'s job sheet? Optional note:`,'');if(note===null)return;
+ const it=clone(it0);it.history=it.history||[];it.history.push(hist('Approved by Head of Sales',note));if(note)it.approvalNote=note;try{nexusLogEvent(CTX.profile,'dd_approved',{id});}catch(e){}await putItem(it,'Approved — now in '+pname(LOGS[it0.log].owner)+"'s work list",'approved');closeModal();}
+async function rejectItem(id){const it0=S.allItems.find(x=>x.id===id);if(!it0)return;const note=prompt('Reason for not approving (the requester will see this):','');if(note===null)return;if(!note.trim()){alert('A reason is required.');return;}const it=clone(it0);it.history=it.history||[];it.history.push(hist('Not approved',note));it.approvalNote=note;try{nexusLogEvent(CTX.profile,'dd_rejected',{id});}catch(e){}await putItem(it,'Request not approved','rejected');closeModal();}
+async function cancelReq(id){if(!confirm('Cancel this request?'))return;const it0=S.allItems.find(x=>x.id===id);const it=clone(it0);it.status='Cancelled';it.history=it.history||[];it.history.push(hist('Cancelled by requester',''));await putItem(it,'Request cancelled');closeModal();}
+async function rateReq(id){const sc=+v('rate_sc');if(!(sc>=1&&sc<=5)){alert('Please choose a rating from 1 to 5.');return;}const it0=S.allItems.find(x=>x.id===id);const it=clone(it0);it.score=sc;it.ratingNote=(v('rate_note')||'').trim();it.history=it.history||[];it.history.push(hist('Rated '+sc+'/5',it.ratingNote));await putItem(it,'Thank you for rating');closeModal();}
+function openReq(id){const i=S.allItems.find(x=>x.id===id);if(!i)return;editing=null;
+ const L=LOGS[i.log],d=i.approval==='approved'?effDue(i):null,st=statusOf(i);
+ const mine=i.requesterId===ME.id,pend=i.approval==='dept'||i.approval==='hos';
+ let h=`<div class="row"><h2 style="margin:0">${esc(i.id)} · ${esc(L.name)}</h2><span class="sp"></span><button class="btn sec" onclick="closeModal()">Close</button></div>
+ <div class="row" style="margin:6px 0 10px"><span class="pill ${st[1]}">${esc(st[0])}</span>${i.expedite&&!i.expedite.cleared?'<span class="pill p-red">expedited</span>':''}</div>
+ <div class="form"><label class="full">Request<div style="color:var(--ink);font-size:14px"><b>${esc(i.title)}</b></div></label>
+ <label class="full">Details<div style="color:var(--ink);white-space:pre-wrap">${esc(i.desc||'—')}</div></label>
+ <label>Type<div style="color:var(--ink)">${esc(typeOf(i)?typeOf(i).label:i.type)}</div></label>
+ <label>Raised by<div style="color:var(--ink)">${esc(i.requesterName||'')} · ${esc(i.dept||'')}</div></label>
+ <label>Goes to<div style="color:var(--ink)">${esc(pname(L.owner))} (${esc(ROLES[L.owner])})</div></label>
+ <label>Deadline<div style="color:var(--ink)">${d?fmtDT(dtStr(d)):(pend?'Set after approval':'—')}</div></label>
+ ${i.eventDate?`<label>Event date<div style="color:var(--ink)">${fmtD(i.eventDate)}</div></label>`:''}${i.neededBy?`<label>Needed by<div style="color:var(--ink)">${fmtD(i.neededBy)}</div></label>`:''}</div>
+ ${i.approvalNote?`<div class="banner" style="margin-top:10px"><b>Note from approver:</b> ${esc(i.approvalNote)}</div>`:''}
+ <h3 style="margin-top:14px">Files</h3>${filesHtml(i)}
+ ${(mine||ME.role===L.owner||isHos())?`<div class="row" style="margin-top:6px"><input type="file" id="rq_more" multiple><button class="btn sm sec" onclick="addFilesTo('${i.id}','rq_more')">Add files</button></div>`:''}`;
+ if(mine&&i.approval==='approved'&&isDone(i)&&!(+i.score>0)&&i.status!=='Cancelled')h+=`<h3 style="margin-top:14px">Rate this delivery</h3><div class="row"><select id="rate_sc"><option value="">Rating…</option>${[5,4,3,2,1].map(n=>`<option value="${n}">${n} — ${['','Poor','Fair','Good','Very good','Excellent'][n]}</option>`).join('')}</select><input id="rate_note" placeholder="Comment (optional)" style="flex:1;min-width:200px"><button class="btn gold" onclick="rateReq('${i.id}')">Submit rating</button></div>`;
+ if(+i.score>0)h+=`<p style="margin-top:12px"><b>Rating:</b> ${'★'.repeat(+i.score)}${'☆'.repeat(5-(+i.score))} ${esc(i.ratingNote||'')}</p>`;
+ h+=`<div class="row" style="margin-top:14px">`;
+ if(i.approval==='dept'&&ME.head&&!mine)h+=`<button class="btn ok" onclick="deptDecide('${i.id}',true)">Approve & send to Head of Sales</button><button class="btn danger" onclick="deptDecide('${i.id}',false)">Not approve</button>`;
+ if(mine&&pend)h+=`<button class="btn danger" onclick="cancelReq('${i.id}')">Cancel this request</button>`;
+ if(i.approval==='approved'&&isOpen(i)&&canExpedite(L.owner)&&!(i.expedite&&!i.expedite.cleared))h+=`<button class="btn danger" onclick="closeModal();expediteItem('${i.id}')">Expedite</button>`;
+ h+=`</div>${i.history&&i.history.length?`<h3 style="margin-top:16px">History</h3><div class="hist">${i.history.slice().reverse().map(x=>`<div><b>${fmtDT(x.at)}</b> · ${esc(x.stage)}${x.byName||x.by?' · '+esc(x.byName||ROLES[x.by]||x.by):''}${x.note?' — '+esc(x.note):''}</div>`).join('')}</div>`:''}`;
+ $('#mbox').innerHTML=h;$('#modal').style.display='flex';}
+
+/* ===================== Approvals (Head of Sales) ===================== */
+function rApprovals(){
+ const wait=S.allItems.filter(i=>i.approval==='hos').sort((a,b)=>a.id.localeCompare(b.id));
+ const withDept=S.allItems.filter(i=>i.approval==='dept');
+ const rej=S.allItems.filter(i=>i.approval==='rejected').slice(-10).reverse();
+ const tbl=(list,showBtn)=>`<div class="card tw"><table><tr><th>ID</th><th>Request</th><th>Raised by</th><th>Goes to</th><th>Needed by</th><th></th></tr>${list.map(i=>`<tr><td class="click" onclick="openItem('${i.id}')"><b>${i.id}</b></td><td>${esc(i.title)}<div class="small muted">${esc(typeOf(i)?typeOf(i).label:i.type)}</div>${i.history&&i.history.some(h=>/Department head approved/.test(h.stage))?'<span class="pill p-green">dept head approved</span>':''}</td><td class="small">${esc(i.requesterName||'')}<div class="muted">${esc(i.dept||'')}</div></td><td class="small">${esc(pname(LOGS[i.log].owner))}<div class="muted">${esc(LOGS[i.log].short)}</div></td><td class="small">${fmtD(i.neededBy||i.eventDate)}</td><td style="white-space:nowrap"><button class="btn sm sec" onclick="openItem('${i.id}')">Open</button> <button class="btn sm ok" onclick="approveItem('${i.id}')">Approve</button> <button class="btn sm danger" onclick="rejectItem('${i.id}')">Not approve</button></td></tr>`).join('')||'<tr><td colspan="6" class="muted">Nothing waiting.</td></tr>'}</table></div>`;
+ return`<h2>Approvals</h2><p class="small muted">Nothing except a system ticket reaches the Digital Division until you approve it. Approving adds it to the owner's job sheet and starts its deadline clock.</p>
+ <h3>Waiting for your approval (${wait.length})</h3>${tbl(wait)}
+ <h3 style="margin-top:18px">With department heads (${withDept.length}) <span class="small muted">— you can approve these directly too</span></h3>${tbl(withDept)}
+ ${rej.length?`<h3 style="margin-top:18px">Recently not approved</h3><div class="card tw"><table><tr><th>ID</th><th>Request</th><th>Reason</th></tr>${rej.map(i=>`<tr class="click" onclick="openItem('${i.id}')"><td>${i.id}</td><td>${esc(i.title)}</td><td class="small">${esc(i.approvalNote||'')}</td></tr>`).join('')}</table></div>`:''}`;}
+
+/* ===================== Control panel additions ===================== */
+async function loadProfiles(){try{const{data,error}=await nexus.from('profiles').select('id,full_name,email,role,status').order('full_name');if(error)throw error;PROFILES=data||[];}catch(e){PROFILES=[];toast('Could not load users');}render();}
+const activeUsers=()=>(PROFILES||[]).filter(p=>p.status==='active');
+function adminPeople(){
+ if(PROFILES===null){loadProfiles();return'<div class="card">Loading Nexus users…</div>';}
+ const st=S.settings,mem=uid=>MEMBERS.find(m=>m.user_id===uid)||{};
+ const holder=r=>(MEMBERS.find(m=>m.dd_role===r)||{}).user_id||'';
+ const users=activeUsers().filter(p=>p.role!=='admin');
+ let h=`<div class="card"><h3>Organisation</h3><div class="form"><label>Organisation name${I('settings.org','text','',true)}</label></div></div>
+ <div class="card"><h3>Who holds each role</h3><p class="small muted">People sign in with their own Nexus login. Pick the person for each Digital Division role (Nexus admins are automatically Head of Sales). Each person then sees only what their role allows. If someone is missing, approve their account in Admin → Users first.</p>
+ <table><tr><th>Role</th><th>Person</th><th>Title</th></tr>
+ <tr><td>Head of Sales</td><td colspan="2" class="muted">All Nexus admins (${esc((PROFILES||[]).filter(p=>p.role==='admin').map(p=>p.full_name||p.email).join(', ')||'—')})</td></tr>
+ ${['dscm','rbe','brand'].map(r=>`<tr><td>${ROLES[r]}</td><td><select onchange="assignRole('${r}',this.value)"><option value="">— not assigned —</option>${users.map(p=>`<option value="${p.id}" ${holder(r)===p.id?'selected':''}>${esc(p.full_name||p.email)}</option>`).join('')}</select></td><td>${I('settings.people.'+r+'.title','text','',false)}</td></tr>`).join('')}</table></div>
+ <div class="card"><h3>Departments of staff, and department heads</h3><p class="small muted">A person's department decides who approves their requests first. Tick "Department head" for the person who approves requests from that department's staff. Requests from people with no department go straight to you.</p>
+ <div class="tw"><table><tr><th>Person</th><th style="width:230px">Department</th><th style="width:130px">Department head</th></tr>${users.filter(p=>!['dscm','rbe','brand'].includes((mem(p.id)).dd_role)).map(p=>{const m=mem(p.id);return`<tr><td>${esc(p.full_name||p.email)}<div class="small muted">${esc(p.email||'')}</div></td><td><select onchange="setUserDept('${p.id}',this.value,${m.is_dept_head?'true':'false'})"><option value="">— none —</option>${opt(st.departments,m.dept||'')}</select></td><td><input type="checkbox" ${m.is_dept_head?'checked':''} ${m.dept?'':'disabled'} onchange="setUserDept('${p.id}','${esc(m.dept||'')}',this.checked)"></td></tr>`;}).join('')||'<tr><td colspan="3" class="muted">No other active users yet.</td></tr>'}</table></div></div>`;
+ return h;}
+async function assignRole(role,uid){try{const prev=MEMBERS.find(m=>m.dd_role===role);if(prev&&prev.user_id===uid)return;
+  if(prev){const{error}=await nexus.from('dd_members').update({dd_role:'requester'}).eq('user_id',prev.user_id);if(error)throw error;}
+  if(uid){const p=PROFILES.find(x=>x.id===uid);const cur=MEMBERS.find(m=>m.user_id===uid);const row={user_id:uid,full_name:p.full_name||p.email,dd_role:role,dept:(cur&&cur.dept)||'',is_dept_head:false};const{error}=await nexus.from('dd_members').upsert(row);if(error)throw error;}
+  try{nexusLogEvent(CTX.profile,'dd_role_assigned',{role,uid});}catch(e){}
+  await loadMembers();render();toast('Saved');}catch(e){dbErr(e);}}
+async function setUserDept(uid,dept,head){try{const p=PROFILES.find(x=>x.id===uid);const cur=MEMBERS.find(m=>m.user_id===uid);const row={user_id:uid,full_name:p.full_name||p.email,dd_role:(cur&&cur.dd_role)||'requester',dept:dept||'',is_dept_head:!!(head&&dept)};const{error}=await nexus.from('dd_members').upsert(row);if(error)throw error;await loadMembers();render();toast('Saved');}catch(e){dbErr(e);}}
+function adminApproval(){const st=S.settings;
+ return`<div class="card"><h3>Who must approve before work reaches the Digital Division</h3><p class="small muted">Recommended setting (and what you asked for): every request except a system ticket needs your approval before it is added to anyone's job sheet. System tickets always go straight to the DSCM, because a broken system cannot wait.</p>
+ <table><tr><th>Request type</th><th style="width:320px">Approval</th></tr>
+ <tr><td>System tickets (STL)</td><td class="muted">Direct — no approval (fixed)</td></tr>
+ ${['DEV','CMP','DRL','BRA'].map(l=>`<tr><td>${esc(LOGS[l].name)}</td><td>${SEL('settings.approval.'+l,[['hos','Head of Sales must approve'],['auto','Goes straight in (no approval)']],true)}</td></tr>`).join('')}</table>
+ <p style="margin-top:12px"><label class="row" style="gap:8px">${CB('settings.deptApproval')} <span>Department head approves first, for staff in departments that have a head</span></label></p></div>`;}
+function adminData(){return`<div class="card"><h3>Data</h3><p class="small">All Digital Division data is stored securely in Nexus — no backup file is needed. You can still export a copy.</p><div class="row"><button class="btn gold" onclick="exportJson()">Export everything (.json)</button><button class="btn sec" onclick="exportCsv()">Export logs (.csv)</button></div><p class="small muted">${S.allItems.length} requests & tickets · ${Object.keys(S.jobs).length} job entries · ${S.daily.length} daily reports</p></div>`;}
+
+/* ===================== Start-up ===================== */
+async function boot(){
+ render();
+ try{CTX=await nexusRequireAuth();if(!CTX)return;ME.id=CTX.profile.id;ME.name=CTX.profile.full_name||CTX.profile.email;
+  await loadAll();READY=true;
+  tab=ME.role==='hos'?'ov':ME.role==='requester'?'req':'my';
+  if(ME.role==='rbe'||ME.role==='brand'){kraRole=ME.role;chkRole=ME.role;myRole=ME.role;}
+  render();
+  setInterval(async()=>{if(document.hidden||cfgTimer||$('#modal').style.display==='flex')return;if(!['ov','my','appr','logs','proj','myreq','dept'].includes(tab))return;try{await loadAll();render();}catch(e){}},60000);
+ }catch(e){console.error(e);$('#view').innerHTML='<div class="card"><h2>Could not load</h2><p>'+esc(e.message||String(e))+'</p><p class="small muted">If this mentions a missing table, the Digital Division SQL (add-digital-division.sql) has not been run in Supabase yet.</p></div>';}
+}
+
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&editing)closeModal();});
+boot();
+</script>
+</body>
+</html>
